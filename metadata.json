@@ -1,0 +1,6 @@
+{
+  "name": "Smart Digital Gate Pass Management System",
+  "description": "A comprehensive and secure online gate pass system for colleges, featuring student requests, HOD approvals, security guard scans, admin analytics, and AI risk assessment.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
