@@ -340,91 +340,33 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
     });
     db.addLog(studentId, req.user!.name, 'student', `Applied for gate pass: ${gatePass.id} to HOD: ${finalHODName || 'Department Head'}`);
 
-    // AI Risk Assessment in background / inline
+    // Rule-based Frequency Risk Assessment (No Gemini AI)
+    const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
+    const passesThisMonth = db.getGatePasses().filter(p =>
+      p.student_id === studentId &&
+      p.created_at &&
+      p.created_at.substring(0, 7) === currentMonth &&
+      p.status !== 'rejected' &&
+      p.status !== 'cancelled'
+    );
+    const monthlyCount = passesThisMonth.length; // Includes current pass since it was created at line 333
+
     let risk_level: 'low' | 'medium' | 'high' = 'low';
-    let risk_remarks = 'Request registered successfully.';
+    let risk_remarks = '';
 
-    /**
-     * 🤖 GOOGLE GEMINI AI VERIFICATION ENGINE
-     * 
-     * This module leverages Gemini-3.5-Flash to analyze the context of the outing:
-     * - Checks for safety risks, timing discrepancies, and curfew guidelines.
-     * - Enforces structured JSON output with a strict schema (risk_level and remarks).
-     */
-    if (ai) {
-      try {
-        const prompt = `Evaluate the following college student gatepass request:
-Reason: "${reason}"
-Destination: "${destination}"
-Expected Exit: "${exit_time}"
-Expected Return: "${return_time}"`;
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
-          contents: prompt,
-          config: {
-            systemInstruction: `You are an AI Safety Assistant for a college Gate Pass Management System. Evaluate student gatepass requests for potential risks.
-Risk Level classification guidelines:
-- "low": standard reasons (e.g., medical, library, buy book, local market, dental checkup), within reasonable hours (< 12 hours total).
-- "medium": longer requests (e.g., going home for weekend, sibling wedding, passport office), or destinations that are somewhat far but plausible.
-- "high": suspicious, unsafe, or highly vague reasons (e.g., "bored", "just outing", "confidential", "night club", "meet friend at midnight"), extremely long return windows for simple reasons, or exit/return times that represent middle of the night (between 11 PM and 5 AM).
-Provide a JSON object with:
-- "risk_level" (must be "low", "medium", or "high" strictly)
-- "remarks" (a very short summary explaining the risk level and advising HOD)
-Do not include markdown tags. Return raw JSON.`,
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                risk_level: { type: Type.STRING, description: 'strictly one of low, medium, or high' },
-                remarks: { type: Type.STRING, description: 'Short advisory note' },
-              },
-              required: ['risk_level', 'remarks'],
-            },
-          },
-        });
-
-        if (response.text) {
-          const parsed = JSON.parse(response.text.trim());
-          if (parsed.risk_level && ['low', 'medium', 'high'].includes(parsed.risk_level.toLowerCase())) {
-            risk_level = parsed.risk_level.toLowerCase() as 'low' | 'medium' | 'high';
-            risk_remarks = parsed.remarks || 'AI risk check completed.';
-          }
-        }
-      } catch (geminiErr) {
-        console.error('Gemini verification failed, using standard rule base', geminiErr);
-        
-        /**
-         * 🛡️ GRACEFUL FALLBACK (Offline mode)
-         * If the Gemini API is offline, the system falls back to a deterministic regex-based 
-         * keyword checker to ensure uninterrupted gate operations.
-         */
-        const reasonLower = reason.toLowerCase();
-        if (reasonLower.includes('emergency') || reasonLower.includes('hospital') || reasonLower.includes('medical')) {
-          risk_level = 'low';
-          risk_remarks = 'Automatic detection: High priority medical/emergency pass.';
-        } else if (reasonLower.includes('bored') || reasonLower.includes('party') || reasonLower.includes('movie') || reasonLower.includes('club')) {
-          risk_level = 'high';
-          risk_remarks = 'Automatic warning: Recreational outing requested during academic sessions.';
-        }
-      }
+    if (monthlyCount <= 2) {
+      risk_level = 'low';
+      risk_remarks = `Student has applied for/received ${monthlyCount} gate pass(es) this month. (Low frequency)`;
+    } else if (monthlyCount <= 4) {
+      risk_level = 'medium';
+      risk_remarks = `Student has applied for/received ${monthlyCount} gate pass(es) this month. (Medium frequency)`;
     } else {
-      // Rule-based keyword matching when no Gemini API Key is configured in environment
-      const reasonLower = reason.toLowerCase();
-      if (reasonLower.includes('emergency') || reasonLower.includes('hospital') || reasonLower.includes('medical')) {
-        risk_level = 'low';
-        risk_remarks = 'Rule-based analyzer: High-priority medical reason.';
-      } else if (reasonLower.includes('bored') || reasonLower.includes('party') || reasonLower.includes('movie') || reasonLower.includes('club')) {
-        risk_level = 'high';
-        risk_remarks = 'Rule-based analyzer: Suspicious or recreational destination flagged.';
-      } else {
-        risk_level = 'low';
-        risk_remarks = 'Default rule check completed.';
-      }
+      risk_level = 'high';
+      risk_remarks = `Warning: Student has applied for/received ${monthlyCount} gate pass(es) this month. This reaches/exceeds the limit of 5. Class Incharge or HOD should REJECT this application.`;
     }
 
     db.updateGatePassAIScore(gatePass.id, risk_level, risk_remarks);
-    
+
     // Find student details to get class teacher
     const studentInfo = db.getStudents().find(s => s.id === studentId);
     const teacherId = studentInfo?.class_teacher_id;
@@ -477,7 +419,7 @@ app.post('/api/student/cancel', authenticateJWT, authorizeRoles('student'), (req
 
   const updated = db.updateGatePassStatus(id, 'cancelled');
   db.addLog(req.user!.id, req.user!.name, 'student', `Cancelled gate pass request: ${id}`);
-  
+
   if (pass.selected_hod_id) {
     db.addNotification(
       pass.selected_hod_id,
@@ -543,7 +485,7 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req:
 
     const updated = db.updateGatePassStatus(id, 'approved', req.user!.name, remarks || 'Approved by HOD', qrCodeBase64);
     db.addLog(req.user!.id, req.user!.name, 'hod', `Approved gate pass ${id} for student ${pass.student_name}`);
-    
+
     // Notify student of approval
     db.addNotification(
       pass.student_id,
@@ -557,12 +499,12 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req:
     // Simulate parents SMS notification logs
     const parentPhone = pass.student_parent_phone || '+91 9876543210';
     db.addLog(
-      'system', 
-      'SMS Gateway', 
-      'admin', 
+      'system',
+      'SMS Gateway',
+      'admin',
       `SMS alert sent to Parent (${parentPhone}): Dear Parent, your child ${pass.student_name} is leaving the college for the reason that the student wrote in the application: "${pass.reason}".`
     );
-    
+
     res.json(updated);
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to generate secure QR Code.' });
@@ -580,7 +522,7 @@ app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req: Authen
 
   const updated = db.updateGatePassStatus(id, 'rejected', req.user!.name, remarks);
   db.addLog(req.user!.id, req.user!.name, 'hod', `Rejected gate pass ${id} for student ${pass.student_name}`);
-  
+
   // Notify student of rejection
   db.addNotification(
     pass.student_id,
@@ -670,7 +612,7 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req: Auth
 
   const updated = db.markExit(id);
   db.addLog(req.user!.id, req.user!.name, 'guard', `Marked exit for Student ${pass.student_name} on pass ${id}`);
-  
+
   // Notify student of exit
   db.addNotification(
     pass.student_id,
@@ -696,7 +638,7 @@ app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req: Au
 
   const updated = db.markReturn(id);
   db.addLog(req.user!.id, req.user!.name, 'guard', `Marked return for Student ${pass.student_name}, gate pass closed.`);
-  
+
   // Notify student of return
   db.addNotification(
     pass.student_id,
@@ -915,15 +857,15 @@ app.post('/api/admin/students', authenticateJWT, authorizeRoles('admin'), (req: 
   }
 
   try {
-    const s = db.registerStudent({ 
-      college_id, 
-      name, 
-      roll_no, 
-      department, 
-      email, 
-      phone, 
-      parent_phone: parent_phone || '+91 9876543210', 
-      password_plain: password 
+    const s = db.registerStudent({
+      college_id,
+      name,
+      roll_no,
+      department,
+      email,
+      phone,
+      parent_phone: parent_phone || '+91 9876543210',
+      password_plain: password
     });
     db.addLog(req.user!.id, req.user!.name, 'admin', `Registered Student ${name} (${roll_no})`);
     res.status(201).json(s);

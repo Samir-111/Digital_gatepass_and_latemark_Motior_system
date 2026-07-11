@@ -921,7 +921,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                                         pass.risk_level === 'high' ? 'bg-red-50 text-red-700 border-red-200' :
                                         pass.risk_level === 'medium' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-blue-50 text-blue-600 border-blue-200'
                                       }`}>
-                                        AI RISK: {pass.risk_level}
+                                        USAGE RISK: {pass.risk_level}
                                       </span>
                                     </div>
                                   )}

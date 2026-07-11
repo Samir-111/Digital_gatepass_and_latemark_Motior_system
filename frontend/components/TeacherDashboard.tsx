@@ -645,7 +645,7 @@ export default function TeacherDashboard({ user, onLogout }: TeacherDashboardPro
                         {/* AI Risk remarks if high/medium */}
                         {pass.risk_remarks && (
                           <p className="text-[10px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-medium leading-relaxed italic">
-                            "AI: {pass.risk_remarks}"
+                            "Frequency: {pass.risk_remarks}"
                           </p>
                         )}
 

@@ -6,7 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import { initializeApp, getApps, getApp } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { Department, Student, HOD, Guard, Admin, GatePass, ActivityLog, UserRole, AppNotification, OfficialParentContact, LateComeEntry, Teacher } from '../frontend/types.js';
 
@@ -45,6 +45,7 @@ interface Schema {
 export class Database {
   private static instance: Database;
   private firestore!: Firestore;
+  private hasExplicitCredential = false;
   
   // Local active memory state
   private data: Schema = {
@@ -100,20 +101,20 @@ export class Database {
   }
 
   /**
-   * Initializes Firebase Admin SDK using applet metadata and project ID
+   * Initializes Firebase Admin SDK using environment variables, local credentials file, or applet metadata
    */
   private initFirebaseSDK() {
-    let projectId = 'primordial-lambda-qk91c';
-    let databaseId = '';
+    let projectId = process.env.FIREBASE_PROJECT_ID || 'primordial-lambda-qk91c';
+    let databaseId = process.env.FIRESTORE_DATABASE_ID || '';
 
     try {
       const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
       if (fs.existsSync(configPath)) {
         const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-        if (config.projectId) {
+        if (!process.env.FIREBASE_PROJECT_ID && config.projectId) {
           projectId = config.projectId;
         }
-        if (config.firestoreDatabaseId) {
+        if (!process.env.FIRESTORE_DATABASE_ID && config.firestoreDatabaseId) {
           databaseId = config.firestoreDatabaseId;
         }
       }
@@ -121,7 +122,56 @@ export class Database {
       console.error('Error reading firebase-applet-config.json:', e);
     }
 
-    const app = getApps().length === 0 ? initializeApp({ projectId }) : getApp();
+    // Try to load service account credentials
+    let credential: any = undefined;
+    let serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+    // Auto-detect common local service account filenames if environment variable not set
+    if (!serviceAccountPath) {
+      const possiblePaths = [
+        path.join(process.cwd(), 'firebase-service-account.json'),
+        path.join(process.cwd(), 'service-account.json')
+      ];
+      for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+          serviceAccountPath = p;
+          break;
+        }
+      }
+    }
+
+    if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
+      try {
+        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
+        credential = cert(serviceAccount);
+        this.hasExplicitCredential = true;
+        if (serviceAccount.project_id && !process.env.FIREBASE_PROJECT_ID) {
+          projectId = serviceAccount.project_id;
+        }
+        console.log(`[Firestore] Loaded service account credentials from file: ${serviceAccountPath}`);
+      } catch (err) {
+        console.error('[Firestore] Error loading service account credential file:', err);
+      }
+    } else if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+        credential = cert(serviceAccount);
+        this.hasExplicitCredential = true;
+        if (serviceAccount.project_id && !process.env.FIREBASE_PROJECT_ID) {
+          projectId = serviceAccount.project_id;
+        }
+        console.log('[Firestore] Loaded service account credentials from environment variable FIREBASE_SERVICE_ACCOUNT_JSON');
+      } catch (err) {
+        console.error('[Firestore] Error parsing FIREBASE_SERVICE_ACCOUNT_JSON:', err);
+      }
+    }
+
+    const appOptions: any = { projectId };
+    if (credential) {
+      appOptions.credential = credential;
+    }
+
+    const app = getApps().length === 0 ? initializeApp(appOptions) : getApp();
 
     try {
       if (databaseId) {
@@ -232,7 +282,7 @@ export class Database {
    */
   public async initFirestore(): Promise<void> {
     console.log('[Firestore] Checking for Google Cloud credentials...');
-    const hasCreds = await this.hasADC();
+    const hasCreds = this.hasExplicitCredential || await this.hasADC();
 
     if (!hasCreds) {
       console.warn('[Firestore] No Google Cloud credentials detected. Skipping Firestore synchronization.');

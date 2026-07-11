@@ -137,7 +137,7 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
     return (
       <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-bold border ${styles[level]}`}>
         <Sparkles className="h-3.5 w-3.5" />
-        <span className="uppercase">AI Assessment: {level}</span>
+        <span className="uppercase">Frequency Risk: {level}</span>
       </span>
     );
   };
@@ -336,7 +336,7 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
                         <div className={`p-3.5 rounded-xl border mb-4 flex items-start space-x-2.5 ${pass.risk_level === 'high' ? 'bg-rose-50/50 border-rose-100 text-rose-800' : pass.risk_level === 'medium' ? 'bg-amber-50/50 border-amber-100 text-amber-800' : 'bg-blue-50/50 border-blue-100 text-blue-800'}`}>
                           <Sparkles className="h-4 w-4 text-current shrink-0 mt-0.5" />
                           <div className="text-xs font-semibold leading-relaxed">
-                            <span className="font-bold">AI Advisory Check: </span>
+                            <span className="font-bold">Monthly Usage Check: </span>
                             {pass.risk_remarks}
                           </div>
                         </div>

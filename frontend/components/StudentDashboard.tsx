@@ -226,7 +226,7 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
     return (
       <span className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${styles[level]}`}>
         <Sparkles className="h-3 w-3 text-current" />
-        <span>AI Risk: {level}</span>
+        <span>Risk level: {level}</span>
       </span>
     );
   };
@@ -382,7 +382,7 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
                     <div className={`p-4 rounded-xl mb-4 border flex items-start space-x-3 ${activePass.risk_level === 'high' ? 'bg-red-50 border-red-100 text-red-800' : activePass.risk_level === 'medium' ? 'bg-amber-50 border-amber-100 text-amber-800' : 'bg-blue-50 border-blue-100 text-blue-800'}`}>
                       <Sparkles className="h-5 w-5 shrink-0 mt-0.5" />
                       <div>
-                        <div className="text-xs font-bold uppercase tracking-wider">Smart Guard Risk Rating: {activePass.risk_level}</div>
+                        <div className="text-xs font-bold uppercase tracking-wider">Monthly Usage Risk Rating: {activePass.risk_level}</div>
                         <div className="text-xs font-medium mt-1 leading-relaxed">{activePass.risk_remarks}</div>
                       </div>
                     </div>
