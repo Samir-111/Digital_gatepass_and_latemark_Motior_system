@@ -29,6 +29,22 @@
       "role": "admin",
       "action": "Logged in successfully",
       "timestamp": "2026-07-10T21:10:04.388Z"
+    },
+    {
+      "id": "log-1783720190490",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-10T21:49:50.490Z"
+    },
+    {
+      "id": "log-1783742965719",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-11T04:09:25.719Z"
     }
   ],
   "notifications": [],
