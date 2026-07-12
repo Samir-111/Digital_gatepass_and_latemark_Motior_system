@@ -390,14 +390,6 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div className="space-y-1.5">
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Destination</span>
-                      <span className="text-sm font-semibold text-slate-800 flex items-center">
-                        <Compass className="h-4 w-4 text-slate-400 mr-1.5 shrink-0" />
-                        {activePass.destination}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Reason for Outing</span>
                       <span className="text-sm font-semibold text-slate-800 flex items-center">
                         <FileText className="h-4 w-4 text-slate-400 mr-1.5 shrink-0" />
@@ -410,14 +402,6 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
                       <span className="text-sm font-semibold text-slate-800 flex items-center">
                         <Clock className="h-4 w-4 text-slate-400 mr-1.5 shrink-0" />
                         {new Date(activePass.exit_time).toLocaleString()}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Expected Return Deadline</span>
-                      <span className="text-sm font-semibold text-slate-800 flex items-center">
-                        <Clock className="h-4 w-4 text-slate-400 mr-1.5 shrink-0" />
-                        {new Date(activePass.return_time).toLocaleString()}
                       </span>
                     </div>
 
@@ -631,12 +615,11 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
                   <table className="min-w-full divide-y divide-slate-100">
                     <thead className="bg-slate-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pass ID</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason / Destination</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Requested Timings</th>
+                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
+                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Requested Exit Time</th>
                         <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Security Activity</th>
                         <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">AI Security Score</th>
+                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">AI Security Score</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-100 text-xs">
@@ -645,11 +628,9 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
                           <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-800">{pass.id}</td>
                           <td className="px-6 py-4">
                             <div className="font-semibold text-slate-800 max-w-xs truncate">{pass.reason}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5 truncate">To: {pass.destination}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                            <div>Out: {new Date(pass.exit_time).toLocaleString()}</div>
-                            <div className="mt-0.5">In: {new Date(pass.return_time).toLocaleString()}</div>
+                            <div>{new Date(pass.exit_time).toLocaleString()}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-[11px] text-slate-600">
                             {pass.exit_marked_at ? (

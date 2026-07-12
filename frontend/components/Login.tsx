@@ -35,7 +35,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [regCollegeId, setRegCollegeId] = useState('');
   const [regDept, setRegDept] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regParentPhone, setRegParentPhone] = useState('');
   const [regClassTeacherId, setRegClassTeacherId] = useState(''); // Selected Class Teacher
   const [regHODId, setRegHODId] = useState(''); // Selected HOD
 
@@ -104,7 +103,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
     if (
       !regName || !regEmail || !regPassword || !regRollNo || 
-      !regDept || !regPhone || !regParentPhone || !regClassTeacherId || !regHODId
+      !regDept || !regPhone || !regClassTeacherId || !regHODId
     ) {
       setError('Please fill out all fields in the registration form including choosing your Class Teacher and HOD.');
       return;
@@ -129,7 +128,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           college_id: regRollNo,
           department: regDept,
           phone: regPhone,
-          parent_phone: regParentPhone,
+          parent_phone: '', // Resolved dynamically in backend
           class_teacher_id: regClassTeacherId,
           selected_hod_id: regHODId,
         }),
@@ -149,7 +148,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       setRegRollNo('');
       setRegCollegeId('');
       setRegPhone('');
-      setRegParentPhone('');
       setRegClassTeacherId('');
       setRegHODId('');
     } catch (err: any) {
@@ -538,39 +536,20 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Your Mobile No.</label>
-                    <div className="mt-1 relative rounded-md shadow-sm">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Phone className="h-4 w-4 text-slate-400" />
-                      </div>
-                      <input
-                        required
-                        type="tel"
-                        placeholder="+91 xxxxx xxxxx"
-                        value={regPhone}
-                        onChange={(e) => setRegPhone(e.target.value)}
-                        className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900 focus:outline-none"
-                      />
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Your Mobile No.</label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Phone className="h-4 w-4 text-slate-400" />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Parent's Mobile No.</label>
-                    <div className="mt-1 relative rounded-md shadow-sm">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Phone className="h-4 w-4 text-slate-400 shrink-0" />
-                      </div>
-                      <input
-                        required
-                        type="tel"
-                        placeholder="+91 xxxxx xxxxx"
-                        value={regParentPhone}
-                        onChange={(e) => setRegParentPhone(e.target.value)}
-                        className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900 focus:outline-none"
-                      />
-                    </div>
+                    <input
+                      required
+                      type="tel"
+                      placeholder="+91 xxxxx xxxxx"
+                      value={regPhone}
+                      onChange={(e) => setRegPhone(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900 focus:outline-none"
+                    />
                   </div>
                 </div>
 

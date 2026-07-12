@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  FileText, Check, X, Search, Filter, RefreshCw, AlertCircle, Calendar, 
+import {
+  FileText, Check, X, Search, Filter, RefreshCw, AlertCircle, Calendar,
   Clock, LogOut, CheckCircle2, AlertTriangle, Sparkles, User, Info
 } from 'lucide-react';
 import { apiFetch } from '../lib/api.js';
@@ -23,7 +23,7 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
   const [history, setHistory] = useState<GatePass[]>([]);
   const [loading, setLoading] = useState(true);
   const [remarksMap, setRemarksMap] = useState<Record<string, string>>({});
-  
+
   // Search and Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [riskFilter, setRiskFilter] = useState('all');
@@ -37,7 +37,7 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
       const historyData = await gatepassService.getHODHistoryPasses();
       setPending(pendingData);
       setHistory(historyData);
-      
+
       const lateData = await gatepassService.getLateComeEntries();
       setLateEntries(lateData || []);
     } catch (err: any) {
@@ -64,7 +64,7 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
     const remarks = remarksMap[passId] || 'Approved';
     try {
       await gatepassService.approveGatePassHOD(passId, remarks);
-      
+
       // Clear local remarks state for this ID
       setRemarksMap(prev => {
         const copy = { ...prev };
@@ -151,7 +151,7 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
     const studentName = p.student_name?.toLowerCase() || '';
     const studentRoll = p.student_roll_no?.toLowerCase() || '';
     const query = searchQuery.toLowerCase();
-    
+
     const matchesSearch = studentName.includes(query) || studentRoll.includes(query);
     const matchesRisk = riskFilter === 'all' || p.risk_level === riskFilter;
 
@@ -190,14 +190,14 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        
+
         {/* HOD Intro Panel */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Welcome, {user.name}</h1>
             <p className="text-sm text-slate-500 font-medium">Head of Department, <span className="font-semibold text-slate-700">{user.department}</span>. You can review, approve, and reject student gate pass requests below.</p>
           </div>
-          <button 
+          <button
             onClick={fetchDashboardData}
             className="self-start md:self-auto inline-flex items-center px-3 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold transition cursor-pointer"
           >
@@ -343,20 +343,12 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
                       )}
 
                       {/* Outing details */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-medium text-slate-600 mb-5 bg-slate-50 p-4 rounded-xl">
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Outing Destination</span>
-                          <span className="text-slate-800 font-bold">{pass.destination}</span>
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium text-slate-600 mb-5 bg-slate-50 p-4 rounded-xl">
                         <div>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Leave Scheduled</span>
                           <span className="text-slate-800 font-bold">{new Date(pass.exit_time).toLocaleString()}</span>
                         </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Expected Return</span>
-                          <span className="text-slate-800 font-bold">{new Date(pass.return_time).toLocaleString()}</span>
-                        </div>
-                        <div className="md:col-span-3 border-t border-slate-200/40 pt-2 mt-1">
+                        <div className="md:col-span-2 border-t border-slate-200/40 pt-2 mt-1">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Reason Submitted</span>
                           <span className="text-slate-700 italic">"{pass.reason}"</span>
                         </div>
@@ -403,8 +395,8 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
                   <tr>
                     <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pass ID</th>
                     <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Student Name</th>
-                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason & Destination</th>
-                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Timings</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Leave Scheduled</th>
                     <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Remarks</th>
                   </tr>
@@ -419,11 +411,9 @@ export default function HODDashboard({ user, onLogout }: HODDashboardProps) {
                       </td>
                       <td className="px-6 py-4">
                         <div className="font-semibold text-slate-800 max-w-xs truncate">{pass.reason}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5 truncate">To: {pass.destination}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                        <div>Out: {new Date(pass.exit_time).toLocaleString()}</div>
-                        <div className="mt-0.5">In: {new Date(pass.return_time).toLocaleString()}</div>
+                        {new Date(pass.exit_time).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
                       <td className="px-6 py-4 text-slate-500 italic max-w-xs truncate">

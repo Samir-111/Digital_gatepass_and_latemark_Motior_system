@@ -872,8 +872,8 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                           <tr>
                             <th className="px-5 py-3 text-left font-bold text-slate-500 uppercase">Student / Dept</th>
                             <th className="px-5 py-3 text-left font-bold text-slate-500 uppercase">HOD Handler</th>
-                            <th className="px-5 py-3 text-left font-bold text-slate-500 uppercase">Reason & Destination</th>
-                            <th className="px-5 py-3 text-left font-bold text-slate-500 uppercase">Timings</th>
+                            <th className="px-5 py-3 text-left font-bold text-slate-500 uppercase">Reason</th>
+                            <th className="px-5 py-3 text-left font-bold text-slate-500 uppercase">Leaving Date/Time</th>
                             <th className="px-5 py-3 text-left font-bold text-slate-500 uppercase">Status & Risks</th>
                             <th className="px-5 py-3 text-left font-bold text-slate-500 uppercase">Parent SMS Alert</th>
                           </tr>
@@ -905,11 +905,9 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                                 </td>
                                 <td className="px-5 py-4 max-w-xs">
                                   <div className="font-medium text-slate-800 line-clamp-2">{pass.reason}</div>
-                                  <div className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">To: {pass.destination}</div>
                                 </td>
                                 <td className="px-5 py-4 whitespace-nowrap">
-                                  <div className="text-slate-600">Out: <span className="font-bold text-slate-800">{new Date(pass.exit_time).toLocaleDateString()} {new Date(pass.exit_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>
-                                  <div className="text-slate-500 mt-0.5">In: <span className="font-semibold">{new Date(pass.return_time).toLocaleDateString()} {new Date(pass.return_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>
+                                  <div className="text-slate-800 font-bold">{new Date(pass.exit_time).toLocaleDateString()} {new Date(pass.exit_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                                 </td>
                                 <td className="px-5 py-4 whitespace-nowrap">
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeColors[pass.status as keyof typeof badgeColors] || 'bg-slate-50'}`}>

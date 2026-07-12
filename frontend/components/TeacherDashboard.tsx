@@ -655,19 +655,9 @@ export default function TeacherDashboard({ user, onLogout }: TeacherDashboardPro
                             <span className="font-bold text-slate-400 uppercase text-[9px] block">Reason for Outing</span>
                             <span className="font-medium text-slate-800">{pass.reason}</span>
                           </div>
-                          <div>
-                            <span className="font-bold text-slate-400 uppercase text-[9px] block">Destination</span>
-                            <span className="font-medium text-slate-800">{pass.destination}</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4 pt-1">
-                            <div>
-                              <span className="font-bold text-slate-400 uppercase text-[9px] block">Exit expected</span>
-                              <span className="font-mono text-slate-800 font-bold">{new Date(pass.exit_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(pass.exit_time).toLocaleDateString([], { month: 'short', day: 'numeric' })})</span>
-                            </div>
-                            <div>
-                              <span className="font-bold text-slate-400 uppercase text-[9px] block">Return expected</span>
-                              <span className="font-mono text-slate-800 font-bold">{new Date(pass.return_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(pass.return_time).toLocaleDateString([], { month: 'short', day: 'numeric' })})</span>
-                            </div>
+                          <div className="pt-1">
+                            <span className="font-bold text-slate-400 uppercase text-[9px] block">Exit expected</span>
+                            <span className="font-mono text-slate-800 font-bold">{new Date(pass.exit_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(pass.exit_time).toLocaleDateString([], { month: 'short', day: 'numeric' })})</span>
                           </div>
                           <div className="pt-1.5">
                             <span className="font-bold text-slate-400 uppercase text-[9px] block">Target HOD</span>

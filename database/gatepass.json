@@ -1,80 +1,51 @@
 {
   "departments": [
     {
-      "id": "dept-1783773069378",
-      "department_name": "Computer S E"
-    },
-    {
-      "id": "dept-1783773895237",
+      "id": "dept-1783845624713",
       "department_name": "Computer Science"
     },
     {
-      "id": "dept-1783773914985",
-      "department_name": "civil engineering "
+      "id": "dept-1783845642526",
+      "department_name": "CSE(AIML)"
     }
   ],
   "students": [
     {
-      "id": "stud-1783773406702",
-      "college_id": "CS23038",
-      "name": "ashvin vaidhya",
-      "roll_no": "CS23038",
-      "department": "Computer S E",
-      "email": "ashvinvaidhya@sbjit.edu.in",
-      "phone": "9988776655",
-      "parent_phone": "9022616290",
-      "photo": "",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "created_at": "2026-07-11T12:36:46.849Z",
-      "password_hash": "$2b$10$Zi2HslxPag4fWIkSDmnV4uKS0msGWcU6Q2PwV/kaVl7qvCRqkE.06"
-    },
-    {
-      "id": "stud-1783773712959",
-      "college_id": "CS23022",
+      "id": "stud-1783795807079",
+      "college_id": "CM23038",
       "name": "samir khorgade",
-      "roll_no": "CS23022",
-      "department": "Computer S E",
-      "email": "samirkhorgade@sbjit.edu.in",
-      "phone": "6677554433",
-      "parent_phone": "9022616290",
-      "photo": "",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "created_at": "2026-07-11T12:41:53.098Z",
-      "password_hash": "$2b$10$bRWIA9BTWXFwx.vNxSOdM.ASFd49bkL4c7dvSQducbk/l8wvqFV1u"
-    },
-    {
-      "id": "stud-1783774106647",
-      "college_id": "CS23011",
-      "name": "jatin lanjewar",
-      "roll_no": "CS23011",
+      "roll_no": "CM23038",
       "department": "Computer Science",
-      "email": "jatinlanjewar@sbjit.edu.in",
-      "phone": "8877654321",
-      "parent_phone": "1234567898",
+      "email": "samirkorgade@sbjit.edu.in",
+      "phone": "9999997765",
+      "parent_phone": "9022616290",
       "photo": "",
       "class_teacher_id": "teacher-1783774034813",
       "class_teacher_name": "Prof. Ravi bhau",
       "selected_hod_id": "hod-1783773979296",
       "selected_hod_name": "Dr. Hemant BHau ",
-      "created_at": "2026-07-11T12:48:26.797Z",
-      "password_hash": "$2b$10$ttafAvE1nINN6BJ77fGDv.PAOWeDcN6ci3keuR5UqWBZCLSC8T/6O"
+      "created_at": "2026-07-11T18:50:07.167Z",
+      "password_hash": "$2b$10$.Rm6vS3Y8jJMkGasuf54mOa8ohsE.yHup9Y/5e1OOSXaEMzNJevWq"
+    },
+    {
+      "id": "stud-1783835987345",
+      "college_id": "CM23036",
+      "name": "Ashvin Vaidhya",
+      "roll_no": "CM23036",
+      "department": "Computer Science",
+      "email": "ashvinvaidhya@sbjit.edu.in",
+      "phone": "9988776655",
+      "parent_phone": "9766233877",
+      "photo": "",
+      "class_teacher_id": "teacher-1783774034813",
+      "class_teacher_name": "Prof. Ravi bhau",
+      "selected_hod_id": "hod-1783773979296",
+      "selected_hod_name": "Dr. Hemant BHau ",
+      "created_at": "2026-07-12T05:59:47.586Z",
+      "password_hash": "$2b$10$0LIvmG40hciqvh0L0subUOO9gTr0IcnhXQkIDH/V/rP68S5tx5fni"
     }
   ],
   "teachers": [
-    {
-      "id": "teacher-1783773147545",
-      "name": "Prof. Swati thakur",
-      "class_name": "CSE 7th Sem",
-      "department": "Computer S E",
-      "email": "swatithakur@sbjit.edu.in",
-      "password_hash": "$2b$10$vlK6mkSIQ0qcY3y7KK6X6.eeM9r/weresEgDYKr/.hmqrTOBDvIMy"
-    },
     {
       "id": "teacher-1783774034813",
       "name": "Prof. Ravi bhau",
@@ -86,18 +57,18 @@
   ],
   "hods": [
     {
-      "id": "hod-1783773096398",
-      "name": "Dr. Animesh Tayal",
-      "department": "Computer S E",
-      "email": "animeshtayal@sbjit.edu.in",
-      "password_hash": "$2b$10$cMur2OMPKGPa2UxBeGt6leZmh4wVO37S0gBq3wADlGImNSRwt7UdK"
-    },
-    {
       "id": "hod-1783773979296",
       "name": "Dr. Hemant BHau ",
       "department": "Computer Science",
       "email": "hemant@sbjit.edu.in",
       "password_hash": "$2b$10$r0XWxDr5u0v7ZWfA.TLSD.PMymsk0zk8jAYxu0gyGYLYOc5Y8rDx2"
+    },
+    {
+      "id": "hod-1783845686310",
+      "name": "Dr. Animesh Tayal",
+      "department": "CSE(AIML)",
+      "email": "animeshtayal@sbjit.edu.in",
+      "password_hash": "$2b$10$McxpHvuYCPMm2xJhtx4Z0.4BmPq0TukssbkKYUk2M3VZuKOHSR28S"
     }
   ],
   "guards": [
@@ -116,543 +87,358 @@
       "password_hash": "$2b$10$dx868c92zjqQo4qVc0jgxeF505AdR0fXxk72UyCm.LrEBghpCVPny"
     }
   ],
-  "gatepasses": [
-    {
-      "id": "pass-1783773497322",
-      "student_id": "stud-1783773406702",
-      "reason": "go home for event.",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T09:40:00.000Z",
-      "return_time": "2026-07-12T13:40:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_qf6v46if9kg_1783773497322",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "created_at": "2026-07-11T12:38:17.322Z",
-      "risk_level": "low",
-      "risk_remarks": "Student has applied for/received 1 gate pass(es) this month. (Low frequency)"
-    },
-    {
-      "id": "pass-1783773502973",
-      "student_id": "stud-1783773406702",
-      "reason": "go home for event.",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T09:40:00.000Z",
-      "return_time": "2026-07-12T13:40:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_tjq1ib0enl_1783773502973",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "created_at": "2026-07-11T12:38:22.973Z",
-      "risk_level": "low",
-      "risk_remarks": "Student has applied for/received 2 gate pass(es) this month. (Low frequency)"
-    },
-    {
-      "id": "pass-1783773508349",
-      "student_id": "stud-1783773406702",
-      "reason": "go home for event.",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T09:40:00.000Z",
-      "return_time": "2026-07-12T13:40:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_f86g0zhh3h_1783773508349",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "created_at": "2026-07-11T12:38:28.349Z",
-      "risk_level": "medium",
-      "risk_remarks": "Student has applied for/received 3 gate pass(es) this month. (Medium frequency)"
-    },
-    {
-      "id": "pass-1783773513762",
-      "student_id": "stud-1783773406702",
-      "reason": "go home for event.",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T09:40:00.000Z",
-      "return_time": "2026-07-12T13:40:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_zn87gkae85_1783773513762",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "created_at": "2026-07-11T12:38:33.762Z",
-      "risk_level": "medium",
-      "risk_remarks": "Student has applied for/received 4 gate pass(es) this month. (Medium frequency)"
-    },
-    {
-      "id": "pass-1783773535226",
-      "student_id": "stud-1783773406702",
-      "reason": "go home for event.",
-      "destination": "N/A",
-      "exit_time": "2026-07-11T09:40:00.000Z",
-      "return_time": "2026-07-11T13:40:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_yfc54cmtvtf_1783773535226",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "created_at": "2026-07-11T12:38:55.226Z",
-      "risk_level": "high",
-      "risk_remarks": "Warning: Student has applied for/received 5 gate pass(es) this month. This reaches/exceeds the limit of 5. Class Incharge or HOD should REJECT this application."
-    },
-    {
-      "id": "pass-1783773539983",
-      "student_id": "stud-1783773406702",
-      "reason": "go home for event.",
-      "destination": "N/A",
-      "exit_time": "2026-07-11T09:40:00.000Z",
-      "return_time": "2026-07-11T13:40:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_sfqzsncihs_1783773539983",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "created_at": "2026-07-11T12:38:59.983Z",
-      "risk_level": "high",
-      "risk_remarks": "Warning: Student has applied for/received 6 gate pass(es) this month. This reaches/exceeds the limit of 5. Class Incharge or HOD should REJECT this application."
-    },
-    {
-      "id": "pass-1783773749712",
-      "student_id": "stud-1783773712959",
-      "reason": "cfghj\n",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T05:45:00.000Z",
-      "return_time": "2026-07-12T09:45:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_w22tzkonvz_1783773749712",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "created_at": "2026-07-11T12:42:29.712Z",
-      "risk_level": "low",
-      "risk_remarks": "Student has applied for/received 1 gate pass(es) this month. (Low frequency)"
-    },
-    {
-      "id": "pass-1783773756694",
-      "student_id": "stud-1783773712959",
-      "reason": "cfghj\n",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T05:45:00.000Z",
-      "return_time": "2026-07-12T09:45:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_vqw2botepbi_1783773756694",
-      "selected_hod_id": "hod-1783773096398",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "created_at": "2026-07-11T12:42:36.694Z",
-      "risk_level": "low",
-      "risk_remarks": "Student has applied for/received 2 gate pass(es) this month. (Low frequency)"
-    },
-    {
-      "id": "pass-1783774177361",
-      "student_id": "stud-1783774106647",
-      "reason": "gf se milne jana haii . jane dee .",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T09:49:00.000Z",
-      "return_time": "2026-07-12T13:49:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_3rpkf8lpp0x_1783774177361",
-      "selected_hod_id": "hod-1783773979296",
-      "selected_hod_name": "Dr. Hemant BHau ",
-      "class_teacher_id": "teacher-1783774034813",
-      "class_teacher_name": "Prof. Ravi bhau",
-      "created_at": "2026-07-11T12:49:37.361Z",
-      "risk_level": "low",
-      "risk_remarks": "Student has applied for/received 1 gate pass(es) this month. (Low frequency)"
-    },
-    {
-      "id": "pass-1783774182459",
-      "student_id": "stud-1783774106647",
-      "reason": "gf se milne jana haii . jane dee .",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T09:49:00.000Z",
-      "return_time": "2026-07-12T13:49:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_qjg6048hpb_1783774182459",
-      "selected_hod_id": "hod-1783773979296",
-      "selected_hod_name": "Dr. Hemant BHau ",
-      "class_teacher_id": "teacher-1783774034813",
-      "class_teacher_name": "Prof. Ravi bhau",
-      "created_at": "2026-07-11T12:49:42.459Z",
-      "risk_level": "low",
-      "risk_remarks": "Student has applied for/received 2 gate pass(es) this month. (Low frequency)"
-    },
-    {
-      "id": "pass-1783774187136",
-      "student_id": "stud-1783774106647",
-      "reason": "gf se milne jana haii . jane dee .",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T09:49:00.000Z",
-      "return_time": "2026-07-12T13:49:00.000Z",
-      "status": "pending",
-      "token": "gp_tok_x2zdgn62819_1783774187136",
-      "selected_hod_id": "hod-1783773979296",
-      "selected_hod_name": "Dr. Hemant BHau ",
-      "class_teacher_id": "teacher-1783774034813",
-      "class_teacher_name": "Prof. Ravi bhau",
-      "created_at": "2026-07-11T12:49:47.136Z",
-      "risk_level": "medium",
-      "risk_remarks": "Student has applied for/received 3 gate pass(es) this month. (Medium frequency)"
-    },
-    {
-      "id": "pass-1783774195030",
-      "student_id": "stud-1783774106647",
-      "reason": "gf se milne jana haii . jane dee .",
-      "destination": "N/A",
-      "exit_time": "2026-07-12T09:49:00.000Z",
-      "return_time": "2026-07-12T13:49:00.000Z",
-      "status": "approved",
-      "token": "gp_tok_hcwv88l6l3a_1783774195030",
-      "selected_hod_id": "hod-1783773979296",
-      "selected_hod_name": "Dr. Hemant BHau ",
-      "class_teacher_id": "teacher-1783774034813",
-      "class_teacher_name": "Prof. Ravi bhau",
-      "created_at": "2026-07-11T12:49:55.030Z",
-      "risk_level": "medium",
-      "risk_remarks": "Student has applied for/received 4 gate pass(es) this month. (Medium frequency)",
-      "approved_by": "Dr. Hemant BHau ",
-      "remarks": "Approved",
-      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARQAAAEUCAYAAADqcMl5AAAAAklEQVR4AewaftIAABlQSURBVO3BsREYyY5EwccJ+gEdNsD8sqF0WMKjCKk3JqbJv3uBzB+/fmOttS54WGutSx7WWuuSh7XWuuRhrbUueVhrrUse1lrrkoe11rrkJ/8gsvib2uKLyGJqiymyeKMtpshiaouTyGJqiymymNpiiizeaIuTyOKNtjiJLKa2OIksvmiLKbKY2uIkspja4iSy+JPaYoosprY4iSz+prY4eVhrrUse1lrrkoe11rrkJy+1xU2RxRuRxdQWJ5HFSVu80RZTZDG1xdQWJ20xRRYnbXESWUxtMbXFSWRxEllMbTFFFlNbTG3xRmTxX9YWb7TFFFlMbXHSFjdFFm88rLXWJQ9rrXXJw1prXfKTjyKLN9rijchiaospspja4o3I4k+KLN5oiymymCKLqS2mtngjsnijLd6ILL5oiymymNrijbaYIoupLU7a4iSymCKLqS2myGJqi5siizfa4ouHtda65GGttS55WGutS37yHxNZTG0xRRZ/UltMkcUbbfFFW5xEFidtMbXFG5HF1BYnbXESWUxtMUUWJ5HFSVuctMUbkcVJW0yRxRuRxdQW/yUPa611ycNaa13ysNZal/zkPy6ymNrijcjipC2myGJqiymy+CKymNpiiiymtjhpi5PI4ovIYmqLKbKY2mJqiymymNpiiiymtjiJLE7a4ou2eCOymNriJLKY2uLf7GGttS55WGutSx7WWuuSn3zUFn9TW3wRWUxtMUUWU2QxtcVJW7wRWUxtMUUWU1u8EVm80RZvRBZTZPFGZDG1xU1tMUUWU2QxtcUbkcUbbTFFFlNbTG3xRVv8TQ9rrXXJw1prXfKw1lqX/OSlyOLfJLKY2mKKLKa2mCKLqS2myOIkspjaYoospra4KbKY2mKKLKa2mCKLk8hiaouTtpgiiy8ii6ktpshiaospspjaYoos3miLKbKY2mKKLL6ILKa2OIks/pce1lrrkoe11rrkYa21LvnJP2iLf7O2mCKLqS1O2mKKLKa2mCKLqS1O2uKkLW6KLKa2mCKLN9rijchiaospsvgispja4o3IYmqLk7Z4I7L4m9ri3+RhrbUueVhrrUse1lrrkh+/fuMgspjaYoosbmqLk8hiaospspja4iSymNrib4osTtpiiiymtpgii/+Stngjsjhpizcii6ktpshiaosvIoupLabI4qQtpsjiprb44mGttS55WGutSx7WWuuSH79+44XIYmqLKbKY2mKKLKa2mCKLk7Y4iSymtngjspjaYoospraYIouTtpgii6kt3ogsprY4iSzeaIs3IoupLabI4qQt3ogsTtripshiaos3Ios32uKmyGJqiymyOGmLk4e11rrkYa21LnlYa61LfvIPIos32mKKLE4ii6ktTiKLqS2mtpgii6ktpsjiprZ4oy1OIouTtjiJLN5oi5PI4t+kLd6ILE7a4qQtpsjii7aYIouTyOKNtpjaYoosTtrijYe11rrkYa21LnlYa61Lfvz6jQ8ii5O2mCKLqS1uiiymtpgii6ktpsjipC3eiCxO2uIkspja4iSymNpiiizeaIv/pchiaoubIouTtpgii6ktTiKLqS2myGJqi5PI4qQt3ogsTtrijYe11rrkYa21LnlYa61Lfvz6jYPIYmqLKbKY2uIksjhpiymyuKktvogspraYIos32mKKLKa2mCKLqS1OIoupLU4ii5O2eCOymNpiiiymtngjsjhpiymymNpiiixO2uK/JLKY2uKNyGJqi5OHtda65GGttS55WGutS378+o1/kcjipC3eiCymtpgii5va4iSyOGmLKbKY2mKKLE7a4qbIYmqLmyKLqS2myOKkLabI4o22+CKy+KItpshiaouTyOKkLd6ILKa2OHlYa61LHtZa65KHtda65Mev37gosviiLU4ii5vaYoos/qS2mCKLk7aYIouTtpgii6kt3ogs3miLKbKY2mKKLE7aYoospra4KbKY2uIksjhpiymymNriJLK4qS1OIoupLd54WGutSx7WWuuSh7XWuuTHr9+4KLJ4oy3eiCxO2uKNyOKkLU4ii6ktTiKLqS2+iCxO2uIkspjaYoosprb4IrL4oi2myGJqiymymNrii8jiv6Qt3ogsprZ442GttS55WGutSx7WWuuSn/yDyOKmtpgii6ktpshiaouTyOKkLf6myOIkspjaYoosTtpiiiymyGJqi6ktpshiaospspjaYoosvmiLN9ripC3eiCxO2uKmyGJqiymymNpiiixOIoupLabI4qaHtda65GGttS55WGutS378+o0/KLKY2uIkspja4iSymNpiiixO2mKKLE7aYoos3miLk8hiaouTyGJqiy8ii6kt3ogspraYIoupLabI4qQtpshiaospspja4ovIYmqLKbKY2mKKLN5oizciiz+pLU4e1lrrkoe11rrkYa21Lvnx6zcOIoub2mKKLN5oi5PIYmqLNyKLqS2myGJqiymymNpiiiymtpgii5O2eCOyuKktpsjipC1OIouTtviTIoupLd6ILE7a4o3IYmqLNyKLk7b4kx7WWuuSh7XWuuRhrbUu+ckf1hZTZDG1xRRZTG0xRRZTW5xEFlNbTJHFG20xRRZTW0yRxUlkMbXFFFmcRBZTW3zRFlNkcVNkMbXFFFlMkcXUFlNkcdIWJ23xRmQxtcUUWUyRxRttMUUWU1uctMVJZDG1xU0Pa611ycNaa13ysNZal/z49RsHkcXUFlNkMbXFFFlMbTFFFje1xRRZnLTFG5HF1BZTZDG1xRuRxUlbnEQWJ21xEllMbTFFFje1xRRZTG0xRRZTW5xEFidtcRJZTG3xRWRx0hZTZHHSFieRxRttMUUWU1ucPKy11iUPa611ycNaa13y49dvHEQWX7TFTZHFF21xElmctMUUWUxtMUUWU1tMkcVNbXESWXzRFieRxdQWU2QxtcVJZPFGW0yRxUlbTJHFG23xRmTxRltMkcXUFm9EFidtMUUWU1ucPKy11iUPa611ycNaa13yk3/QFlNkcdIWU2QxtcUUWZy0xdQWJ5HFF20xRRY3RRZvtMUUWUxtcVNbnEQWJ20xRRYnkcXUFlNb/EmRxUlbnEQWU1u80RZfRBZTW0yRxRdt8cbDWmtd8rDWWpc8rLXWJT/5B5HFSVtMkcXUFlNkMbXFSWQxtcUUWUxtMUUWU2Rx0hb/n7XFFFlMkcUbbTFFFidtMUUWU2QxtcVJZDG1xdQWU2QxtcUUWZxEFm9EFm9EFlNbnLTFSVtMkcXUFlNkcdIWJw9rrXXJw1prXfKw1lqX/Pj1GweRxRdtMUUWJ23xRmQxtcVJZDG1xRRZTG0xRRZTW0yRxdQWb0QWU1u8EVmctMUXkcXUFieRxdQWJ5HFSVt8EVmctMUUWXzRFm9EFl+0xRRZvNEWU2QxtcXJw1prXfKw1lqXPKy11iU/uawtpshiaouTyOKmyGJqizciizfaYoos/qTI4qQtTiKLqS2myGJqiy8ii6ktvogsprY4aYub2mKKLE4iizfa4ou2mCKLqS1O2uKNh7XWuuRhrbUueVhrrUt+/PqNg8jipraYIoupLb6ILE7a4o3IYmqLk8hiaouTyOKNtjiJLE7a4m+KLKa2mCKLqS3+pMhiaospspja4iSyeKMtTiKLqS2myOKkLf6XHtZa65KHtda65GGttS75yUtt8UZkcdIWU2QxtcVJZPFfEllMbfE3RRZTW5xEFlNbnEQWU1vcFFmctMVJW5y0xRRZvNEWU2QxRRZTW0xtcdIWU2TxRmQxtcUUWUxt8cbDWmtd8rDWWpc8rLXWJT95KbK4KbKY2uIksvhfiixO2mKKLKa2eCOymNrijbaYIospsjhpiymymNriJLKY2uIkspjaYmqLKbI4iSxO2uJPaouTyGJqiymyOGmLKbL4X3pYa61LHtZa65KHtda65Cf/oC2myOKNtjhpizfa4o3I4ou2+KItTiKLk7aYIouTtpgii5O2eKMtTtriJLL4IrL4oi2+aIub2uKkLabI4t/sYa21LnlYa61LHtZa65Kf/IPI4ovI4n+pLU4ii6ktpsjijbaYIoupLU7a4o22mCKLNyKLm9piiiymtpgii5sii6ktpsjipC2+iCymtpgii5O2mCKLk8ji3+RhrbUueVhrrUse1lrrkp981BYnkcXUFm9EFlNbnEQWJ5HF1BZTZPFFZDG1xRuRxUlbnLTFFFlMbTFFFlNbvBFZTJHFG20xRRYnbXFTW5y0xRRZTG1xElmctMUUWZy0xRuRxdQWf9LDWmtd8rDWWpc8rLXWJT/5B23xRmTxRmQxtcVJZDG1xdQWU2TxRltMkcXUFlNk8UVbTJHFSWQxtcUUWUxtMUUWb0QWU1uctMUUWUyRxdQWX0QWU1v8TZHF1BYnkcUUWUxtMUUWJ5HF1BZvRBY3Pay11iUPa611ycNaa13yk5cii5O2mCKLk7b4k9riJLI4aYuTtngjsjhpiymymNripC1uaos3IouTtripLf5NIouTtpgiiymyeKMtvmiLKbKYIoupLU4e1lrrkoe11rrkYa21Lvnx6zc+iCz+prY4iSymtngjspjaYoos/qS2OIksvmiLKbK4qS2myOKkLb6ILKa2OIksprY4iSxO2uKNyOKkLabI4k9qi5se1lrrkoe11rrkYa21Lvnx6zcOIoupLabI4o22OIkspraYIos/qS3+psjijbaYIos/qS2myOKkLb6ILL5oiymymNpiiiymtpgii6kt3ogspraYIoub2uKLyGJqizce1lrrkoe11rrkYa21Lvnx6zcOIouTtngjsjhpiy8ii5O2mCKLm9riJLKY2mKKLKa2mCKLm9riJLKY2mKKLE7a4iSymNpiiixO2uKNyGJqi5PI4o22+JMii6kt3ogs3miLNx7WWuuSh7XWuuRhrbUu+fHrNw4iizfaYoosTtriJLKY2uKLyGJqiymymNpiiiymtvg3iSymtjiJLKa2OIkspra4KbKY2uIkspja4iSyOGmLKbKY2uKLyOKkLd6ILN5oiz/pYa21LnlYa61LHtZa65KfvNQWJ5HF1BYnkcXUFieRxdQWJ5HFSWQxtcVJW0yRxRttcRJZTG0xRRZTW5xEFn9SZDG1xRuRxdQWf1Jb3BRZnLTFSVtMkcVJW0xtMUUWU1ucRBYnbfHGw1prXfKw1lqXPKy11iU/fv3GQWTxRVvcFFlMbTFFFlNbTJHF1BZTZHHSFlNkMbXFFFmctMVJZDG1xUlkcdIWU2TxRltMkcUXbTFFFm+0xRuRxdQWU2QxtcUUWfxNbXESWZy0xRRZTG0xRRZTW7zxsNZalzystdYlD2utdcmPX79xUWQxtcVJZPFGW0yRxdQWU2QxtcVJZDG1xd8UWUxtMUUWU1tMkcUXbTFFFidtMUUWX7TFG5HFSVt8EVlMbfFFZDG1xReRxdQWb0QWJ23xxsNaa13ysNZalzystdYlP379xkFkMbXFFFlMbXFTZDG1xRuRxRdtMUUWX7TFFFmctMXfFFlMbfFFZDG1xUlkcdIWJ5HFSVv8SZHF1BZTZPFGW0yRxdQWU2Rx0hYnkcVJW5w8rLXWJQ9rrXXJw1prXfKTlyKLk8jipraYIouTtpja4o3I4o22OIksvogsprY4iSzeaIuTyOKkLabI4qa2mCKLvymyeKMt3miLLyKLqS1OIos32uKNh7XWuuRhrbUueVhrrUt+8lFbTJHFG23xRltMkcUXkcVJZPFvEllMbTG1xRRZvNEWU2QxtcUbbTFFFidtMUUWb7TFFFl80RZTZPFGZDG1xRRZTG3xRlucRBZTW5xEFlNkMbXFycNaa13ysNZalzystdYlP379xkFk8UZbvBFZTG0xRRZTW5xEFlNbTJHF1BY3RRYnbfG/FFlMbfFFZPFGW9wUWUxt8UZk8UVbvBFZTG1xElm80RZTZDG1xUlkMbXFGw9rrXXJw1prXfKw1lqX/OSyyGJqi5O2eCOymNrib4ospraY2mKKLKbI4qQtTiKLqS3eaIspsnijLf5LIoub2uKmyGJqi6ktpsjii8jipC2myGJqi5OHtda65GGttS55WGutS37yD9piiixO2uIksrgpspja4qQt3ogs/qbIYmqLqS3eiCxO2uIksjhpiymyeCOymNpiiiymtviiLU4ii5PIYmqLKbKY2uKkLabI4qQt3miLKbKY2mKKLKa2eONhrbUueVhrrUse1lrrkp/8g8hiaospsnijLU4ii5O2OIksTtpiiiymtpja4iSymNripC2myGJqiymymNriJLKY2uKNyOIksvgisvgispjaYoosvmiLmyKLqS3eaIs3IouTtjhpiymymNri5GGttS55WGutSx7WWuuSn/yDtpgii6kt3ogs3miLKbI4aYspspgii6ktTiKLk7a4KbKY2mKKLE7a4iSyOGmLKbI4aYspsjhpizfa4iSyOGmLk8jii7Y4aYspsvib2uKNyGJqizce1lrrkoe11rrkYa21Lvnx6zc+iCymtvgisjhpizciiy/a4o3IYmqLKbJ4oy2myOKkLd6ILG5qiymyOGmLKbI4aYspsjhpi5sii6ktpsjii7Y4iSymtjiJLKa2mCKLN9ri5GGttS55WGutSx7WWuuSH79+4yCymNriJLKY2mKKLE7aYoos3miLKbJ4oy2myOKkLU4ii5vaYoosTtrii8jipC2myGJqi5PI4qQtboos3miLk8hiaospspja4ovIYmqLKbKY2mKKLE7a4ouHtda65GGttS55WGutS37yD9riJLJ4oy1OIov/pcjib2qLKbL4oi3eiCy+iCzeiCymtjiJLE7a4iSyOGmLk8jiT4osvogsTiKLqS3+pIe11rrkYa21LnlYa61LfvJRW0yRxUlk8UZb3NQWU2QxtcVJZDFFFm+0xd8UWUxtMbXFSWQxtcVJZDFFFlNbvNEWU2RxEllMbTFFFlNkMbXFG21x0hZvtMUbkcXUFm9EFidt8cbDWmtd8rDWWpc8rLXWJT9+/cZFkcXUFm9EFidtcRJZTG3xRmQxtcVJZPFGW/ybRRZTW9wUWUxtMUUWU1tMkcVJW0yRxUlbnEQWJ20xRRZTW0yRxUlbTJHF1BZTZPFFW0yRxUlbnDystdYlD2utdcnDWmtd8pOPIos3Ios32uKLyGJqiymymNpiiiymtpja4qbI4qQtTiKLqS2myGJqiz8pspjaYoos3miLk8hiaouTyGJqi5O2mCKLqS1O2uKNtjhpi5PIYmqLk7b44mGttS55WGutSx7WWuuSn/yDyGJqi6ktpsjipC1OIouTyGJqi6kt3miLKbKY2mKKLE7a4o3IYmqLNyKLqS1O2mKKLKa2mCKLN9rii7Y4iSymtviT2mKKLN6ILKa2mCKLvymymNripoe11rrkYa21LnlYa61LfvIP2mKKLE7aYoospraYIos32mKKLKa2OIkspraY2mKKLKa2OIkspra4KbJ4I7KY2uIksviTIoupLabI4qQtpshiaouTyOIksjhpiymymCKLqS2myOKkLabI4qa2mCKLqS2+eFhrrUse1lrrkoe11rrkx6/f+BeLLKa2+CKy+JPaYoos/qS2mCKLqS2myOKkLd6ILKa2mCKLk7Y4iSymtpgiiy/a4qbI4ou2mCKLqS3eiCzeaIspspja4uRhrbUueVhrrUse1lrrkh+/fuMgsvib2uIkspjaYoospraYIoupLU4ii6ktTiKLqS3eiCymtpgiiy/aYoospraYIoupLabI4qa2+CKy+JPaYoosprY4iSymtpgii5O2mCKLqS2myOKNtvjiYa21LnlYa61LHtZa65KfvNQWN0UWJ5HF1BYnbfFGZDG1xRdtcRJZfNEWJ5HF1BZftMUbbfFGZDFFFlNbfNEWU2RxU1tMkcUXbTFFFidt8UVbnEQWU1ucPKy11iUPa611ycNaa13yk48iizfa4ovIYmqLk8hiaos32uIkspja4qQtpsjijcjipC2+iCxuiiymtpjaYoos3ogspraYIouTtjiJLKbIYmqLqS3eiCymtjiJLL5oiymymNpiaos3HtZa65KHtda65GGttS75yX9MW0yRxdQWX0QWJ23xRmTxRlt8EVlMbTFFFlNbnEQWU1tMkcUbkcUXkcVJZPFFZPFFZDG1xZ/UFl+0xRRZTG3xxsNaa13ysNZalzystdYlP/mPa4spspja4qbIYmqLk7aYIoupLabI4qQtpshiaouTtjiJLKa2eCOymNriJLKY2uKkLabI4qQtpsjijbaYIosvIouTyGJqiymymCKLqS2myGJqiymyuOlhrbUueVhrrUse1lrrkp981BZ/UltMkcVJW0yRxUlbnLTFFFmcRBZTW5xEFlNbnEQWU1tMkcXUFl9EFidtcRJZfBFZTG0xtcUUWbwRWUxtMUUWJ5HF1BYnbfFGZHHSFlNk8UZbTJHFFw9rrXXJw1prXfKw1lqX/OSlyOJviiymtpgii5O2mCKLKbKY2mKKLKa2mCKLN9rijchiaospsngjspjaYmqLk8hiiixO2uIksngjsngjsjhpizfaYoospshiaoub2mKKLKa2mCKLKbI4aYsvHtZa65KHtda65GGttS758es31lrrgoe11rrkYa21LnlYa61LHtZa65KHtda65GGttS55WGutS/4PHZBIjsaYqaUAAAAASUVORK5CYII="
-    }
-  ],
+  "gatepasses": [],
   "logs": [
     {
-      "id": "log-1",
-      "user_id": "admin-1",
-      "user_name": "System Administrator",
-      "role": "admin",
-      "action": "Database Initialized (Admin Profile Created)",
-      "timestamp": "2026-07-11T12:07:01.527Z"
-    },
-    {
-      "id": "log-1783772900674",
+      "id": "log-1783845587372",
       "user_id": "admin-1",
       "user_name": "System Administrator",
       "role": "admin",
       "action": "Logged in successfully",
-      "timestamp": "2026-07-11T12:28:20.674Z"
+      "timestamp": "2026-07-12T08:39:47.372Z"
     },
     {
-      "id": "log-1783772958548",
-      "user_id": "admin-1",
-      "user_name": "System Administrator",
-      "role": "admin",
-      "action": "Logged in successfully",
-      "timestamp": "2026-07-11T12:29:18.548Z"
-    },
-    {
-      "id": "log-1783773069387",
-      "user_id": "admin-1",
-      "user_name": "System Administrator",
-      "role": "admin",
-      "action": "Created department: Computer S E",
-      "timestamp": "2026-07-11T12:31:09.387Z"
-    },
-    {
-      "id": "log-1783773096679",
-      "user_id": "admin-1",
-      "user_name": "System Administrator",
-      "role": "admin",
-      "action": "Registered HOD Dr./Prof. Dr. Animesh Tayal for Computer S E",
-      "timestamp": "2026-07-11T12:31:36.679Z"
-    },
-    {
-      "id": "log-1783773147749",
-      "user_id": "admin-1",
-      "user_name": "System Administrator",
-      "role": "admin",
-      "action": "Registered Class Teacher Prof. Swati thakur for CSE 7th Sem (Computer S E)",
-      "timestamp": "2026-07-11T12:32:27.749Z"
-    },
-    {
-      "id": "log-1783773190246",
-      "user_id": "admin-1",
-      "user_name": "System Administrator",
-      "role": "admin",
-      "action": "Registered Security Guard sudha kaka",
-      "timestamp": "2026-07-11T12:33:10.246Z"
-    },
-    {
-      "id": "log-1783773406853",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Self-registered new account with class teacher: Prof. Swati thakur & HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:36:46.853Z"
-    },
-    {
-      "id": "log-1783773409358",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Logged in successfully",
-      "timestamp": "2026-07-11T12:36:49.358Z"
-    },
-    {
-      "id": "log-1783773458657",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Logged a late arrival entry for today: Reason: \"tiffin not deliver at time .\n\"",
-      "timestamp": "2026-07-11T12:37:38.657Z"
-    },
-    {
-      "id": "log-1783773497326",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783773497322 to HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:38:17.326Z"
-    },
-    {
-      "id": "log-1783773502977",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783773502973 to HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:38:22.977Z"
-    },
-    {
-      "id": "log-1783773508352",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783773508349 to HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:38:28.352Z"
-    },
-    {
-      "id": "log-1783773513766",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783773513762 to HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:38:33.766Z"
-    },
-    {
-      "id": "log-1783773535245",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783773535226 to HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:38:55.245Z"
-    },
-    {
-      "id": "log-1783773539986",
-      "user_id": "stud-1783773406702",
-      "user_name": "ashvin vaidhya",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783773539983 to HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:38:59.986Z"
-    },
-    {
-      "id": "log-1783773713101",
-      "user_id": "stud-1783773712959",
-      "user_name": "samir khorgade",
-      "role": "student",
-      "action": "Self-registered new account with class teacher: Prof. Swati thakur & HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:41:53.101Z"
-    },
-    {
-      "id": "log-1783773715893",
-      "user_id": "stud-1783773712959",
-      "user_name": "samir khorgade",
-      "role": "student",
-      "action": "Logged in successfully",
-      "timestamp": "2026-07-11T12:41:55.893Z"
-    },
-    {
-      "id": "log-1783773749715",
-      "user_id": "stud-1783773712959",
-      "user_name": "samir khorgade",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783773749712 to HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:42:29.715Z"
-    },
-    {
-      "id": "log-1783773756699",
-      "user_id": "stud-1783773712959",
-      "user_name": "samir khorgade",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783773756694 to HOD: Dr. Animesh Tayal",
-      "timestamp": "2026-07-11T12:42:36.699Z"
-    },
-    {
-      "id": "log-1783773869899",
-      "user_id": "admin-1",
-      "user_name": "System Administrator",
-      "role": "admin",
-      "action": "Logged in successfully",
-      "timestamp": "2026-07-11T12:44:29.899Z"
-    },
-    {
-      "id": "log-1783773895240",
+      "id": "log-1783845624722",
       "user_id": "admin-1",
       "user_name": "System Administrator",
       "role": "admin",
       "action": "Created department: Computer Science",
-      "timestamp": "2026-07-11T12:44:55.240Z"
+      "timestamp": "2026-07-12T08:40:24.722Z"
     },
     {
-      "id": "log-1783773914988",
+      "id": "log-1783845642534",
       "user_id": "admin-1",
       "user_name": "System Administrator",
       "role": "admin",
-      "action": "Created department: civil engineering ",
-      "timestamp": "2026-07-11T12:45:14.988Z"
+      "action": "Created department: CSE(AIML)",
+      "timestamp": "2026-07-12T08:40:42.534Z"
     },
     {
-      "id": "log-1783773979453",
+      "id": "log-1783845686515",
       "user_id": "admin-1",
       "user_name": "System Administrator",
       "role": "admin",
-      "action": "Registered HOD Dr./Prof. Dr. Hemant BHau  for Computer Science",
-      "timestamp": "2026-07-11T12:46:19.453Z"
-    },
-    {
-      "id": "log-1783774034969",
-      "user_id": "admin-1",
-      "user_name": "System Administrator",
-      "role": "admin",
-      "action": "Registered Class Teacher Prof. Ravi bhau for CSE 6th sem (Computer Science)",
-      "timestamp": "2026-07-11T12:47:14.969Z"
-    },
-    {
-      "id": "log-1783774106802",
-      "user_id": "stud-1783774106647",
-      "user_name": "jatin lanjewar",
-      "role": "student",
-      "action": "Self-registered new account with class teacher: Prof. Ravi bhau & HOD: Dr. Hemant BHau ",
-      "timestamp": "2026-07-11T12:48:26.802Z"
-    },
-    {
-      "id": "log-1783774108880",
-      "user_id": "stud-1783774106647",
-      "user_name": "jatin lanjewar",
-      "role": "student",
-      "action": "Logged in successfully",
-      "timestamp": "2026-07-11T12:48:28.880Z"
-    },
-    {
-      "id": "log-1783774143664",
-      "user_id": "stud-1783774106647",
-      "user_name": "jatin lanjewar",
-      "role": "student",
-      "action": "Logged a late arrival entry for today: Reason: \"bus missed.\n\"",
-      "timestamp": "2026-07-11T12:49:03.664Z"
-    },
-    {
-      "id": "log-1783774177367",
-      "user_id": "stud-1783774106647",
-      "user_name": "jatin lanjewar",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783774177361 to HOD: Dr. Hemant BHau ",
-      "timestamp": "2026-07-11T12:49:37.367Z"
-    },
-    {
-      "id": "log-1783774182467",
-      "user_id": "stud-1783774106647",
-      "user_name": "jatin lanjewar",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783774182459 to HOD: Dr. Hemant BHau ",
-      "timestamp": "2026-07-11T12:49:42.467Z"
-    },
-    {
-      "id": "log-1783774187140",
-      "user_id": "stud-1783774106647",
-      "user_name": "jatin lanjewar",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783774187136 to HOD: Dr. Hemant BHau ",
-      "timestamp": "2026-07-11T12:49:47.140Z"
-    },
-    {
-      "id": "log-1783774195037",
-      "user_id": "stud-1783774106647",
-      "user_name": "jatin lanjewar",
-      "role": "student",
-      "action": "Applied for gate pass: pass-1783774195030 to HOD: Dr. Hemant BHau ",
-      "timestamp": "2026-07-11T12:49:55.037Z"
-    },
-    {
-      "id": "log-1783774935736",
-      "user_id": "teacher-1783774034813",
-      "user_name": "Prof. Ravi bhau",
-      "role": "teacher",
-      "action": "Logged in successfully",
-      "timestamp": "2026-07-11T13:02:15.736Z"
-    },
-    {
-      "id": "log-1783775078691",
-      "user_id": "hod-1783773979296",
-      "user_name": "Dr. Hemant BHau ",
-      "role": "hod",
-      "action": "Logged in successfully",
-      "timestamp": "2026-07-11T13:04:38.691Z"
-    },
-    {
-      "id": "log-1783775084106",
-      "user_id": "hod-1783773979296",
-      "user_name": "Dr. Hemant BHau ",
-      "role": "hod",
-      "action": "Approved gate pass pass-1783774195030 for student jatin lanjewar",
-      "timestamp": "2026-07-11T13:04:44.106Z"
-    },
-    {
-      "id": "log-1783775132466",
-      "user_id": "stud-1783774106647",
-      "user_name": "jatin lanjewar",
-      "role": "student",
-      "action": "Logged in successfully",
-      "timestamp": "2026-07-11T13:05:32.466Z"
+      "action": "Registered HOD Dr./Prof. Dr. Animesh Tayal for CSE(AIML)",
+      "timestamp": "2026-07-12T08:41:26.515Z"
     }
   ],
-  "notifications": [
+  "notifications": [],
+  "officialParentContacts": [
     {
-      "id": "notif-1783775084109-cajms",
-      "recipient_id": "stud-1783774106647",
-      "recipient_role": "student",
-      "title": "GatePass Approved! 🎉",
-      "message": "Your gate pass request for \"gf se milne jana haii . jane dee .\" has been APPROVED by HOD Dr. Hemant BHau . You can download your QR code now.",
-      "type": "status_changed",
-      "reference_id": "pass-1783774195030",
-      "is_read": false,
-      "created_at": "2026-07-11T13:04:44.109Z"
-    }
-  ],
-  "officialParentContacts": [],
-  "lateComeEntries": [
-    {
-      "id": "late-1783773458654",
-      "student_id": "stud-1783773406702",
-      "student_name": "ashvin vaidhya",
-      "student_roll_no": "CS23038",
-      "student_department": "Computer S E",
-      "class_teacher_id": "teacher-1783773147545",
-      "class_teacher_name": "Prof. Swati thakur",
-      "arrival_time": "2026-07-12T11:07",
-      "reason": "tiffin not deliver at time .\n",
-      "created_at": "2026-07-11T12:37:38.654Z"
+      "roll_no": "CM23001",
+      "name": "RAJ RAVINDRA URKUDE",
+      "parent_phone": "9373572061"
     },
     {
-      "id": "late-1783774143659",
-      "student_id": "stud-1783774106647",
-      "student_name": "jatin lanjewar",
-      "student_roll_no": "CS23011",
-      "student_department": "Computer Science",
-      "class_teacher_id": "teacher-1783774034813",
-      "class_teacher_name": "Prof. Ravi bhau",
-      "arrival_time": "2026-07-12T11:06",
-      "reason": "bus missed.\n",
-      "created_at": "2026-07-11T12:49:03.659Z"
+      "roll_no": "CM23002",
+      "name": "CHAITANYA PRANESH BAGDE",
+      "parent_phone": "8263985364"
+    },
+    {
+      "roll_no": "CM23003",
+      "name": "DHANSHREE MAHADEO BHORKAR",
+      "parent_phone": "9371717980"
+    },
+    {
+      "roll_no": "CM23004",
+      "name": "KANCHAN SURENDRA GAIKWAD",
+      "parent_phone": "8788277975"
+    },
+    {
+      "roll_no": "CM23005",
+      "name": "SUJAL DILIP SANGLE",
+      "parent_phone": "9172245040"
+    },
+    {
+      "roll_no": "CM23006",
+      "name": "SHRUSHTI HEMANT ZOD",
+      "parent_phone": "7397900911"
+    },
+    {
+      "roll_no": "CM23007",
+      "name": "TANISHQ VILAS UKEY",
+      "parent_phone": "9699152071"
+    },
+    {
+      "roll_no": "CM23008",
+      "name": "SUBODH DEEPAPRAKASH WALONDRE",
+      "parent_phone": "9665267760"
+    },
+    {
+      "roll_no": "CM23009",
+      "name": "HIMANSHU SUNIL KAKDE",
+      "parent_phone": "9049972990"
+    },
+    {
+      "roll_no": "CM23010",
+      "name": "SHREYASH SUNIL KARDE",
+      "parent_phone": "9657799217"
+    },
+    {
+      "roll_no": "CM23011",
+      "name": "PARTH RAJENDRA SONONE",
+      "parent_phone": "8208721505"
+    },
+    {
+      "roll_no": "CM23012",
+      "name": "SARA AMIT GANVIR",
+      "parent_phone": "8766403464"
+    },
+    {
+      "roll_no": "CM23013",
+      "name": "SAHIL VIJAY BHOYAR",
+      "parent_phone": "8080226797"
+    },
+    {
+      "roll_no": "CM23015",
+      "name": "VEDANT MANISH TIWADE",
+      "parent_phone": "8468905776"
+    },
+    {
+      "roll_no": "CM23016",
+      "name": "SANSKRUTI ARUN MISHRA",
+      "parent_phone": "7776959594"
+    },
+    {
+      "roll_no": "CM23017",
+      "name": "JASVEER VIJAY RERWAR",
+      "parent_phone": "9503205734"
+    },
+    {
+      "roll_no": "CM23018",
+      "name": "JARRAR ABRAR KHAN",
+      "parent_phone": "9336393221"
+    },
+    {
+      "roll_no": "CM23019",
+      "name": "ATUL JITENDRA GUPTA",
+      "parent_phone": "7498325268"
+    },
+    {
+      "roll_no": "CM23020",
+      "name": "TANVI MINTU BEER",
+      "parent_phone": "8956427048"
+    },
+    {
+      "roll_no": "CM23021",
+      "name": "TANISH RAVINDRA KESHARWANI",
+      "parent_phone": "9529260741"
+    },
+    {
+      "roll_no": "CM23022",
+      "name": "ARYA ANAND GUDGILLA",
+      "parent_phone": "7666530867"
+    },
+    {
+      "roll_no": "CM23023",
+      "name": "VARUN KAILASHCHANDRA PATHAK",
+      "parent_phone": "7757809444"
+    },
+    {
+      "roll_no": "CM23024",
+      "name": "FAWWAZ IRSHAD AHMED",
+      "parent_phone": "7045053340"
+    },
+    {
+      "roll_no": "CM23025",
+      "name": "KHUSHBOO MAHENDRASINGH GAUTAM",
+      "parent_phone": "7972736689"
+    },
+    {
+      "roll_no": "CM23027",
+      "name": "ADITYA SUBHASH SINHA",
+      "parent_phone": "8976594765"
+    },
+    {
+      "roll_no": "CM23028",
+      "name": "ANUSHKA SUSHILKUMAR SAVITA",
+      "parent_phone": "9371525696"
+    },
+    {
+      "roll_no": "CM23029",
+      "name": "DIPANSHU UMESH MATHANKAR",
+      "parent_phone": "8767862237"
+    },
+    {
+      "roll_no": "CM23030",
+      "name": "SHIVAM ANANTA JADHAV",
+      "parent_phone": "8010201223"
+    },
+    {
+      "roll_no": "CM23031",
+      "name": "PRATHAM KASHINATH PIMPALIKAR",
+      "parent_phone": "8483868299"
+    },
+    {
+      "roll_no": "CM23032",
+      "name": "ARPIT ARVIND RANGARI",
+      "parent_phone": "9049696329"
+    },
+    {
+      "roll_no": "CM23033",
+      "name": "MITHILESH MANOJ KOSE",
+      "parent_phone": "7263938242"
+    },
+    {
+      "roll_no": "CM23034",
+      "name": "AMOGH ANIL SAMARTH",
+      "parent_phone": "9975836957"
+    },
+    {
+      "roll_no": "CM23035",
+      "name": "MEKSHA VIJAY TAJANE",
+      "parent_phone": "9309207605"
+    },
+    {
+      "roll_no": "CM23036",
+      "name": "ASHVIN ISHWAR VAIDHYA",
+      "parent_phone": "9766233877"
+    },
+    {
+      "roll_no": "CM23037",
+      "name": "PURVAL SANJAY NAIK",
+      "parent_phone": "7249333827"
+    },
+    {
+      "roll_no": "CM23038",
+      "name": "SAMIR SANJAY KHORGADE",
+      "parent_phone": "9022616290"
+    },
+    {
+      "roll_no": "CM23039",
+      "name": "GAYATRI ARUN VIDHATE",
+      "parent_phone": "9307150731"
+    },
+    {
+      "roll_no": "CM23040",
+      "name": "PARTH SUJEET WADEKAR",
+      "parent_phone": "9975181905"
+    },
+    {
+      "roll_no": "CM23042",
+      "name": "YASH MAHENDRA KAPSE",
+      "parent_phone": "8767078967"
+    },
+    {
+      "roll_no": "CM23043",
+      "name": "SARANG RAVINDRA GHATULKAR",
+      "parent_phone": "9850310507"
+    },
+    {
+      "roll_no": "CM23044",
+      "name": "REENA MANISH TRILOK",
+      "parent_phone": "8180864070"
+    },
+    {
+      "roll_no": "CM23045",
+      "name": "TEJAS PURUSHOTTAM KAYARKAR",
+      "parent_phone": "9022202858"
+    },
+    {
+      "roll_no": "CM23046",
+      "name": "KAUSTUBH SANJAY KOSE",
+      "parent_phone": "7507451583"
+    },
+    {
+      "roll_no": "CM23047",
+      "name": "GLORY RARATAN JAGJIWAN",
+      "parent_phone": "8788352245"
+    },
+    {
+      "roll_no": "CM23048",
+      "name": "ASHUTOSH MURLIDHAR BHULE",
+      "parent_phone": "9325986301"
+    },
+    {
+      "roll_no": "CM23049",
+      "name": "SHOURYA CHOURE",
+      "parent_phone": "8669202393"
+    },
+    {
+      "roll_no": "CM23050",
+      "name": "SRIYANSH SANJIB SHEEL",
+      "parent_phone": "9322148375"
+    },
+    {
+      "roll_no": "CM23051",
+      "name": "AYUSH DILIP BADWAIK",
+      "parent_phone": "8208832911"
+    },
+    {
+      "roll_no": "CM23053",
+      "name": "PRATHAMESH RAJENDRA MOWADE",
+      "parent_phone": "9175406926"
+    },
+    {
+      "roll_no": "CM23054",
+      "name": "ADITYA UMESH MAHALLE",
+      "parent_phone": "9325338734"
+    },
+    {
+      "roll_no": "CM23055",
+      "name": "UTKARSH SURESH PUNKAR",
+      "parent_phone": "8010379670"
+    },
+    {
+      "roll_no": "CM23056",
+      "name": "VANSHIKA SUNILJI KHARWADE",
+      "parent_phone": "9766324881"
+    },
+    {
+      "roll_no": "CM23057",
+      "name": "NEHA ASHOK MUSALE",
+      "parent_phone": "8605589053"
+    },
+    {
+      "roll_no": "CM23058",
+      "name": "DIVYANI GANRAJ WATH",
+      "parent_phone": "9322727566"
+    },
+    {
+      "roll_no": "CM23059",
+      "name": "DHANSHREE RAUT",
+      "parent_phone": "9340438607"
+    },
+    {
+      "roll_no": "CM23060",
+      "name": "VEDANT ASHISH BHANARKAR",
+      "parent_phone": "7028398796"
+    },
+    {
+      "roll_no": "CM23061",
+      "name": "BURHANUDDIN ZOEB HUSAIN",
+      "parent_phone": "9172693153"
+    },
+    {
+      "roll_no": "CM23062",
+      "name": "OM RAJIV POLAKHARE",
+      "parent_phone": "7020597973"
+    },
+    {
+      "roll_no": "CM23063",
+      "name": "SOHAM UDAY GARGE",
+      "parent_phone": "9370024667"
+    },
+    {
+      "roll_no": "CM24D002",
+      "name": "JANMESH SHEDAME",
+      "parent_phone": "8177910756"
+    },
+    {
+      "roll_no": "CM24D003",
+      "name": "PHALGUNI DHABALE",
+      "parent_phone": "9322659001"
+    },
+    {
+      "roll_no": "CM24D004",
+      "name": "YASH RAJU MESHRAM",
+      "parent_phone": "9579065181"
+    },
+    {
+      "roll_no": "CM24D006",
+      "name": "GAYATRI KRISHNA BORIKAR",
+      "parent_phone": "7020343381"
     }
-  ]
+  ],
+  "lateComeEntries": []
 }

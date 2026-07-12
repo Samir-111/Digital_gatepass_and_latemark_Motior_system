@@ -46,7 +46,7 @@ export class Database {
   private static instance: Database;
   private firestore!: Firestore;
   private hasExplicitCredential = false;
-  
+
   // Local active memory state
   private data: Schema = {
     departments: [],
@@ -327,7 +327,7 @@ export class Database {
       this.data.lateComeEntries = lateComeSnap.docs.map(doc => doc.data() as LateComeEntry);
 
       console.log('[Firestore] Synchronization completed! Total gate passes loaded:', this.data.gatepasses.length);
-      
+
       // Save locally to keep backup robust
       this.saveLocal();
     } catch (err) {
@@ -393,7 +393,24 @@ export class Database {
    */
   private saveDoc(collectionName: string, id: string, docData: any) {
     if (!this.firestore) return;
-    this.firestore.collection(collectionName).doc(id).set(docData).catch(err => {
+
+    // Clean up undefined properties so Firestore doesn't reject the write
+    const cleanObject = (obj: any): any => {
+      if (obj === null || typeof obj !== 'object') return obj;
+      if (Array.isArray(obj)) return obj.map(cleanObject);
+
+      const cleaned: any = {};
+      for (const key of Object.keys(obj)) {
+        if (obj[key] !== undefined) {
+          cleaned[key] = cleanObject(obj[key]);
+        }
+      }
+      return cleaned;
+    };
+
+    const cleaned = cleanObject(docData);
+
+    this.firestore.collection(collectionName).doc(id).set(cleaned).catch(err => {
       console.error(`[Firestore] Failed to save ${id} in ${collectionName}:`, err);
     });
   }
@@ -501,7 +518,7 @@ export class Database {
     const id = `stud-${Date.now()}`;
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(studentData.password_plain, salt);
-    
+
     const finalParentPhone = this.getOfficialParentPhone(studentData.roll_no, studentData.parent_phone || '+91 9876543210');
 
     const newStudent = {
@@ -525,7 +542,7 @@ export class Database {
     this.data.students.push(newStudent);
     this.saveLocal();
     this.saveDoc('students', id, newStudent);
-    
+
     const { password_hash: _, ...userWithoutPassword } = newStudent;
     return userWithoutPassword;
   }
@@ -539,7 +556,7 @@ export class Database {
         const salt = bcrypt.genSaltSync(10);
         hash = bcrypt.hashSync(update.password_plain, salt);
       }
-      
+
       const newRollNo = update.roll_no ?? current.roll_no;
       const proposedParentPhone = update.parent_phone ?? current.parent_phone ?? '+91 9876543210';
       const finalParentPhone = this.getOfficialParentPhone(newRollNo, proposedParentPhone);
@@ -706,7 +723,7 @@ export class Database {
     const id = `pass-${Date.now()}`;
     const token = `gp_tok_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
     const student = this.data.students.find(s => s.id === studentId);
-    
+
     const newPass: GatePass = {
       id,
       student_id: studentId,
@@ -733,7 +750,7 @@ export class Database {
     const index = this.data.gatepasses.findIndex(p => p.id === id);
     if (index !== -1) {
       const current = this.data.gatepasses[index];
-      
+
       const updatedPass = {
         ...current,
         status,
@@ -871,7 +888,7 @@ export class Database {
         if (n.recipient_id === 'hod-all') match = true;
         if (n.recipient_role === 'hod' && department && n.department === department) match = true;
       }
-      
+
       if (match && !n.is_read) {
         n.is_read = true;
         updated = true;
@@ -888,7 +905,7 @@ export class Database {
   public getCSVData(): string {
     const list = this.getGatePasses();
     const headers = ['Pass ID', 'Student Name', 'Roll No', 'Department', 'Reason', 'Destination', 'Status', 'Risk Level', 'Exit Expected', 'Return Expected', 'Actual Exit', 'Actual Return', 'Approved By', 'Remarks', 'Applied At'];
-    
+
     const rows = list.map(p => [
       p.id,
       p.student_name,
@@ -1048,7 +1065,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
 
   public saveOfficialParentContacts(contacts: OfficialParentContact[]): void {
     this.data.officialParentContacts = contacts;
-    
+
     this.data.students.forEach(student => {
       const match = contacts.find(c => c.roll_no.trim().toLowerCase() === student.roll_no.trim().toLowerCase());
       if (match) {

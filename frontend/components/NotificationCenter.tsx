@@ -105,9 +105,8 @@ export default function NotificationCenter() {
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`flex gap-3 px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors ${
-                    !n.is_read ? 'bg-indigo-50/20' : ''
-                  }`}
+                  className={`flex gap-3 px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors ${!n.is_read ? 'bg-indigo-50/20' : ''
+                    }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-2">

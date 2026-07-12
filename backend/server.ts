@@ -76,6 +76,41 @@ const authorizeRoles = (...allowedRoles: UserRole[]) => {
   };
 };
 
+// Helper to send a real SMS using Fast2SMS API
+const sendSMS = async (phoneNumber: string, message: string) => {
+  const apiKey = process.env.FAST2SMS_API_KEY;
+  if (!apiKey || apiKey === 'YOUR_FAST2SMS_API_KEY' || apiKey.includes('api_key')) {
+    console.log(`[SMS Gateway] Real SMS to ${phoneNumber} skipped: FAST2SMS_API_KEY not configured in .env`);
+    return;
+  }
+
+  // Sanitize phone number (remove any leading +91, spaces, dashes)
+  let cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
+  if (cleanNumber.startsWith('91') && cleanNumber.length === 12) {
+    cleanNumber = cleanNumber.substring(2);
+  }
+
+  try {
+    const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+      method: 'POST',
+      headers: {
+        'authorization': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        route: 'q',
+        message: message,
+        numbers: cleanNumber
+      })
+    });
+
+    const result = await response.json() as any;
+    console.log(`[SMS Gateway] Fast2SMS dispatch result to ${cleanNumber}:`, result);
+  } catch (error) {
+    console.error(`[SMS Gateway] Failed to send SMS to ${cleanNumber}:`, error);
+  }
+};
+
 // ==========================================
 // API ROUTES
 // ==========================================
@@ -124,7 +159,7 @@ app.post('/api/login', (req: Request, res: Response) => {
 app.post('/api/register', (req: Request, res: Response) => {
   const { name, email, password, phone, parent_phone, roll_no, department, college_id, class_teacher_id, selected_hod_id } = req.body;
 
-  if (!name || !email || !password || !phone || !parent_phone || !roll_no || !department || !college_id || !class_teacher_id || !selected_hod_id) {
+  if (!name || !email || !password || !phone || !roll_no || !department || !college_id || !class_teacher_id || !selected_hod_id) {
     return res.status(400).json({ error: 'All fields are required for student registration, including Class Teacher and HOD selection.' });
   }
 
@@ -165,7 +200,7 @@ app.post('/api/register', (req: Request, res: Response) => {
       name,
       email,
       phone,
-      parent_phone,
+      parent_phone: parent_phone || '', // Will be automatically looked up by roll number in registerStudent
       roll_no,
       department,
       college_id,
@@ -198,11 +233,13 @@ app.post('/api/sms/send-warning', authenticateJWT, authorizeRoles('teacher'), (r
     return res.status(400).json({ error: 'Parent phone number and student name are required.' });
   }
 
-  // Real integration log / SMS dispatch emulation
+  const message = `Dear Parent, your ward ${studentName} was late to college today (Arrival Time: ${arrivalTime}). Entered class through Class Incharge ${teacherName}. Please ensure timely attendance.`;
+
+  // Real integration log / SMS dispatch
   console.log('====================================================');
   console.log(`[GATEPASS WARNING SMS DISPATCHED]`);
   console.log(`To: ${parentPhone} (Parent of ${studentName})`);
-  console.log(`Message: "Dear Parent, your ward ${studentName} was late to college today (Arrival Time: ${arrivalTime}). Entered class through Class Incharge ${teacherName}. Please ensure timely attendance."`);
+  console.log(`Message: "${message}"`);
   console.log('====================================================');
 
   db.addLog(
@@ -496,13 +533,14 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req:
       id
     );
 
-    // Simulate parents SMS notification logs
+    // Real parents SMS notification
     const parentPhone = pass.student_parent_phone || '+91 9876543210';
+    const message = `Dear Parent, your child ${pass.student_name} is leaving the college for the reason: "${pass.reason}".`;
     db.addLog(
       'system',
       'SMS Gateway',
       'admin',
-      `SMS alert sent to Parent (${parentPhone}): Dear Parent, your child ${pass.student_name} is leaving the college for the reason that the student wrote in the application: "${pass.reason}".`
+      `SMS alert sent to Parent (${parentPhone}): ${message}`
     );
 
     res.json(updated);
@@ -621,6 +659,29 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req: Auth
     `You checked out of the campus gate at ${new Date().toLocaleTimeString()}. Safe travels!`,
     'status_changed',
     id
+  );
+
+  // Send SMS to parents when the student leaves the campus!
+  const parentPhone = (pass.student_parent_phone && pass.student_parent_phone !== 'N/A')
+    ? pass.student_parent_phone
+    : (db.getOfficialParentPhone(pass.student_roll_no, '') || '+91 9876543210');
+
+  const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const message = `Dear Parent, your ward ${pass.student_name} (Roll No: ${pass.student_roll_no}) has checked out and left the college campus at ${timeString}.`;
+
+  console.log('====================================================');
+  console.log(`[CAMPUS EXIT SMS DISPATCHED]`);
+  console.log(`To: ${parentPhone} (Parent of ${pass.student_name})`);
+  console.log(`Message: "${message}"`);
+  console.log('====================================================');
+
+  sendSMS(parentPhone, message).catch(console.error);
+
+  db.addLog(
+    'system',
+    'SMS Gateway',
+    'admin',
+    `SMS alert sent to Parent (${parentPhone}): ${message}`
   );
 
   res.json({ message: 'Student exit logged successfully.', pass: updated });

@@ -629,20 +629,12 @@ export default function GuardDashboard({ user, onLogout }: GuardDashboardProps) 
 
                   <div className="grid grid-cols-2 gap-4 text-xs font-semibold">
                     <div className="bg-white p-3 rounded-xl border border-slate-200">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Destination</span>
-                      <span className="text-slate-800">{verifiedPass.destination}</span>
-                    </div>
-                    <div className="bg-white p-3 rounded-xl border border-slate-200">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Reason</span>
                       <span className="text-slate-800">{verifiedPass.reason}</span>
                     </div>
                     <div className="bg-white p-3 rounded-xl border border-slate-200">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Exit Permitted</span>
                       <span className="text-slate-800">{new Date(verifiedPass.exit_time).toLocaleString()}</span>
-                    </div>
-                    <div className="bg-white p-3 rounded-xl border border-slate-200">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Expected Return</span>
-                      <span className="text-slate-800">{new Date(verifiedPass.return_time).toLocaleString()}</span>
                     </div>
                   </div>
 
@@ -695,10 +687,10 @@ export default function GuardDashboard({ user, onLogout }: GuardDashboardProps) 
               <thead className="bg-slate-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Student Details</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Destination / Reason</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Exit Timestamp</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Return Timestamp</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">Exit Timestamp</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">Return Timestamp</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">Status</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100 text-xs text-slate-700">
@@ -709,8 +701,7 @@ export default function GuardDashboard({ user, onLogout }: GuardDashboardProps) 
                       <div className="text-[10px] text-slate-400 font-medium">Roll: {pass.student_roll_no} • {pass.student_department}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-slate-800 truncate max-w-xs">{pass.destination}</div>
-                      <div className="text-[10px] text-slate-400 font-medium truncate max-w-xs mt-0.5">"{pass.reason}"</div>
+                      <div className="font-semibold text-slate-800 truncate max-w-xs">"{pass.reason}"</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-semibold">
                       {pass.exit_marked_at ? (
