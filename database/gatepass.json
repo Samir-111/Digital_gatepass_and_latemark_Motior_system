@@ -1,0 +1,689 @@
+{
+  "departments": [
+    {
+      "id": "dept-1783845642526",
+      "department_name": "CSE(AIML)"
+    }
+  ],
+  "students": [
+    {
+      "id": "stud-1783855347063",
+      "college_id": "CM23032",
+      "name": "Arpit Rangari",
+      "roll_no": "CM23032",
+      "department": "CSE(AIML)",
+      "email": "arpit@sbjit.edu.in",
+      "phone": "2233445512",
+      "parent_phone": "9049696329",
+      "photo": "",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-12T11:22:27.285Z",
+      "password_hash": "$2b$10$he2cOqc/3H7QIivXm7sdJOQRyw/h5ItiMsbgAq.4oR7xtmWuKoyKK"
+    },
+    {
+      "id": "stud-1783959955133",
+      "college_id": "CM23038",
+      "name": "samir khorgade",
+      "roll_no": "CM23038",
+      "department": "CSE(AIML)",
+      "email": "samirkorgade@sbjit.edu.in",
+      "phone": "9999997765",
+      "parent_phone": "9022616290",
+      "photo": "",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-13T16:25:55.324Z",
+      "password_hash": "$2b$10$2.Iosf2QNxckM.k5C0WsVe6rfgZ.z6OY4JrGoTqRpXBdtCoxubuwS"
+    },
+    {
+      "id": "stud-1783964359651",
+      "college_id": "CM23012",
+      "name": "Sara Amit Ganvir",
+      "roll_no": "CM23012",
+      "department": "CSE(AIML)",
+      "email": "saraganvir.aiml23@sbjit.edu.in",
+      "phone": "9766233877",
+      "parent_phone": "8766403464",
+      "photo": "",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-13T17:39:19.822Z",
+      "password_hash": "$2b$10$vqXVzQakJMWxu8Li7Y7Gvut08VmqNcP4gU2B/e0AWYXpfvjiwHwZa"
+    },
+    {
+      "id": "stud-1783964702750",
+      "college_id": "CM23036",
+      "name": "Ashvin Ishwar Vaidhya",
+      "roll_no": "CM23036",
+      "department": "CSE(AIML)",
+      "email": "ashvinvaidhya.aiml23@sbjit.edu.in",
+      "phone": "9766233877",
+      "parent_phone": "9766233877",
+      "photo": "",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-13T17:45:02.981Z",
+      "password_hash": "$2b$10$IvFwO6vWqaUp7ZziYx/4D.VpnqSVWOTAm3CGkCzs70sdedLxYKga2"
+    },
+    {
+      "id": "stud-1783968725126",
+      "college_id": "CD23003",
+      "name": "Jatin Lanjewar",
+      "roll_no": "CD23003",
+      "department": "CSE(AIML)",
+      "email": "jatinlanjewar.aids23@sbjit.edu.in",
+      "phone": "9766233877",
+      "parent_phone": "+91 9876543210",
+      "photo": "",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-13T18:52:05.336Z",
+      "password_hash": "$2b$10$o0VumZnqgD4VkBvC0ui44eOEGAkH24N5dv0zNS2xeUN3dvoRW/98K"
+    },
+    {
+      "id": "stud-1783969166481",
+      "college_id": "CM23039",
+      "name": "Samir Khorgade",
+      "roll_no": "CM23039",
+      "department": "CSE(AIML)",
+      "email": "samirkhorgade.aiml23@sbjit.edu.in",
+      "phone": "9766233877",
+      "parent_phone": "9307150731",
+      "photo": "",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-13T18:59:26.723Z",
+      "password_hash": "$2b$10$rwW.6IQNjVZttdb6ORvFkeuIatyjFgdZI3BtJmzQLsAzFVFrR6JwO"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "teacher-1783850410091",
+      "name": "Prof. Shweta bokade",
+      "class_name": "CSE(AIML)",
+      "department": "CSE(AIML)",
+      "email": "shwetabokade.aiml23@sbjjit.edu.in",
+      "password_hash": "$2b$10$vRiiBkpDgSj2RxcdekqXhe2XqtPJNghEMJL5sVHJFf8/XG6gpr7Ie"
+    }
+  ],
+  "hods": [
+    {
+      "id": "hod-1783845686310",
+      "name": "Dr. Animesh Tayal",
+      "department": "CSE(AIML)",
+      "email": "animeshtayal@sbjit.edu.in",
+      "password_hash": "$2b$10$McxpHvuYCPMm2xJhtx4Z0.4BmPq0TukssbkKYUk2M3VZuKOHSR28S"
+    }
+  ],
+  "guards": [
+    {
+      "id": "guard-1783773190096",
+      "name": "sudha kaka",
+      "email": "sudhakaka@sbjit.edu.in",
+      "password_hash": "$2b$10$ziedDBUxL/KePUQkbaOQluJi2NB4Lv3h4/0joMzJDIC/pFQnbSRfK"
+    }
+  ],
+  "admins": [
+    {
+      "id": "admin-1",
+      "name": "System Administrator",
+      "email": "admin@college.edu",
+      "password_hash": "$2b$10$dx868c92zjqQo4qVc0jgxeF505AdR0fXxk72UyCm.LrEBghpCVPny"
+    }
+  ],
+  "gatepasses": [
+    {
+      "id": "pass-1783850792464",
+      "student_id": "stud-1783850760289",
+      "reason": "home",
+      "destination": "N/A",
+      "exit_time": "2026-07-12T10:06:00.000Z",
+      "return_time": "2026-07-12T14:06:00.000Z",
+      "status": "exited",
+      "token": "gp_tok_rs7pliwu0hh_1783850792464",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "created_at": "2026-07-12T10:06:32.464Z",
+      "risk_level": "low",
+      "risk_remarks": "Default rule check completed.",
+      "approved_by": "Dr. Animesh Tayal",
+      "remarks": "Approved",
+      "qr_code": "data:image/png;base64,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",
+      "exit_marked_at": "2026-07-12T11:03:36.170Z"
+    },
+    {
+      "id": "pass-1783854650186",
+      "student_id": "stud-1783854604963",
+      "reason": "home\n",
+      "destination": "N/A",
+      "exit_time": "2026-07-12T11:10:00.000Z",
+      "return_time": "2026-07-12T15:10:00.000Z",
+      "status": "exited",
+      "token": "gp_tok_o3bn3sn1ld_1783854650190",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "created_at": "2026-07-12T11:10:50.190Z",
+      "risk_level": "low",
+      "risk_remarks": "Student has applied for/received 1 gate pass(es) this month. (Low frequency)",
+      "approved_by": "Dr. Animesh Tayal",
+      "remarks": "Approved",
+      "qr_code": "data:image/png;base64,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",
+      "exit_marked_at": "2026-07-12T11:13:25.019Z"
+    }
+  ],
+  "logs": [
+    {
+      "id": "log-1783855210214",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-12T11:20:10.214Z"
+    },
+    {
+      "id": "log-1783855347291",
+      "user_id": "stud-1783855347063",
+      "user_name": "Arpit Rangari",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Shweta bokade & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-12T11:22:27.291Z"
+    },
+    {
+      "id": "log-1783855349353",
+      "user_id": "stud-1783855347063",
+      "user_name": "Arpit Rangari",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-12T11:22:29.353Z"
+    },
+    {
+      "id": "log-1783855404508",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-12T11:23:24.508Z"
+    },
+    {
+      "id": "log-1783959850450",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-13T16:24:10.450Z"
+    },
+    {
+      "id": "log-1783959955331",
+      "user_id": "stud-1783959955133",
+      "user_name": "samir khorgade",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Shweta bokade & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-13T16:25:55.331Z"
+    },
+    {
+      "id": "log-1783959959322",
+      "user_id": "stud-1783959955133",
+      "user_name": "samir khorgade",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-13T16:25:59.322Z"
+    },
+    {
+      "id": "log-1783960105224",
+      "user_id": "stud-1783960105066",
+      "user_name": "Ashvin Vaidhya",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Shweta bokade & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-13T16:28:25.224Z"
+    },
+    {
+      "id": "log-1783960106871",
+      "user_id": "stud-1783960105066",
+      "user_name": "Ashvin Vaidhya",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-13T16:28:26.871Z"
+    },
+    {
+      "id": "log-1783964291821",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-13T17:38:11.821Z"
+    },
+    {
+      "id": "log-1783964310842",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Deleted Student ID stud-1783960105066",
+      "timestamp": "2026-07-13T17:38:30.842Z"
+    },
+    {
+      "id": "log-1783964359827",
+      "user_id": "stud-1783964359651",
+      "user_name": "Sara Amit Ganvir",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Shweta bokade & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-13T17:39:19.827Z"
+    },
+    {
+      "id": "log-1783964367250",
+      "user_id": "stud-1783964359651",
+      "user_name": "Sara Amit Ganvir",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-13T17:39:27.250Z"
+    },
+    {
+      "id": "log-1783964703026",
+      "user_id": "stud-1783964702750",
+      "user_name": "Ashvin Ishwar Vaidhya",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Shweta bokade & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-13T17:45:03.026Z"
+    },
+    {
+      "id": "log-1783968496706",
+      "user_id": "stud-1783964702750",
+      "user_name": "Ashvin Ishwar Vaidhya",
+      "role": "student",
+      "action": "Reset password via OTP verification",
+      "timestamp": "2026-07-13T18:48:16.706Z"
+    },
+    {
+      "id": "log-1783968725342",
+      "user_id": "stud-1783968725126",
+      "user_name": "Jatin Lanjewar",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Shweta bokade & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-13T18:52:05.342Z"
+    },
+    {
+      "id": "log-1783968902839",
+      "user_id": "stud-1783968725126",
+      "user_name": "Jatin Lanjewar",
+      "role": "student",
+      "action": "Reset password via OTP verification",
+      "timestamp": "2026-07-13T18:55:02.839Z"
+    },
+    {
+      "id": "log-1783969166730",
+      "user_id": "stud-1783969166481",
+      "user_name": "Samir Khorgade",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Shweta bokade & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-13T18:59:26.730Z"
+    },
+    {
+      "id": "log-1783969227022",
+      "user_id": "stud-1783969166481",
+      "user_name": "Samir Khorgade",
+      "role": "student",
+      "action": "Reset password via OTP verification",
+      "timestamp": "2026-07-13T19:00:27.022Z"
+    }
+  ],
+  "notifications": [],
+  "officialParentContacts": [
+    {
+      "roll_no": "CM23001",
+      "name": "RAJ RAVINDRA URKUDE",
+      "parent_phone": "9373572061"
+    },
+    {
+      "roll_no": "CM23002",
+      "name": "CHAITANYA PRANESH BAGDE",
+      "parent_phone": "8263985364"
+    },
+    {
+      "roll_no": "CM23003",
+      "name": "DHANSHREE MAHADEO BHORKAR",
+      "parent_phone": "9371717980"
+    },
+    {
+      "roll_no": "CM23004",
+      "name": "KANCHAN SURENDRA GAIKWAD",
+      "parent_phone": "8788277975"
+    },
+    {
+      "roll_no": "CM23005",
+      "name": "SUJAL DILIP SANGLE",
+      "parent_phone": "9172245040"
+    },
+    {
+      "roll_no": "CM23006",
+      "name": "SHRUSHTI HEMANT ZOD",
+      "parent_phone": "7397900911"
+    },
+    {
+      "roll_no": "CM23007",
+      "name": "TANISHQ VILAS UKEY",
+      "parent_phone": "9699152071"
+    },
+    {
+      "roll_no": "CM23008",
+      "name": "SUBODH DEEPAPRAKASH WALONDRE",
+      "parent_phone": "9665267760"
+    },
+    {
+      "roll_no": "CM23009",
+      "name": "HIMANSHU SUNIL KAKDE",
+      "parent_phone": "9049972990"
+    },
+    {
+      "roll_no": "CM23010",
+      "name": "SHREYASH SUNIL KARDE",
+      "parent_phone": "9657799217"
+    },
+    {
+      "roll_no": "CM23011",
+      "name": "PARTH RAJENDRA SONONE",
+      "parent_phone": "8208721505"
+    },
+    {
+      "roll_no": "CM23012",
+      "name": "SARA AMIT GANVIR",
+      "parent_phone": "8766403464"
+    },
+    {
+      "roll_no": "CM23013",
+      "name": "SAHIL VIJAY BHOYAR",
+      "parent_phone": "8080226797"
+    },
+    {
+      "roll_no": "CM23015",
+      "name": "VEDANT MANISH TIWADE",
+      "parent_phone": "8468905776"
+    },
+    {
+      "roll_no": "CM23016",
+      "name": "SANSKRUTI ARUN MISHRA",
+      "parent_phone": "7776959594"
+    },
+    {
+      "roll_no": "CM23017",
+      "name": "JASVEER VIJAY RERWAR",
+      "parent_phone": "9503205734"
+    },
+    {
+      "roll_no": "CM23018",
+      "name": "JARRAR ABRAR KHAN",
+      "parent_phone": "9336393221"
+    },
+    {
+      "roll_no": "CM23019",
+      "name": "ATUL JITENDRA GUPTA",
+      "parent_phone": "7498325268"
+    },
+    {
+      "roll_no": "CM23020",
+      "name": "TANVI MINTU BEER",
+      "parent_phone": "8956427048"
+    },
+    {
+      "roll_no": "CM23021",
+      "name": "TANISH RAVINDRA KESHARWANI",
+      "parent_phone": "9529260741"
+    },
+    {
+      "roll_no": "CM23022",
+      "name": "ARYA ANAND GUDGILLA",
+      "parent_phone": "7666530867"
+    },
+    {
+      "roll_no": "CM23023",
+      "name": "VARUN KAILASHCHANDRA PATHAK",
+      "parent_phone": "7757809444"
+    },
+    {
+      "roll_no": "CM23024",
+      "name": "FAWWAZ IRSHAD AHMED",
+      "parent_phone": "7045053340"
+    },
+    {
+      "roll_no": "CM23025",
+      "name": "KHUSHBOO MAHENDRASINGH GAUTAM",
+      "parent_phone": "7972736689"
+    },
+    {
+      "roll_no": "CM23027",
+      "name": "ADITYA SUBHASH SINHA",
+      "parent_phone": "8976594765"
+    },
+    {
+      "roll_no": "CM23028",
+      "name": "ANUSHKA SUSHILKUMAR SAVITA",
+      "parent_phone": "9371525696"
+    },
+    {
+      "roll_no": "CM23029",
+      "name": "DIPANSHU UMESH MATHANKAR",
+      "parent_phone": "8767862237"
+    },
+    {
+      "roll_no": "CM23030",
+      "name": "SHIVAM ANANTA JADHAV",
+      "parent_phone": "8010201223"
+    },
+    {
+      "roll_no": "CM23031",
+      "name": "PRATHAM KASHINATH PIMPALIKAR",
+      "parent_phone": "8483868299"
+    },
+    {
+      "roll_no": "CM23032",
+      "name": "ARPIT ARVIND RANGARI",
+      "parent_phone": "9049696329"
+    },
+    {
+      "roll_no": "CM23033",
+      "name": "MITHILESH MANOJ KOSE",
+      "parent_phone": "7263938242"
+    },
+    {
+      "roll_no": "CM23034",
+      "name": "AMOGH ANIL SAMARTH",
+      "parent_phone": "9975836957"
+    },
+    {
+      "roll_no": "CM23035",
+      "name": "MEKSHA VIJAY TAJANE",
+      "parent_phone": "9309207605"
+    },
+    {
+      "roll_no": "CM23036",
+      "name": "ASHVIN ISHWAR VAIDHYA",
+      "parent_phone": "9766233877"
+    },
+    {
+      "roll_no": "CM23037",
+      "name": "PURVAL SANJAY NAIK",
+      "parent_phone": "7249333827"
+    },
+    {
+      "roll_no": "CM23038",
+      "name": "SAMIR SANJAY KHORGADE",
+      "parent_phone": "9022616290"
+    },
+    {
+      "roll_no": "CM23039",
+      "name": "GAYATRI ARUN VIDHATE",
+      "parent_phone": "9307150731"
+    },
+    {
+      "roll_no": "CM23040",
+      "name": "PARTH SUJEET WADEKAR",
+      "parent_phone": "9975181905"
+    },
+    {
+      "roll_no": "CM23042",
+      "name": "YASH MAHENDRA KAPSE",
+      "parent_phone": "8767078967"
+    },
+    {
+      "roll_no": "CM23043",
+      "name": "SARANG RAVINDRA GHATULKAR",
+      "parent_phone": "9850310507"
+    },
+    {
+      "roll_no": "CM23044",
+      "name": "REENA MANISH TRILOK",
+      "parent_phone": "8180864070"
+    },
+    {
+      "roll_no": "CM23045",
+      "name": "TEJAS PURUSHOTTAM KAYARKAR",
+      "parent_phone": "9022202858"
+    },
+    {
+      "roll_no": "CM23046",
+      "name": "KAUSTUBH SANJAY KOSE",
+      "parent_phone": "7507451583"
+    },
+    {
+      "roll_no": "CM23047",
+      "name": "GLORY RARATAN JAGJIWAN",
+      "parent_phone": "8788352245"
+    },
+    {
+      "roll_no": "CM23048",
+      "name": "ASHUTOSH MURLIDHAR BHULE",
+      "parent_phone": "9325986301"
+    },
+    {
+      "roll_no": "CM23049",
+      "name": "SHOURYA CHOURE",
+      "parent_phone": "8669202393"
+    },
+    {
+      "roll_no": "CM23050",
+      "name": "SRIYANSH SANJIB SHEEL",
+      "parent_phone": "9322148375"
+    },
+    {
+      "roll_no": "CM23051",
+      "name": "AYUSH DILIP BADWAIK",
+      "parent_phone": "8208832911"
+    },
+    {
+      "roll_no": "CM23053",
+      "name": "PRATHAMESH RAJENDRA MOWADE",
+      "parent_phone": "9175406926"
+    },
+    {
+      "roll_no": "CM23054",
+      "name": "ADITYA UMESH MAHALLE",
+      "parent_phone": "9325338734"
+    },
+    {
+      "roll_no": "CM23055",
+      "name": "UTKARSH SURESH PUNKAR",
+      "parent_phone": "8010379670"
+    },
+    {
+      "roll_no": "CM23056",
+      "name": "VANSHIKA SUNILJI KHARWADE",
+      "parent_phone": "9766324881"
+    },
+    {
+      "roll_no": "CM23057",
+      "name": "NEHA ASHOK MUSALE",
+      "parent_phone": "8605589053"
+    },
+    {
+      "roll_no": "CM23058",
+      "name": "DIVYANI GANRAJ WATH",
+      "parent_phone": "9322727566"
+    },
+    {
+      "roll_no": "CM23059",
+      "name": "DHANSHREE RAUT",
+      "parent_phone": "9340438607"
+    },
+    {
+      "roll_no": "CM23060",
+      "name": "VEDANT ASHISH BHANARKAR",
+      "parent_phone": "7028398796"
+    },
+    {
+      "roll_no": "CM23061",
+      "name": "BURHANUDDIN ZOEB HUSAIN",
+      "parent_phone": "9172693153"
+    },
+    {
+      "roll_no": "CM23062",
+      "name": "OM RAJIV POLAKHARE",
+      "parent_phone": "7020597973"
+    },
+    {
+      "roll_no": "CM23063",
+      "name": "SOHAM UDAY GARGE",
+      "parent_phone": "9370024667"
+    },
+    {
+      "roll_no": "CM24D002",
+      "name": "JANMESH SHEDAME",
+      "parent_phone": "8177910756"
+    },
+    {
+      "roll_no": "CM24D003",
+      "name": "PHALGUNI DHABALE",
+      "parent_phone": "9322659001"
+    },
+    {
+      "roll_no": "CM24D004",
+      "name": "YASH RAJU MESHRAM",
+      "parent_phone": "9579065181"
+    },
+    {
+      "roll_no": "CM24D006",
+      "name": "GAYATRI KRISHNA BORIKAR",
+      "parent_phone": "7020343381"
+    }
+  ],
+  "lateComeEntries": [
+    {
+      "id": "late-1783850780210",
+      "student_id": "stud-1783850760289",
+      "student_name": "samir khorgade",
+      "student_roll_no": "CM23038",
+      "student_department": "CSE(AIML)",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "arrival_time": "2026-07-12T11:36",
+      "reason": "cvbn",
+      "created_at": "2026-07-12T10:06:20.210Z"
+    },
+    {
+      "id": "late-1783854637651",
+      "student_id": "stud-1783854604963",
+      "student_name": "Yash Kapse",
+      "student_roll_no": "CM23042",
+      "student_department": "CSE(AIML)",
+      "class_teacher_id": "teacher-1783850410091",
+      "class_teacher_name": "Prof. Shweta bokade",
+      "arrival_time": "2026-07-12T12:40",
+      "reason": "nooooooooooooooo",
+      "created_at": "2026-07-12T11:10:37.651Z"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "name": "react-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "// dev_comment": "RUN LOCALLY: This starts your project on your computer and injects your secret settings from the .env file before compiling your code.",
+    "dev": "node -r dotenv/config node_modules/tsx/dist/cli.mjs backend/server.ts",
+    "// build_comment": "PRODUCTION COMPILATION: This prepares your system to be deployed on the web. 1. It builds your frontend screens using Vite. 2. It compiles your server code into a small, fast package inside the 'dist' folder.",
+    "build": "vite build && esbuild backend/server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "// start_comment": "RUN ON CLOUD ENGINE: This is the command the hosting server (like Render) uses to run your website. It opens up the compiled production code file we created during the build step.",
+    "start": "node dist/server.cjs",
+    "// clean_comment": "RESET SCRIPTS: Deletes old temporary build folders so you can compile a completely fresh copy.",
+    "clean": "rm -rf dist",
+    "// lint_comment": "QUALITY CHECK: Scans your code files for any hidden typescript coding bugs or errors.",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "@types/nodemailer": "^8.0.1",
+    "@vitejs/plugin-react": "^5.0.4",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "firebase-admin": "^14.1.0",
+    "html5-qrcode": "^2.3.8",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "nodemailer": "^9.0.3",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "vite": "^6.2.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.14.0",
+    "@types/qrcode": "^1.5.6",
+    "autoprefixer": "^10.4.21",
+    "esbuild": "^0.25.0",
+    "tailwindcss": "^4.1.14",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3"
+  }
+}

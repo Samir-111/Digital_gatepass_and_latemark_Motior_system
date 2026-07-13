@@ -1,0 +1,228 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "Student registration profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "college_id": { "type": "string" },
+        "name": { "type": "string" },
+        "roll_no": { "type": "string" },
+        "department": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "parent_phone": { "type": "string" },
+        "photo": { "type": "string" },
+        "class_teacher_id": { "type": "string" },
+        "class_teacher_name": { "type": "string" },
+        "selected_hod_id": { "type": "string" },
+        "selected_hod_name": { "type": "string" },
+        "password_hash": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "college_id", "name", "roll_no", "department", "email", "phone", "parent_phone", "password_hash", "created_at"]
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "Class Teacher (Class Incharge) profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "class_name": { "type": "string" },
+        "department": { "type": "string" },
+        "email": { "type": "string" },
+        "password_hash": { "type": "string" }
+      },
+      "required": ["id", "name", "class_name", "department", "email", "password_hash"]
+    },
+    "HOD": {
+      "title": "HOD",
+      "description": "Head of Department profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "department": { "type": "string" },
+        "email": { "type": "string" },
+        "password_hash": { "type": "string" }
+      },
+      "required": ["id", "name", "department", "email", "password_hash"]
+    },
+    "Guard": {
+      "title": "Guard",
+      "description": "Security Guard profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "password_hash": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "password_hash"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "System Administrator profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "password_hash": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "password_hash"]
+    },
+    "Department": {
+      "title": "Department",
+      "description": "Academic Department",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "department_name": { "type": "string" }
+      },
+      "required": ["id", "department_name"]
+    },
+    "GatePass": {
+      "title": "GatePass",
+      "description": "GatePass application record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "student_id": { "type": "string" },
+        "student_name": { "type": "string" },
+        "student_roll_no": { "type": "string" },
+        "student_department": { "type": "string" },
+        "student_phone": { "type": "string" },
+        "student_parent_phone": { "type": "string" },
+        "selected_hod_id": { "type": "string" },
+        "selected_hod_name": { "type": "string" },
+        "class_teacher_id": { "type": "string" },
+        "class_teacher_name": { "type": "string" },
+        "reason": { "type": "string" },
+        "destination": { "type": "string" },
+        "exit_time": { "type": "string" },
+        "return_time": { "type": "string" },
+        "status": { "type": "string" },
+        "qr_code": { "type": "string" },
+        "approved_by": { "type": "string" },
+        "remarks": { "type": "string" },
+        "exit_marked_at": { "type": "string" },
+        "return_marked_at": { "type": "string" },
+        "token": { "type": "string" },
+        "risk_level": { "type": "string" },
+        "risk_remarks": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "student_id", "reason", "destination", "exit_time", "return_time", "status", "created_at"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "Security and application activity log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "user_name": { "type": "string" },
+        "role": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "user_id", "user_name", "role", "action", "timestamp"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "In-app Notification for tracking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "recipient_id": { "type": "string" },
+        "recipient_role": { "type": "string" },
+        "department": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "reference_id": { "type": "string" },
+        "is_read": { "type": "boolean" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "recipient_id", "recipient_role", "title", "message", "type", "is_read", "created_at"]
+    },
+    "OfficialParentContact": {
+      "title": "OfficialParentContact",
+      "description": "Official parent contact phone mapping",
+      "type": "object",
+      "properties": {
+        "roll_no": { "type": "string" },
+        "parent_phone": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "required": ["roll_no", "parent_phone"]
+    },
+    "LateComeEntry": {
+      "title": "LateComeEntry",
+      "description": "Late arrival entry record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "student_id": { "type": "string" },
+        "student_name": { "type": "string" },
+        "student_roll_no": { "type": "string" },
+        "student_department": { "type": "string" },
+        "class_teacher_id": { "type": "string" },
+        "class_teacher_name": { "type": "string" },
+        "arrival_time": { "type": "string" },
+        "reason": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "student_id", "student_name", "student_roll_no", "student_department", "arrival_time", "reason", "created_at"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Collection of student profiles"
+    },
+    "/teachers/{teacherId}": {
+      "schema": { "$ref": "#/entities/Teacher" },
+      "description": "Collection of class teacher profiles"
+    },
+    "/hods/{hodId}": {
+      "schema": { "$ref": "#/entities/HOD" },
+      "description": "Collection of Head of Department profiles"
+    },
+    "/guards/{guardId}": {
+      "schema": { "$ref": "#/entities/Guard" },
+      "description": "Collection of security guard profiles"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Collection of system administrator profiles"
+    },
+    "/departments/{departmentId}": {
+      "schema": { "$ref": "#/entities/Department" },
+      "description": "Collection of academic departments"
+    },
+    "/gatepasses/{gatepassId}": {
+      "schema": { "$ref": "#/entities/GatePass" },
+      "description": "Collection of gate passes"
+    },
+    "/logs/{logId}": {
+      "schema": { "$ref": "#/entities/ActivityLog" },
+      "description": "Collection of activity logs"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "Collection of app notifications"
+    },
+    "/officialParentContacts/{contactId}": {
+      "schema": { "$ref": "#/entities/OfficialParentContact" },
+      "description": "Collection of official parent contacts"
+    },
+    "/lateComeEntries/{entryId}": {
+      "schema": { "$ref": "#/entities/LateComeEntry" },
+      "description": "Collection of late come entries"
+    }
+  }
+}
