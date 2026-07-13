@@ -646,17 +646,7 @@ export default function GuardDashboard({ user, onLogout }: GuardDashboardProps) 
                         className="w-full flex items-center justify-center py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer space-x-1.5"
                       >
                         <ArrowRight className="h-4 w-4" />
-                        <span>Log Departure (Mark Exit)</span>
-                      </button>
-                    )}
-
-                    {verifiedPass.status === 'exited' && (
-                      <button
-                        onClick={() => handleMarkReturn(verifiedPass.id)}
-                        className="w-full flex items-center justify-center py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer space-x-1.5"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                        <span>Log Arrival (Mark Return & Close Pass)</span>
+                        <span>Log Exit (Close Pass)</span>
                       </button>
                     )}
                   </div>
@@ -688,8 +678,7 @@ export default function GuardDashboard({ user, onLogout }: GuardDashboardProps) 
                 <tr>
                   <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Student Details</th>
                   <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">Exit Timestamp</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">Return Timestamp</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">Scan / Exit Timestamp</th>
                   <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">Status</th>
                 </tr>
               </thead>
@@ -705,24 +694,12 @@ export default function GuardDashboard({ user, onLogout }: GuardDashboardProps) 
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-semibold">
                       {pass.exit_marked_at ? (
-                        <span className="flex items-center text-blue-600">
-                          <Clock className="h-3.5 w-3.5 mr-1" />
+                        <span className="flex items-center text-emerald-600 font-bold">
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
                           {new Date(pass.exit_marked_at).toLocaleTimeString()}
                         </span>
                       ) : (
-                        <span className="text-slate-400">No departure log</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-semibold">
-                      {pass.return_marked_at ? (
-                        <span className="flex items-center text-emerald-600">
-                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                          {new Date(pass.return_marked_at).toLocaleTimeString()}
-                        </span>
-                      ) : (
-                        pass.exit_marked_at && (
-                          <span className="text-amber-500 animate-pulse font-bold">Currently Outside</span>
-                        )
+                        <span className="text-slate-400">No Scan Logged</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -732,8 +709,8 @@ export default function GuardDashboard({ user, onLogout }: GuardDashboardProps) 
                 ))}
                 {todayEntries.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400 font-medium">
-                      No gate exits or returns have been logged yet today.
+                    <td colSpan={4} className="px-6 py-8 text-center text-slate-400 font-medium">
+                      No gate exits have been logged yet today.
                     </td>
                   </tr>
                 )}

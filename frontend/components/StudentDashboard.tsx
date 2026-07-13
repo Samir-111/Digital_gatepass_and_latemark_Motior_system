@@ -364,7 +364,7 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
                     </a>
                   )}
                   <p className="text-[10px] text-slate-400 mt-3 font-medium text-center max-w-xs">
-                    Present this QR to the security guard at the college gate. To prevent duplicate scans, do not share screenshot. Code expires after exit and return.
+                    Present this QR to the security guard at the college gate. To prevent duplicate scans, do not share screenshot. Code expires immediately after exit is logged.
                   </p>
                 </div>
 
@@ -434,7 +434,7 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
                       <div>
                         <div className="text-xs font-bold">Approved and Active!</div>
                         <p className="text-xs font-medium mt-1">
-                          Your pass is ready. Show the guard the QR code to log your exit. Remember to return and check-in with the guard before expected time to avoid curfew triggers.
+                          Your pass is ready. Show the guard the QR code to log your exit. Once scanned, this pass will be closed.
                         </p>
                       </div>
                     </div>
@@ -615,9 +615,10 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
                   <table className="min-w-full divide-y divide-slate-100">
                     <thead className="bg-slate-50">
                       <tr>
+                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">GatePass ID</th>
                         <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
                         <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Requested Exit Time</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Security Activity</th>
+                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Scan / Exit Timestamp</th>
                         <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
                         <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">AI Security Score</th>
                       </tr>
@@ -634,14 +635,9 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-[11px] text-slate-600">
                             {pass.exit_marked_at ? (
-                              <div>Exit: <span className="font-semibold text-slate-800">{new Date(pass.exit_marked_at).toLocaleTimeString()}</span></div>
+                              <span className="font-semibold text-slate-800">{new Date(pass.exit_marked_at).toLocaleString()}</span>
                             ) : (
-                              <span className="text-slate-400">No Exit</span>
-                            )}
-                            {pass.return_marked_at ? (
-                              <div className="mt-0.5">Return: <span className="font-semibold text-slate-800">{new Date(pass.return_marked_at).toLocaleTimeString()}</span></div>
-                            ) : (
-                              pass.exit_marked_at && <span className="text-amber-500 block font-semibold mt-0.5">Active Out</span>
+                              <span className="text-slate-400">Not Scanned</span>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>

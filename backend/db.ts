@@ -46,6 +46,7 @@ export class Database {
   private static instance: Database;
   private firestore!: Firestore;
   private hasExplicitCredential = false;
+  private otps = new Map<string, { otp: string; expiresAt: number }>();
 
   // Local active memory state
   private data: Schema = {
@@ -111,10 +112,10 @@ export class Database {
       const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
       if (fs.existsSync(configPath)) {
         const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-        if (!process.env.FIREBASE_PROJECT_ID && config.projectId) {
+        if (process.env.FIREBASE_PROJECT_ID === undefined && config.projectId) {
           projectId = config.projectId;
         }
-        if (!process.env.FIRESTORE_DATABASE_ID && config.firestoreDatabaseId) {
+        if (process.env.FIRESTORE_DATABASE_ID === undefined && config.firestoreDatabaseId) {
           databaseId = config.firestoreDatabaseId;
         }
       }
@@ -773,7 +774,7 @@ export class Database {
       const current = this.data.gatepasses[index];
       const updatedPass = {
         ...current,
-        status: 'exited' as const,
+        status: 'closed' as const,
         exit_marked_at: new Date().toISOString(),
       };
       this.data.gatepasses[index] = updatedPass;
@@ -1147,6 +1148,126 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
       this.deleteDoc('teachers', id);
       return true;
     }
+    return false;
+  }
+
+  // Find a user across all roles by email
+  public findUserByEmail(email: string): { name: string; email: string; role: UserRole } | null {
+    const emailLower = email.toLowerCase().trim();
+
+    // Check Students
+    const student = this.data.students.find(s => s.email.toLowerCase().trim() === emailLower);
+    if (student) return { name: student.name, email: student.email, role: 'student' };
+
+    // Check Teachers / Class Incharges
+    if (this.data.teachers) {
+      const teacher = this.data.teachers.find(t => t.email.toLowerCase().trim() === emailLower);
+      if (teacher) return { name: teacher.name, email: teacher.email, role: 'teacher' };
+    }
+
+    // Check HODs
+    const hod = this.data.hods.find(h => h.email.toLowerCase().trim() === emailLower);
+    if (hod) return { name: hod.name, email: hod.email, role: 'hod' };
+
+    // Check Guards
+    const guard = this.data.guards.find(g => g.email.toLowerCase().trim() === emailLower);
+    if (guard) return { name: guard.name, email: guard.email, role: 'guard' };
+
+    // Check Admins
+    const admin = this.data.admins.find(a => a.email.toLowerCase().trim() === emailLower);
+    if (admin) return { name: admin.name, email: admin.email, role: 'admin' };
+
+    return null;
+  }
+
+  // Store generated OTP
+  public storeOTP(email: string, otp: string): void {
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes from now
+    this.otps.set(email.toLowerCase().trim(), { otp, expiresAt });
+  }
+
+  // Verify OTP
+  public verifyOTP(email: string, otp: string): boolean {
+    const emailKey = email.toLowerCase().trim();
+    const entry = this.otps.get(emailKey);
+    if (!entry) return false;
+
+    if (Date.now() > entry.expiresAt) {
+      this.otps.delete(emailKey);
+      return false;
+    }
+
+    if (entry.otp === otp) {
+      this.otps.delete(emailKey); // Valid OTP is single use
+      return true;
+    }
+
+    return false;
+  }
+
+  // Update password for any role
+  public updateUserPassword(email: string, password_plain: string): boolean {
+    const emailLower = email.toLowerCase().trim();
+    const salt = bcrypt.genSaltSync(10);
+    const password_hash = bcrypt.hashSync(password_plain, salt);
+
+    // Update Student
+    const studentIndex = this.data.students.findIndex(s => s.email.toLowerCase().trim() === emailLower);
+    if (studentIndex !== -1) {
+      const student = this.data.students[studentIndex];
+      student.password_hash = password_hash;
+      this.saveLocal();
+      this.saveDoc('students', student.id, student);
+      this.addLog(student.id, student.name, 'student', 'Reset password via OTP verification');
+      return true;
+    }
+
+    // Update Teacher
+    if (this.data.teachers) {
+      const teacherIndex = this.data.teachers.findIndex(t => t.email.toLowerCase().trim() === emailLower);
+      if (teacherIndex !== -1) {
+        const teacher = this.data.teachers[teacherIndex];
+        teacher.password_hash = password_hash;
+        this.saveLocal();
+        this.saveDoc('teachers', teacher.id, teacher);
+        this.addLog(teacher.id, teacher.name, 'teacher', 'Reset password via OTP verification');
+        return true;
+      }
+    }
+
+    // Update HOD
+    const hodIndex = this.data.hods.findIndex(h => h.email.toLowerCase().trim() === emailLower);
+    if (hodIndex !== -1) {
+      const hod = this.data.hods[hodIndex];
+      hod.password_hash = password_hash;
+      this.saveLocal();
+      this.saveDoc('hods', hod.id, hod);
+      this.addLog(hod.id, hod.name, 'hod', 'Reset password via OTP verification');
+      return true;
+    }
+
+    // Update Guard
+    const guardIndex = this.data.guards.findIndex(g => g.email.toLowerCase().trim() === emailLower);
+    if (guardIndex !== -1) {
+      const guard = this.data.guards[guardIndex];
+      guard.password_hash = password_hash;
+      this.saveLocal();
+      this.saveDoc('guards', guard.id, guard);
+      this.addLog(guard.id, guard.name, 'guard', 'Reset password via OTP verification');
+      return true;
+    }
+
+    // Update Admin
+    const adminIndex = this.data.admins.findIndex(a => a.email.toLowerCase().trim() === emailLower);
+    if (adminIndex !== -1) {
+      const admin = this.data.admins[adminIndex];
+      admin.password_hash = password_hash;
+      this.saveLocal();
+      this.saveDoc('admins', admin.id, admin);
+      this.addLog(admin.id, admin.name, 'admin', 'Reset password via OTP verification');
+      return true;
+    }
+
     return false;
   }
 }

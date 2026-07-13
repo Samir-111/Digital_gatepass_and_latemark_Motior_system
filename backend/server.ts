@@ -8,6 +8,7 @@ import path from 'path';
 import jwt from 'jsonwebtoken';
 import QRCode from 'qrcode';
 import dotenv from 'dotenv';
+import nodemailer from 'nodemailer';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import { Database } from './db.js';
@@ -109,6 +110,65 @@ const sendSMS = async (phoneNumber: string, message: string) => {
   } catch (error) {
     console.error(`[SMS Gateway] Failed to send SMS to ${cleanNumber}:`, error);
   }
+};
+
+// Helper to send OTP email (using nodemailer with SMTP or fallback to terminal logging)
+const sendOTPEmail = async (email: string, otp: string) => {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || '587');
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || 'no-reply@college.edu.in';
+
+  const isConfigured = !!(host && user && pass);
+
+  const subject = 'Your Password Reset OTP Code';
+  const textContent = `Your One-Time Password (OTP) for resetting your campus access portal password is: ${otp}. It is valid for 10 minutes.`;
+  const htmlContent = `
+    <div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+      <h2 style="color: #10b981; font-size: 20px; border-b: 1px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">Campus Access Portal Password Reset</h2>
+      <p style="font-size: 14px; line-height: 1.5; color: #334155;">You requested to reset your password. Use the following One-Time Password (OTP) to proceed:</p>
+      <div style="font-size: 32px; font-weight: 800; background: #f8fafc; color: #0f172a; padding: 18px; text-align: center; border-radius: 10px; letter-spacing: 4px; margin: 24px 0; border: 1px dashed #cbd5e1;">
+        ${otp}
+      </div>
+      <p style="font-size: 12px; line-height: 1.5; color: #64748b; margin-bottom: 0;">This OTP code is valid for 10 minutes and is for single use only. If you did not request a password reset, please ignore this email.</p>
+    </div>
+  `;
+
+  if (isConfigured) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass }
+      });
+
+      await transporter.sendMail({
+        from: `Campus Portal <${from}>`,
+        to: email,
+        subject,
+        text: textContent,
+        html: htmlContent
+      });
+
+      console.log(`[OTP Email] Real email successfully sent to ${email}`);
+      return true;
+    } catch (error) {
+      console.error(`[OTP Email] Failed to send real email to ${email}:`, error);
+      // Fallback to console print on error
+    }
+  }
+
+  // Fallback console log for local development/unconfigured SMTP
+  console.log('\n====================================================');
+  console.log(`[OTP SERVICE] (LOCAL FALLBACK)`);
+  console.log(`To: ${email}`);
+  console.log(`OTP: ${otp}`);
+  console.log(`Message: "${textContent}"`);
+  console.log(`Note: Configure SMTP_HOST, SMTP_USER, SMTP_PASS, etc. in .env to send real emails`);
+  console.log('====================================================\n');
+  return false;
 };
 
 // ==========================================
@@ -218,6 +278,72 @@ app.post('/api/register', (req: Request, res: Response) => {
     res.status(500).json({ error: err.message || 'Failed to complete registration.' });
   }
 });
+
+// 1.7 OTP Forgot Password Routes
+// 1.7.1 Request OTP for Forgot Password
+app.post('/api/forgot-password/request-otp', async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Email address is required.' });
+  }
+
+  // Find user by email
+  const user = db.findUserByEmail(email);
+  if (!user) {
+    return res.status(404).json({ error: 'No account registered with this email address.' });
+  }
+
+  try {
+    // Generate a 6-digit random code
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store OTP in database/memory
+    db.storeOTP(email, otp);
+
+    // Send the OTP email
+    await sendOTPEmail(email, otp);
+
+    const isConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+    res.json({
+      success: true,
+      message: isConfigured 
+        ? 'One-Time Password (OTP) has been sent to your email.' 
+        : 'One-Time Password (OTP) has been sent (Developer Mode: printed in server console).',
+      ...(!isConfigured ? { dev_otp: otp } : {})
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to generate and send OTP.' });
+  }
+});
+
+// 1.7.2 Verify OTP and Reset Password
+app.post('/api/forgot-password/verify-otp', (req: Request, res: Response) => {
+  const { email, otp, new_password } = req.body;
+
+  if (!email || !otp || !new_password) {
+    return res.status(400).json({ error: 'Email, OTP code, and new password are required.' });
+  }
+
+  // Verify OTP
+  const isOTPValid = db.verifyOTP(email, otp);
+  if (!isOTPValid) {
+    return res.status(400).json({ error: 'Invalid or expired OTP. Please request a new code.' });
+  }
+
+  try {
+    // Update user's password
+    const success = db.updateUserPassword(email, new_password);
+    if (success) {
+      return res.json({ success: true, message: 'Password reset successful! You can now log in with your new password.' });
+    } else {
+      return res.status(500).json({ error: 'Failed to update user password.' });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'Failed to reset password.' });
+  }
+});
+
 
 // 1.8 Class Teacher (Class Incharge) Routes
 app.get('/api/teacher/students', authenticateJWT, authorizeRoles('teacher'), (req: AuthenticatedRequest, res: Response) => {
