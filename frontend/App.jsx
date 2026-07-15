@@ -5,26 +5,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
-import Login from './components/Login.tsx';
-import StudentDashboard from './components/StudentDashboard.tsx';
-import HODDashboard from './components/HODDashboard.tsx';
-import GuardDashboard from './components/GuardDashboard.tsx';
-import AdminDashboard from './components/AdminDashboard.tsx';
-import TeacherDashboard from './components/TeacherDashboard.tsx';
+import Login from './components/Login';
+import StudentDashboard from './components/StudentDashboard';
+import HODDashboard from './components/HODDashboard';
+import GuardDashboard from './components/GuardDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import TeacherDashboard from './components/TeacherDashboard';
 import { getAuthToken, getAuthUser, getAuthRole, removeAuthToken } from './lib/api.js';
-import { UserRole } from './types.js';
 
 /**
  * Vance GatePass Portal - Main Application Component
  * 
- * Explain to your teacher: "This is the single-view entry point of the React SPA. It is responsible for:
- * 1. Restoring user session tokens from localStorage upon page refresh (maintaining state).
- * 2. Serving as the master router, dynamically rendering the correct portal (Student, HOD, Guard, or Admin)
- *    based on the authenticated user's role."
+ * Master router, dynamically rendering the correct portal (Student, HOD, Guard, or Admin)
+ * based on the authenticated user's role.
  */
 export default function App() {
-  const [user, setUser] = useState<any>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Theme state managed globally at app root level
@@ -45,7 +42,7 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Lifecyle hook to check active session on app startup
+  // Lifecycle hook to check active session on app startup
   useEffect(() => {
     const token = getAuthToken();
     const savedUser = getAuthUser();
@@ -53,13 +50,13 @@ export default function App() {
 
     if (token && savedUser && savedRole) {
       setUser(savedUser);
-      setRole(savedRole as UserRole);
+      setRole(savedRole);
     }
     setLoading(false);
   }, []);
 
   // Callback triggered upon successful login
-  const handleLoginSuccess = (loggedInUser: any, userRole: UserRole) => {
+  const handleLoginSuccess = (loggedInUser, userRole) => {
     setUser(loggedInUser);
     setRole(userRole);
   };
@@ -123,4 +120,3 @@ export default function App() {
     </div>
   );
 }
-

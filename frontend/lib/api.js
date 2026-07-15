@@ -1,8 +1,8 @@
-export function getAuthToken(): string | null {
+export function getAuthToken() {
   return localStorage.getItem('gatepass_token');
 }
 
-export function getAuthUser(): any | null {
+export function getAuthUser() {
   const user = localStorage.getItem('gatepass_user');
   if (!user) return null;
   try {
@@ -12,21 +12,21 @@ export function getAuthUser(): any | null {
   }
 }
 
-export function getAuthRole(): string | null {
+export function getAuthRole() {
   return localStorage.getItem('gatepass_role');
 }
 
-export function removeAuthToken(): void {
+export function removeAuthToken() {
   localStorage.removeItem('gatepass_token');
   localStorage.removeItem('gatepass_user');
   localStorage.removeItem('gatepass_role');
 }
 
-export function setAuthToken(token: string): void {
+export function setAuthToken(token) {
   localStorage.setItem('gatepass_token', token);
 }
 
-export async function apiFetch(url: string, options: RequestInit = {}): Promise<any> {
+export async function apiFetch(url, options = {}) {
   const token = getAuthToken();
   const headers = new Headers(options.headers || {});
 

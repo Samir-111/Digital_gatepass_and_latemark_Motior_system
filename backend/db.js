@@ -7,30 +7,11 @@ import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
 import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
-import { Department, Student, HOD, Guard, Admin, GatePass, ActivityLog, UserRole, AppNotification, OfficialParentContact, LateComeEntry, Teacher } from '../frontend/types.js';
+import { getFirestore } from 'firebase-admin/firestore';
 
 // Setup file paths for persistent JSON storage on server disk (local fallback/cache backup)
 const DB_DIR = path.join(process.cwd(), 'database');
 const DB_FILE = path.join(DB_DIR, 'gatepass.json');
-
-/**
- * GatePass Database Engine Schema
- * Defines the structure of the database tables saved inside gatepass.json
- */
-interface Schema {
-  departments: Department[];
-  students: (Student & { password_hash: string })[];
-  hods: (HOD & { password_hash: string })[];
-  guards: (Guard & { password_hash: string })[];
-  admins: (Admin & { password_hash: string })[];
-  teachers?: (Teacher & { password_hash: string })[];
-  gatepasses: GatePass[];
-  logs: ActivityLog[];
-  notifications?: AppNotification[];
-  officialParentContacts?: OfficialParentContact[];
-  lateComeEntries?: LateComeEntry[];
-}
 
 /**
  * GatePass Database Controller - Firebase Firestore Integrated
@@ -43,13 +24,13 @@ interface Schema {
  * It also maintains a local disk JSON file fallback in case of connection dropouts.
  */
 export class Database {
-  private static instance: Database;
-  private firestore!: Firestore;
-  private hasExplicitCredential = false;
-  private otps = new Map<string, { otp: string; expiresAt: number }>();
+  static instance;
+  firestore;
+  hasExplicitCredential = false;
+  otps = new Map();
 
   // Local active memory state
-  private data: Schema = {
+  data = {
     departments: [],
     students: [],
     hods: [],
@@ -64,7 +45,7 @@ export class Database {
   };
 
   // Private constructor restricts instantiation from external modules
-  private constructor() {
+  constructor() {
     this.initLocalFallback();
     this.initFirebaseSDK();
   }
@@ -72,7 +53,7 @@ export class Database {
   /**
    * Static access method to retrieve the single active Database instance
    */
-  public static getInstance(): Database {
+  static getInstance() {
     if (!Database.instance) {
       Database.instance = new Database();
     }
@@ -82,7 +63,7 @@ export class Database {
   /**
    * Initializes local disk backup and seeding just in case
    */
-  private initLocalFallback() {
+  initLocalFallback() {
     if (!fs.existsSync(DB_DIR)) {
       fs.mkdirSync(DB_DIR, { recursive: true });
     }
@@ -104,7 +85,7 @@ export class Database {
   /**
    * Initializes Firebase Admin SDK using environment variables, local credentials file, or applet metadata
    */
-  private initFirebaseSDK() {
+  initFirebaseSDK() {
     let projectId = process.env.FIREBASE_PROJECT_ID || 'primordial-lambda-qk91c';
     let databaseId = process.env.FIRESTORE_DATABASE_ID || '';
 
@@ -124,7 +105,7 @@ export class Database {
     }
 
     // Try to load service account credentials
-    let credential: any = undefined;
+    let credential = undefined;
     let serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
     // Auto-detect common local service account filenames if environment variable not set
@@ -167,7 +148,7 @@ export class Database {
       }
     }
 
-    const appOptions: any = { projectId };
+    const appOptions = { projectId };
     if (credential) {
       appOptions.credential = credential;
     }
@@ -191,7 +172,7 @@ export class Database {
   /**
    * Asynchronously verifies if Google Cloud Application Default Credentials (ADC) are available.
    */
-  private async hasADC(): Promise<boolean> {
+  async hasADC() {
     try {
       const { GoogleAuth } = await import('google-auth-library');
       const auth = new GoogleAuth();
@@ -205,16 +186,16 @@ export class Database {
   /**
    * Generates initial database records for seeding (Only admin profile is created initially).
    */
-  private getSeedData() {
-    const depts: Department[] = [];
+  getSeedData() {
+    const depts = [];
 
     const salt = bcrypt.genSaltSync(10);
     const defaultHash = bcrypt.hashSync('password', salt);
 
-    const teachers: any[] = [];
-    const students: any[] = [];
-    const hods: any[] = [];
-    const guards: any[] = [];
+    const teachers = [];
+    const students = [];
+    const hods = [];
+    const guards = [];
 
     const admins = [
       {
@@ -225,9 +206,9 @@ export class Database {
       }
     ];
 
-    const gatepasses: GatePass[] = [];
+    const gatepasses = [];
 
-    const logs: ActivityLog[] = [
+    const logs = [
       {
         id: 'log-1',
         user_id: 'admin-1',
@@ -244,7 +225,7 @@ export class Database {
   /**
    * Seeds database cache locally when Firestore is bypassed or fails.
    */
-  private seedLocal(): void {
+  seedLocal() {
     const { depts, teachers, students, hods, guards, admins, gatepasses, logs } = this.getSeedData();
 
     this.data = {
@@ -268,7 +249,7 @@ export class Database {
   /**
    * Checks if local database is empty and seeds it if necessary.
    */
-  private initLocalOnlySeed(): void {
+  initLocalOnlySeed() {
     if (!this.data.admins || this.data.admins.length === 0) {
       console.log('[Local Database] Empty local database detected. Seeding initial demo profiles locally...');
       this.seedLocal();
@@ -281,14 +262,14 @@ export class Database {
    * Loads all collections from Google Cloud Firestore and caches them in memory.
    * If the cloud database is brand new and empty, it executes seeding on the cloud automatically.
    */
-  public async initFirestore(): Promise<void> {
+  async initFirestore() {
     console.log('[Firestore] Checking for Google Cloud credentials...');
     const hasCreds = this.hasExplicitCredential || await this.hasADC();
 
     if (!hasCreds) {
       console.warn('[Firestore] No Google Cloud credentials detected. Skipping Firestore synchronization.');
       console.log('[Firestore] Running in local-only fallback mode.');
-      this.firestore = undefined as any;
+      this.firestore = undefined;
       this.initLocalOnlySeed();
       return;
     }
@@ -315,17 +296,17 @@ export class Database {
       }
 
       // Sync local memory data structures
-      this.data.departments = deptsSnap.docs.map(doc => doc.data() as Department);
-      this.data.students = studentsSnap.docs.map(doc => doc.data() as (Student & { password_hash: string }));
-      this.data.teachers = teachersSnap.docs.map(doc => doc.data() as (Teacher & { password_hash: string }));
-      this.data.hods = hodsSnap.docs.map(doc => doc.data() as (HOD & { password_hash: string }));
-      this.data.guards = guardsSnap.docs.map(doc => doc.data() as (Guard & { password_hash: string }));
-      this.data.admins = adminsSnap.docs.map(doc => doc.data() as (Admin & { password_hash: string }));
-      this.data.gatepasses = gatepassesSnap.docs.map(doc => doc.data() as GatePass);
-      this.data.logs = logsSnap.docs.map(doc => doc.data() as ActivityLog);
-      this.data.notifications = notificationsSnap.docs.map(doc => doc.data() as AppNotification);
-      this.data.officialParentContacts = parentContactsSnap.docs.map(doc => doc.data() as OfficialParentContact);
-      this.data.lateComeEntries = lateComeSnap.docs.map(doc => doc.data() as LateComeEntry);
+      this.data.departments = deptsSnap.docs.map(doc => doc.data());
+      this.data.students = studentsSnap.docs.map(doc => doc.data());
+      this.data.teachers = teachersSnap.docs.map(doc => doc.data());
+      this.data.hods = hodsSnap.docs.map(doc => doc.data());
+      this.data.guards = guardsSnap.docs.map(doc => doc.data());
+      this.data.admins = adminsSnap.docs.map(doc => doc.data());
+      this.data.gatepasses = gatepassesSnap.docs.map(doc => doc.data());
+      this.data.logs = logsSnap.docs.map(doc => doc.data());
+      this.data.notifications = notificationsSnap.docs.map(doc => doc.data());
+      this.data.officialParentContacts = parentContactsSnap.docs.map(doc => doc.data());
+      this.data.lateComeEntries = lateComeSnap.docs.map(doc => doc.data());
 
       console.log('[Firestore] Synchronization completed! Total gate passes loaded:', this.data.gatepasses.length);
 
@@ -333,7 +314,7 @@ export class Database {
       this.saveLocal();
     } catch (err) {
       console.error('[Firestore] Initialization error. Running on local fallback cache:', err);
-      this.firestore = undefined as any;
+      this.firestore = undefined;
       this.initLocalOnlySeed();
     }
   }
@@ -341,7 +322,7 @@ export class Database {
   /**
    * Seeds cloud collections with initial demo profiles
    */
-  private async seedCloud(): Promise<void> {
+  async seedCloud() {
     const { depts, teachers, students, hods, guards, admins, gatepasses, logs } = this.getSeedData();
 
     try {
@@ -381,7 +362,7 @@ export class Database {
   /**
    * Commits the current in-memory database records to disk fallback
    */
-  private saveLocal() {
+  saveLocal() {
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
     } catch (err) {
@@ -392,15 +373,16 @@ export class Database {
   /**
    * Helper to write a single document to Firestore asynchronously
    */
-  private saveDoc(collectionName: string, id: string, docData: any) {
+  saveDoc(collectionName, id, docData) {
     if (!this.firestore) return;
 
     // Clean up undefined properties so Firestore doesn't reject the write
-    const cleanObject = (obj: any): any => {
+    const cleanObject = (obj) => {
       if (obj === null || typeof obj !== 'object') return obj;
+
       if (Array.isArray(obj)) return obj.map(cleanObject);
 
-      const cleaned: any = {};
+      const cleaned = {};
       for (const key of Object.keys(obj)) {
         if (obj[key] !== undefined) {
           cleaned[key] = cleanObject(obj[key]);
@@ -419,7 +401,7 @@ export class Database {
   /**
    * Helper to delete a single document from Firestore asynchronously
    */
-  private deleteDoc(collectionName: string, id: string) {
+  deleteDoc(collectionName, id) {
     if (!this.firestore) return;
     this.firestore.collection(collectionName).doc(id).delete().catch(err => {
       console.error(`[Firestore] Failed to delete ${id} in ${collectionName}:`, err);
@@ -431,7 +413,7 @@ export class Database {
   // ==========================================
 
   // Auth Operations
-  public authenticateUser(email: string, password_plain: string): { user: any; role: UserRole } | null {
+  authenticateUser(email, password_plain) {
     // Check Students
     const student = this.data.students.find(s => s.email.toLowerCase() === email.toLowerCase());
     if (student && bcrypt.compareSync(password_plain, student.password_hash)) {
@@ -473,11 +455,11 @@ export class Database {
   }
 
   // Fetch departments
-  public getDepartments(): Department[] {
+  getDepartments() {
     return this.data.departments;
   }
 
-  public addDepartment(name: string): Department {
+  addDepartment(name) {
     const id = `dept-${Date.now()}`;
     const newDept = { id, department_name: name };
     this.data.departments.push(newDept);
@@ -486,7 +468,7 @@ export class Database {
     return newDept;
   }
 
-  public deleteDepartment(id: string): boolean {
+  deleteDepartment(id) {
     const index = this.data.departments.findIndex(d => d.id === id);
     if (index !== -1) {
       this.data.departments.splice(index, 1);
@@ -498,7 +480,7 @@ export class Database {
   }
 
   // Student Operations
-  public getOfficialParentPhone(roll_no: string, studentProvidedPhone: string): string {
+  getOfficialParentPhone(roll_no, studentProvidedPhone) {
     if (!this.data.officialParentContacts) return studentProvidedPhone;
     const official = this.data.officialParentContacts.find(
       c => c.roll_no.trim().toLowerCase() === roll_no.trim().toLowerCase()
@@ -506,7 +488,7 @@ export class Database {
     return official ? official.parent_phone : studentProvidedPhone;
   }
 
-  public getStudents(): Student[] {
+  getStudents() {
     return this.data.students.map(({ password_hash, ...rest }) => {
       return {
         ...rest,
@@ -515,7 +497,7 @@ export class Database {
     });
   }
 
-  public registerStudent(studentData: Omit<Student, 'id' | 'created_at'> & { password_plain: string }): Student {
+  registerStudent(studentData) {
     const id = `stud-${Date.now()}`;
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(studentData.password_plain, salt);
@@ -548,7 +530,7 @@ export class Database {
     return userWithoutPassword;
   }
 
-  public updateStudent(id: string, update: Partial<Student> & { password_plain?: string }): boolean {
+  updateStudent(id, update) {
     const index = this.data.students.findIndex(s => s.id === id);
     if (index !== -1) {
       const current = this.data.students[index];
@@ -587,7 +569,7 @@ export class Database {
     return false;
   }
 
-  public deleteStudent(id: string): boolean {
+  deleteStudent(id) {
     const index = this.data.students.findIndex(s => s.id === id);
     if (index !== -1) {
       this.data.students.splice(index, 1);
@@ -599,11 +581,11 @@ export class Database {
   }
 
   // HOD Operations
-  public getHODs(): HOD[] {
+  getHODs() {
     return this.data.hods.map(({ password_hash, ...rest }) => rest);
   }
 
-  public registerHOD(hodData: Omit<HOD, 'id'> & { password_plain: string }): HOD {
+  registerHOD(hodData) {
     const id = `hod-${Date.now()}`;
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(hodData.password_plain, salt);
@@ -624,7 +606,7 @@ export class Database {
     return rest;
   }
 
-  public deleteHOD(id: string): boolean {
+  deleteHOD(id) {
     const index = this.data.hods.findIndex(h => h.id === id);
     if (index !== -1) {
       this.data.hods.splice(index, 1);
@@ -636,11 +618,11 @@ export class Database {
   }
 
   // Guards Operations
-  public getGuards(): Guard[] {
+  getGuards() {
     return this.data.guards.map(({ password_hash, ...rest }) => rest);
   }
 
-  public registerGuard(guardData: Omit<Guard, 'id'> & { password_plain: string }): Guard {
+  registerGuard(guardData) {
     const id = `guard-${Date.now()}`;
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(guardData.password_plain, salt);
@@ -660,7 +642,7 @@ export class Database {
     return rest;
   }
 
-  public deleteGuard(id: string): boolean {
+  deleteGuard(id) {
     const index = this.data.guards.findIndex(g => g.id === id);
     if (index !== -1) {
       this.data.guards.splice(index, 1);
@@ -672,7 +654,7 @@ export class Database {
   }
 
   // GatePass Operations
-  public getGatePasses(filters?: { student_id?: string; department?: string; status?: string }): GatePass[] {
+  getGatePasses(filters) {
     let list = this.data.gatepasses.map(pass => {
       const student = this.data.students.find(s => s.id === pass.student_id);
       const parentPhone = student ? this.getOfficialParentPhone(student.roll_no, student.parent_phone) : 'N/A';
@@ -703,7 +685,7 @@ export class Database {
     return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
-  public getGatePassById(id: string): GatePass | null {
+  getGatePassById(id) {
     const pass = this.data.gatepasses.find(p => p.id === id);
     if (!pass) return null;
     const student = this.data.students.find(s => s.id === pass.student_id);
@@ -720,12 +702,12 @@ export class Database {
     };
   }
 
-  public createGatePass(studentId: string, data: { reason: string; destination: string; exit_time: string; return_time: string; selected_hod_id?: string; selected_hod_name?: string }): GatePass {
+  createGatePass(studentId, data) {
     const id = `pass-${Date.now()}`;
     const token = `gp_tok_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
     const student = this.data.students.find(s => s.id === studentId);
 
-    const newPass: GatePass = {
+    const newPass = {
       id,
       student_id: studentId,
       reason: data.reason,
@@ -744,10 +726,10 @@ export class Database {
     this.data.gatepasses.push(newPass);
     this.saveLocal();
     this.saveDoc('gatepasses', id, newPass);
-    return this.getGatePassById(id)!;
+    return this.getGatePassById(id);
   }
 
-  public updateGatePassStatus(id: string, status: GatePass['status'], approvedBy?: string, remarks?: string, qrCode?: string): GatePass | null {
+  updateGatePassStatus(id, status, approvedBy, remarks, qrCode) {
     const index = this.data.gatepasses.findIndex(p => p.id === id);
     if (index !== -1) {
       const current = this.data.gatepasses[index];
@@ -768,13 +750,13 @@ export class Database {
     return null;
   }
 
-  public markExit(id: string): GatePass | null {
+  markExit(id) {
     const index = this.data.gatepasses.findIndex(p => p.id === id);
     if (index !== -1) {
       const current = this.data.gatepasses[index];
       const updatedPass = {
         ...current,
-        status: 'closed' as const,
+        status: 'closed',
         exit_marked_at: new Date().toISOString(),
       };
       this.data.gatepasses[index] = updatedPass;
@@ -785,13 +767,13 @@ export class Database {
     return null;
   }
 
-  public markReturn(id: string): GatePass | null {
+  markReturn(id) {
     const index = this.data.gatepasses.findIndex(p => p.id === id);
     if (index !== -1) {
       const current = this.data.gatepasses[index];
       const updatedPass = {
         ...current,
-        status: 'closed' as const,
+        status: 'closed',
         return_marked_at: new Date().toISOString(),
       };
       this.data.gatepasses[index] = updatedPass;
@@ -802,7 +784,7 @@ export class Database {
     return null;
   }
 
-  public updateGatePassAIScore(id: string, risk_level: 'low' | 'medium' | 'high', risk_remarks: string) {
+  updateGatePassAIScore(id, risk_level, risk_remarks) {
     const index = this.data.gatepasses.findIndex(p => p.id === id);
     if (index !== -1) {
       this.data.gatepasses[index].risk_level = risk_level;
@@ -813,12 +795,12 @@ export class Database {
   }
 
   // Logs Operations
-  public getLogs(): ActivityLog[] {
+  getLogs() {
     return [...this.data.logs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
-  public addLog(userId: string, userName: string, role: UserRole, action: string) {
-    const log: ActivityLog = {
+  addLog(userId, userName, role, action) {
+    const log = {
       id: `log-${Date.now()}`,
       user_id: userId,
       user_name: userName,
@@ -832,7 +814,7 @@ export class Database {
   }
 
   // Notifications Operations
-  public getNotifications(userId: string, role: UserRole, department?: string): AppNotification[] {
+  getNotifications(userId, role, department) {
     this.data.notifications = this.data.notifications || [];
     return this.data.notifications
       .filter(n => {
@@ -846,9 +828,9 @@ export class Database {
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
-  public addNotification(recipientId: string, recipientRole: UserRole, title: string, message: string, type: AppNotification['type'], referenceId?: string, department?: string): AppNotification {
+  addNotification(recipientId, recipientRole, title, message, type, referenceId, department) {
     this.data.notifications = this.data.notifications || [];
-    const notification: AppNotification = {
+    const notification = {
       id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       recipient_id: recipientId,
       recipient_role: recipientRole,
@@ -866,7 +848,7 @@ export class Database {
     return notification;
   }
 
-  public markNotificationAsRead(id: string): boolean {
+  markNotificationAsRead(id) {
     this.data.notifications = this.data.notifications || [];
     const notif = this.data.notifications.find(n => n.id === id);
     if (notif) {
@@ -878,7 +860,7 @@ export class Database {
     return false;
   }
 
-  public markAllNotificationsAsRead(userId: string, role: UserRole, department?: string): boolean {
+  markAllNotificationsAsRead(userId, role, department) {
     this.data.notifications = this.data.notifications || [];
     let updated = false;
     this.data.notifications.forEach(n => {
@@ -903,7 +885,7 @@ export class Database {
   }
 
   // Get CSV Reports Data
-  public getCSVData(): string {
+  getCSVData() {
     const list = this.getGatePasses();
     const headers = ['Pass ID', 'Student Name', 'Roll No', 'Department', 'Reason', 'Destination', 'Status', 'Risk Level', 'Exit Expected', 'Return Expected', 'Actual Exit', 'Actual Return', 'Approved By', 'Remarks', 'Applied At'];
 
@@ -929,7 +911,7 @@ export class Database {
   }
 
   // Export SQL Script
-  public generateSQLDump(): string {
+  generateSQLDump() {
     let sql = `-- SMART DIGITAL GATE PASS SYSTEM DATABASE DUMP
 -- Exported on ${new Date().toISOString()}
 
@@ -1060,11 +1042,11 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
   }
 
   // Official Parent Contacts Directory Operations
-  public getOfficialParentContacts(): OfficialParentContact[] {
+  getOfficialParentContacts() {
     return this.data.officialParentContacts || [];
   }
 
-  public saveOfficialParentContacts(contacts: OfficialParentContact[]): void {
+  saveOfficialParentContacts(contacts) {
     this.data.officialParentContacts = contacts;
 
     this.data.students.forEach(student => {
@@ -1085,13 +1067,13 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
   }
 
   // Late Come Operations
-  public getLateComeEntries(): LateComeEntry[] {
+  getLateComeEntries() {
     return this.data.lateComeEntries || [];
   }
 
-  public addLateComeEntry(studentId: string, arrivalTime: string, reason: string): LateComeEntry {
+  addLateComeEntry(studentId, arrivalTime, reason) {
     const student = this.data.students.find(s => s.id === studentId);
-    const entry: LateComeEntry = {
+    const entry = {
       id: `late-${Date.now()}`,
       student_id: studentId,
       student_name: student?.name || 'Unknown Student',
@@ -1112,11 +1094,11 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
   }
 
   // Teacher / Class Incharge Operations
-  public getTeachers(): Teacher[] {
+  getTeachers() {
     return (this.data.teachers || []).map(({ password_hash, ...rest }) => rest);
   }
 
-  public registerTeacher(teacherData: Omit<Teacher, 'id'> & { password_plain: string }): Teacher {
+  registerTeacher(teacherData) {
     const id = `teacher-${Date.now()}`;
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(teacherData.password_plain, salt);
@@ -1139,7 +1121,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
     return rest;
   }
 
-  public deleteTeacher(id: string): boolean {
+  deleteTeacher(id) {
     if (!this.data.teachers) return false;
     const index = this.data.teachers.findIndex(t => t.id === id);
     if (index !== -1) {
@@ -1152,7 +1134,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
   }
 
   // Find a user across all roles by email
-  public findUserByEmail(email: string): { name: string; email: string; role: UserRole } | null {
+  findUserByEmail(email) {
     const emailLower = email.toLowerCase().trim();
 
     // Check Students
@@ -1181,13 +1163,13 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
   }
 
   // Store generated OTP
-  public storeOTP(email: string, otp: string): void {
+  storeOTP(email, otp) {
     const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes from now
     this.otps.set(email.toLowerCase().trim(), { otp, expiresAt });
   }
 
   // Verify OTP
-  public verifyOTP(email: string, otp: string): boolean {
+  verifyOTP(email, otp) {
     const emailKey = email.toLowerCase().trim();
     const entry = this.otps.get(emailKey);
     if (!entry) return false;
@@ -1206,7 +1188,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
   }
 
   // Update password for any role
-  public updateUserPassword(email: string, password_plain: string): boolean {
+  updateUserPassword(email, password_plain) {
     const emailLower = email.toLowerCase().trim();
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(password_plain, salt);

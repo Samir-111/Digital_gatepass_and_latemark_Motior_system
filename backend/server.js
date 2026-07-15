@@ -3,16 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import path from 'path';
 import jwt from 'jsonwebtoken';
 import QRCode from 'qrcode';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { Database } from './db.js';
-import { UserRole } from '../frontend/types.js';
 
 dotenv.config();
 
@@ -23,7 +22,7 @@ const db = Database.getInstance();
 
 // Initialize Gemini SDK with User-Agent for telemetry
 const apiKey = process.env.GEMINI_API_KEY;
-let ai: GoogleGenAI | null = null;
+let ai = null;
 if (apiKey && apiKey !== 'MY_GEMINI_API_KEY') {
   ai = new GoogleGenAI({
     apiKey,
@@ -39,23 +38,12 @@ if (apiKey && apiKey !== 'MY_GEMINI_API_KEY') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Extend Express Request interface to hold auth user
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-    role: UserRole;
-    department?: string;
-  };
-}
-
 // Authentication Middleware
-const authenticateJWT = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (authHeader) {
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, JWT_SECRET, (err, decoded: any) => {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
         return res.status(403).json({ error: 'Session expired or invalid token. Please log in again.' });
       }
@@ -68,8 +56,8 @@ const authenticateJWT = (req: AuthenticatedRequest, res: Response, next: NextFun
 };
 
 // Role-based Access Control Middleware
-const authorizeRoles = (...allowedRoles: UserRole[]) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const authorizeRoles = (...allowedRoles) => {
+  return (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
       return res.status(403).json({ error: 'Access denied. Insufficient privileges.' });
     }
@@ -78,7 +66,7 @@ const authorizeRoles = (...allowedRoles: UserRole[]) => {
 };
 
 // Helper to send a real SMS using Fast2SMS API
-const sendSMS = async (phoneNumber: string, message: string) => {
+const sendSMS = async (phoneNumber, message) => {
   const apiKey = process.env.FAST2SMS_API_KEY;
   if (!apiKey || apiKey === 'YOUR_FAST2SMS_API_KEY' || apiKey.includes('api_key')) {
     console.log(`[SMS Gateway] Real SMS to ${phoneNumber} skipped: FAST2SMS_API_KEY not configured in .env`);
@@ -105,7 +93,7 @@ const sendSMS = async (phoneNumber: string, message: string) => {
       })
     });
 
-    const result = await response.json() as any;
+    const result = await response.json();
     console.log(`[SMS Gateway] Fast2SMS dispatch result to ${cleanNumber}:`, result);
   } catch (error) {
     console.error(`[SMS Gateway] Failed to send SMS to ${cleanNumber}:`, error);
@@ -113,7 +101,7 @@ const sendSMS = async (phoneNumber: string, message: string) => {
 };
 
 // Helper to send OTP email (using nodemailer with SMTP or fallback to terminal logging)
-const sendOTPEmail = async (email: string, otp: string) => {
+const sendOTPEmail = async (email, otp) => {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || '587');
   const user = process.env.SMTP_USER;
@@ -141,7 +129,10 @@ const sendOTPEmail = async (email: string, otp: string) => {
         host,
         port,
         secure: port === 465,
-        auth: { user, pass }
+        auth: { user, pass },
+        tls: {
+          rejectUnauthorized: false
+        }
       });
 
       await transporter.sendMail({
@@ -176,7 +167,7 @@ const sendOTPEmail = async (email: string, otp: string) => {
 // ==========================================
 
 // Public metadata for dynamic dropdown menus in login & registration
-app.get('/api/public/info', (req: Request, res: Response) => {
+app.get('/api/public/info', (req, res) => {
   res.json({
     departments: db.getDepartments(),
     hods: db.getHODs(),
@@ -185,7 +176,7 @@ app.get('/api/public/info', (req: Request, res: Response) => {
 });
 
 // 1. General Auth Route
-app.post('/api/login', (req: Request, res: Response) => {
+app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
@@ -216,7 +207,7 @@ app.post('/api/login', (req: Request, res: Response) => {
 });
 
 // 1.5 Student Registration Route
-app.post('/api/register', (req: Request, res: Response) => {
+app.post('/api/register', (req, res) => {
   const { name, email, password, phone, parent_phone, roll_no, department, college_id, class_teacher_id, selected_hod_id } = req.body;
 
   if (!name || !email || !password || !phone || !roll_no || !department || !college_id || !class_teacher_id || !selected_hod_id) {
@@ -274,14 +265,14 @@ app.post('/api/register', (req: Request, res: Response) => {
     db.addLog(student.id, student.name, 'student', `Self-registered new account with class teacher: ${teacherName || 'None'} & HOD: ${hodName || 'None'}`);
 
     res.status(201).json({ success: true, message: 'Registration successful! You can now log in.' });
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to complete registration.' });
   }
 });
 
 // 1.7 OTP Forgot Password Routes
 // 1.7.1 Request OTP for Forgot Password
-app.post('/api/forgot-password/request-otp', async (req: Request, res: Response) => {
+app.post('/api/forgot-password/request-otp', async (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ error: 'Email address is required.' });
@@ -296,29 +287,27 @@ app.post('/api/forgot-password/request-otp', async (req: Request, res: Response)
   try {
     // Generate a 6-digit random code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     // Store OTP in database/memory
     db.storeOTP(email, otp);
 
     // Send the OTP email
-    await sendOTPEmail(email, otp);
-
-    const isConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+    const emailSent = await sendOTPEmail(email, otp);
 
     res.json({
       success: true,
-      message: isConfigured 
-        ? 'One-Time Password (OTP) has been sent to your email.' 
+      message: emailSent
+        ? 'One-Time Password (OTP) has been sent to your email.'
         : 'One-Time Password (OTP) has been sent (Developer Mode: printed in server console).',
-      ...(!isConfigured ? { dev_otp: otp } : {})
+      ...(!emailSent ? { dev_otp: otp } : {})
     });
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to generate and send OTP.' });
   }
 });
 
 // 1.7.2 Verify OTP and Reset Password
-app.post('/api/forgot-password/verify-otp', (req: Request, res: Response) => {
+app.post('/api/forgot-password/verify-otp', (req, res) => {
   const { email, otp, new_password } = req.body;
 
   if (!email || !otp || !new_password) {
@@ -339,20 +328,19 @@ app.post('/api/forgot-password/verify-otp', (req: Request, res: Response) => {
     } else {
       return res.status(500).json({ error: 'Failed to update user password.' });
     }
-  } catch (err: any) {
+  } catch (err) {
     return res.status(500).json({ error: err.message || 'Failed to reset password.' });
   }
 });
 
-
 // 1.8 Class Teacher (Class Incharge) Routes
-app.get('/api/teacher/students', authenticateJWT, authorizeRoles('teacher'), (req: AuthenticatedRequest, res: Response) => {
-  const teacherId = req.user!.id;
+app.get('/api/teacher/students', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
+  const teacherId = req.user.id;
   const students = db.getStudents().filter(s => s.class_teacher_id === teacherId);
   res.json(students);
 });
 
-app.post('/api/sms/send-warning', authenticateJWT, authorizeRoles('teacher'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/sms/send-warning', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
   const { entryId, parentPhone, studentName, arrivalTime, teacherName, className } = req.body;
 
   if (!parentPhone || !studentName) {
@@ -369,8 +357,8 @@ app.post('/api/sms/send-warning', authenticateJWT, authorizeRoles('teacher'), (r
   console.log('====================================================');
 
   db.addLog(
-    req.user!.id,
-    req.user!.name,
+    req.user.id,
+    req.user.name,
     'teacher',
     `Triggered warning SMS to parent number (${parentPhone}) for late arrival of ${studentName}`
   );
@@ -378,15 +366,14 @@ app.post('/api/sms/send-warning', authenticateJWT, authorizeRoles('teacher'), (r
   res.json({ success: true, message: 'SMS warning successfully dispatched to parent.' });
 });
 
-app.get('/api/teacher/gatepasses', authenticateJWT, authorizeRoles('teacher'), (req: AuthenticatedRequest, res: Response) => {
-  const teacherId = req.user!.id;
-  // Get all gatepasses and filter where student's class_teacher_id matches this teacher
+app.get('/api/teacher/gatepasses', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
+  const teacherId = req.user.id;
   const allPasses = db.getGatePasses();
   const teacherPasses = allPasses.filter(p => p.class_teacher_id === teacherId);
   res.json(teacherPasses);
 });
 
-app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
   const { id, remarks } = req.body;
   if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
 
@@ -396,16 +383,15 @@ app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (re
     return res.status(400).json({ error: 'Gate pass is already approved or processed by class teacher.' });
   }
 
-  // Update status to pending_hod so HOD can review it next
   const updated = db.updateGatePassStatus(id, 'pending_hod', undefined, remarks || 'Approved by Class Teacher');
-  db.addLog(req.user!.id, req.user!.name, 'teacher', `Class Teacher approved gate pass ${id} for student ${pass.student_name}. Forwarding to HOD.`);
+  db.addLog(req.user.id, req.user.name, 'teacher', `Class Teacher approved gate pass ${id} for student ${pass.student_name}. Forwarding to HOD.`);
 
   // Notify student
   db.addNotification(
     pass.student_id,
     'student',
     'GatePass Approved by Teacher 📝',
-    `Your gate pass request has been APPROVED by Class Incharge ${req.user!.name}. It has been forwarded to HOD ${pass.selected_hod_name || 'Department Head'} for final authorization.`,
+    `Your gate pass request has been APPROVED by Class Incharge ${req.user.name}. It has been forwarded to HOD ${pass.selected_hod_name || 'Department Head'} for final authorization.`,
     'status_changed',
     id
   );
@@ -415,7 +401,7 @@ app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (re
     pass.selected_hod_id || 'hod-all',
     'hod',
     'New GatePass Approved by Teacher',
-    `Student ${pass.student_name} has requested a gate pass. Class Incharge ${req.user!.name} has APPROVED it. Ready for HOD final review. Reason: "${pass.reason}"`,
+    `Student ${pass.student_name} has requested a gate pass. Class Incharge ${req.user.name} has APPROVED it. Ready for HOD final review. Reason: "${pass.reason}"`,
     'pending_request',
     id,
     pass.student_department
@@ -424,7 +410,7 @@ app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (re
   res.json(updated);
 });
 
-app.post('/api/teacher/reject', authenticateJWT, authorizeRoles('teacher'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/teacher/reject', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
   const { id, remarks } = req.body;
   if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
   if (!remarks) return res.status(400).json({ error: 'Remarks/Reason for rejection are required.' });
@@ -435,15 +421,15 @@ app.post('/api/teacher/reject', authenticateJWT, authorizeRoles('teacher'), (req
     return res.status(400).json({ error: 'Gate pass is already processed.' });
   }
 
-  const updated = db.updateGatePassStatus(id, 'rejected', req.user!.name, remarks);
-  db.addLog(req.user!.id, req.user!.name, 'teacher', `Class Teacher rejected gate pass ${id} for student ${pass.student_name}. Reason: "${remarks}"`);
+  const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks);
+  db.addLog(req.user.id, req.user.name, 'teacher', `Class Teacher rejected gate pass ${id} for student ${pass.student_name}. Reason: "${remarks}"`);
 
   // Notify student
   db.addNotification(
     pass.student_id,
     'student',
     'GatePass Rejected by Teacher ❌',
-    `Your gate pass request has been REJECTED by Class Incharge ${req.user!.name}. Remarks: "${remarks}"`,
+    `Your gate pass request has been REJECTED by Class Incharge ${req.user.name}. Remarks: "${remarks}"`,
     'status_changed',
     id
   );
@@ -452,21 +438,49 @@ app.post('/api/teacher/reject', authenticateJWT, authorizeRoles('teacher'), (req
 });
 
 // 2. Student Routes
-app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async (req: AuthenticatedRequest, res: Response) => {
-  const studentId = req.user!.id;
+app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async (req, res) => {
+  const studentId = req.user.id;
   const { reason, destination, exit_time, return_time } = req.body;
 
   if (!reason || !exit_time) {
     return res.status(400).json({ error: 'Reason of application and leaving date/time are required.' });
   }
 
-  // Fetch registered student details to automatically use their class teacher and HOD
+  const getISTTimeDetails = (dateStringOrObject) => {
+    const date = new Date(dateStringOrObject);
+    const options = { timeZone: 'Asia/Kolkata', hour12: false };
+    const timeString = date.toLocaleTimeString('en-US', options);
+    const dateString = date.toLocaleDateString('en-US', options);
+    const [hour, minute] = timeString.split(':').map(Number);
+    return { hour, minute, dateString };
+  };
+
+  // 1. Validate exit timing (between 9:00 AM and 6:00 PM)
+  const exitDetails = getISTTimeDetails(exit_time);
+  if (exitDetails.hour < 9 || exitDetails.hour > 18 || (exitDetails.hour === 18 && exitDetails.minute > 0)) {
+    return res.status(400).json({ error: 'Selected exit timing must be strictly between 9:00 AM and 6:00 PM.' });
+  }
+
+  // 2. Limit to one gate pass per student per day
+  const currentDetails = getISTTimeDetails(new Date());
+  const hasPassOnSameDay = db.getGatePasses().some(p => {
+    if (p.student_id !== studentId) return false;
+    if (p.status === 'rejected' || p.status === 'cancelled') return false;
+
+    const passExitDetails = getISTTimeDetails(p.exit_time);
+    const passCreatedDetails = getISTTimeDetails(p.created_at);
+    return passExitDetails.dateString === exitDetails.dateString || passCreatedDetails.dateString === currentDetails.dateString;
+  });
+
+  if (hasPassOnSameDay) {
+    return res.status(400).json({ error: 'You are allowed only one gate pass per day. You already have a pending or approved gate pass for today or the scheduled date.' });
+  }
+
   const student = db.getStudents().find(s => s.id === studentId);
   if (!student) {
     return res.status(404).json({ error: 'Student profile not found.' });
   }
 
-  // Retrieve student's registered HOD or fallback to HOD of their department
   let finalHODId = student.selected_hod_id;
   let finalHODName = student.selected_hod_name;
 
@@ -501,9 +515,9 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
       selected_hod_id: finalHODId,
       selected_hod_name: finalHODName
     });
-    db.addLog(studentId, req.user!.name, 'student', `Applied for gate pass: ${gatePass.id} to HOD: ${finalHODName || 'Department Head'}`);
+    db.addLog(studentId, req.user.name, 'student', `Applied for gate pass: ${gatePass.id} to HOD: ${finalHODName || 'Department Head'}`);
 
-    // Rule-based Frequency Risk Assessment (No Gemini AI)
+    // Frequency Risk Assessment
     const currentMonth = new Date().toISOString().substring(0, 7); // "YYYY-MM"
     const passesThisMonth = db.getGatePasses().filter(p =>
       p.student_id === studentId &&
@@ -512,9 +526,9 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
       p.status !== 'rejected' &&
       p.status !== 'cancelled'
     );
-    const monthlyCount = passesThisMonth.length; // Includes current pass since it was created at line 333
+    const monthlyCount = passesThisMonth.length;
 
-    let risk_level: 'low' | 'medium' | 'high' = 'low';
+    let risk_level = 'low';
     let risk_remarks = '';
 
     if (monthlyCount <= 2) {
@@ -530,68 +544,64 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
 
     db.updateGatePassAIScore(gatePass.id, risk_level, risk_remarks);
 
-    // Find student details to get class teacher
     const studentInfo = db.getStudents().find(s => s.id === studentId);
     const teacherId = studentInfo?.class_teacher_id;
 
     if (teacherId) {
-      // Notify class teacher (Class Incharge) first
       db.addNotification(
         teacherId,
         'teacher',
         'New GatePass Request Pending',
-        `Student ${req.user!.name} has requested a gate pass for "${reason}". Risk assessment: ${risk_level.toUpperCase()}. Please review and approve.`,
+        `Student ${req.user.name} has requested a gate pass for "${reason}". Risk assessment: ${risk_level.toUpperCase()}. Please review and approve.`,
         'pending_request',
         gatePass.id
       );
     } else {
-      // Fallback: Notify HOD if no class teacher mapped
       db.addNotification(
         finalHODId || 'hod-all',
         'hod',
         'New GatePass Request Pending (No Teacher Mapped)',
-        `Student ${req.user!.name} has requested a gate pass for "${reason}". Risk assessment: ${risk_level.toUpperCase()}.`,
+        `Student ${req.user.name} has requested a gate pass for "${reason}". Risk assessment: ${risk_level.toUpperCase()}.`,
         'pending_request',
         gatePass.id,
-        req.user!.department
+        req.user.department
       );
     }
 
-    // Retrieve fully analyzed gatepass
     const finalizedPass = db.getGatePassById(gatePass.id);
     res.status(201).json(finalizedPass);
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to submit request.' });
   }
 });
 
-app.get('/api/student/history', authenticateJWT, authorizeRoles('student'), (req: AuthenticatedRequest, res: Response) => {
-  const studentId = req.user!.id;
+app.get('/api/student/history', authenticateJWT, authorizeRoles('student'), (req, res) => {
+  const studentId = req.user.id;
   const passes = db.getGatePasses({ student_id: studentId });
   res.json(passes);
 });
 
-app.post('/api/student/cancel', authenticateJWT, authorizeRoles('student'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/student/cancel', authenticateJWT, authorizeRoles('student'), (req, res) => {
   const { id } = req.body;
   if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
 
   const pass = db.getGatePassById(id);
   if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
-  if (pass.student_id !== req.user!.id) return res.status(403).json({ error: 'Access denied.' });
+  if (pass.student_id !== req.user.id) return res.status(403).json({ error: 'Access denied.' });
   if (pass.status !== 'pending') return res.status(400).json({ error: 'Only pending requests can be cancelled.' });
 
   const updated = db.updateGatePassStatus(id, 'cancelled');
-  db.addLog(req.user!.id, req.user!.name, 'student', `Cancelled gate pass request: ${id}`);
+  db.addLog(req.user.id, req.user.name, 'student', `Cancelled gate pass request: ${id}`);
 
   if (pass.selected_hod_id) {
     db.addNotification(
       pass.selected_hod_id,
       'hod',
       'GatePass Cancelled',
-      `Student ${req.user!.name} has cancelled their pending gate pass request: ${id}.`,
+      `Student ${req.user.name} has cancelled their pending gate pass request: ${id}.`,
       'status_changed',
       id,
-      req.user!.department
+      req.user.department
     );
   }
 
@@ -599,16 +609,16 @@ app.post('/api/student/cancel', authenticateJWT, authorizeRoles('student'), (req
 });
 
 // 3. HOD Routes
-app.get('/api/hod/pending', authenticateJWT, authorizeRoles('hod'), (req: AuthenticatedRequest, res: Response) => {
-  const hodDept = req.user!.department;
+app.get('/api/hod/pending', authenticateJWT, authorizeRoles('hod'), (req, res) => {
+  const hodDept = req.user.department;
   if (!hodDept) return res.status(400).json({ error: 'HOD department not specified in profile.' });
 
   const passes = db.getGatePasses({ department: hodDept, status: 'pending_hod' });
   res.json(passes);
 });
 
-app.get('/api/hod/history', authenticateJWT, authorizeRoles('hod'), (req: AuthenticatedRequest, res: Response) => {
-  const hodDept = req.user!.department;
+app.get('/api/hod/history', authenticateJWT, authorizeRoles('hod'), (req, res) => {
+  const hodDept = req.user.department;
   if (!hodDept) return res.status(400).json({ error: 'HOD department not specified.' });
 
   const allPasses = db.getGatePasses({ department: hodDept });
@@ -616,7 +626,7 @@ app.get('/api/hod/history', authenticateJWT, authorizeRoles('hod'), (req: Authen
   res.json(history);
 });
 
-app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req, res) => {
   const { id, remarks } = req.body;
   if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
 
@@ -625,7 +635,6 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req:
   if (pass.status !== 'pending_hod') return res.status(400).json({ error: 'Gate pass is not approved by class teacher or already processed.' });
 
   try {
-    // Generate secure QR Code with token encryption (unique token is embedded)
     const qrPayload = JSON.stringify({
       id: pass.id,
       token: pass.token,
@@ -640,21 +649,21 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req:
 
     const qrCodeBase64 = await QRCode.toDataURL(qrPayload, {
       color: {
-        dark: '#1e293b', // Deep Slate
+        dark: '#1e293b',
         light: '#ffffff',
       },
       margin: 2,
     });
 
-    const updated = db.updateGatePassStatus(id, 'approved', req.user!.name, remarks || 'Approved by HOD', qrCodeBase64);
-    db.addLog(req.user!.id, req.user!.name, 'hod', `Approved gate pass ${id} for student ${pass.student_name}`);
+    const updated = db.updateGatePassStatus(id, 'approved', req.user.name, remarks || 'Approved by HOD', qrCodeBase64);
+    db.addLog(req.user.id, req.user.name, 'hod', `Approved gate pass ${id} for student ${pass.student_name}`);
 
     // Notify student of approval
     db.addNotification(
       pass.student_id,
       'student',
       'GatePass Approved! 🎉',
-      `Your gate pass request for "${pass.reason}" has been APPROVED by HOD ${req.user!.name}. You can download your QR code now.`,
+      `Your gate pass request for "${pass.reason}" has been APPROVED by HOD ${req.user.name}. You can download your QR code now.`,
       'status_changed',
       id
     );
@@ -670,12 +679,12 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req:
     );
 
     res.json(updated);
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: 'Failed to generate secure QR Code.' });
   }
 });
 
-app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req, res) => {
   const { id, remarks } = req.body;
   if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
   if (!remarks) return res.status(400).json({ error: 'Reason/Remarks for rejection are required.' });
@@ -684,15 +693,15 @@ app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req: Authen
   if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
   if (pass.status !== 'pending_hod') return res.status(400).json({ error: 'Gate pass is already processed or not approved by class teacher.' });
 
-  const updated = db.updateGatePassStatus(id, 'rejected', req.user!.name, remarks);
-  db.addLog(req.user!.id, req.user!.name, 'hod', `Rejected gate pass ${id} for student ${pass.student_name}`);
+  const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks);
+  db.addLog(req.user.id, req.user.name, 'hod', `Rejected gate pass ${id} for student ${pass.student_name}`);
 
   // Notify student of rejection
   db.addNotification(
     pass.student_id,
     'student',
     'GatePass Rejected ❌',
-    `Your gate pass request for "${pass.reason}" has been REJECTED by HOD ${req.user!.name}. Remarks: "${remarks}"`,
+    `Your gate pass request for "${pass.reason}" has been REJECTED by HOD ${req.user.name}. Remarks: "${remarks}"`,
     'status_changed',
     id
   );
@@ -701,13 +710,13 @@ app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req: Authen
 });
 
 // 4. Guard Routes
-app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req, res) => {
   let { token, id } = req.body;
   if (!token && !id) {
     return res.status(400).json({ error: 'Verification credentials are missing.' });
   }
 
-  // If token is a JSON payload (e.g. from the QR Code), try to parse it to extract actual token and id
+  // If token is a JSON payload, parse it
   if (token && typeof token === 'string') {
     const trimmed = token.trim();
     if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
@@ -721,8 +730,7 @@ app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req: Au
     }
   }
 
-  // Find by token or pass_id
-  let pass: any = null;
+  let pass = null;
   if (id) {
     pass = db.getGatePassById(id);
   } else {
@@ -735,7 +743,6 @@ app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req: Au
   }
 
   // Security checks:
-  // 1. Is it approved?
   if (pass.status === 'pending') {
     return res.status(400).json({ error: 'Pass pending HOD approval. Entry/Exit not permitted.', pass });
   }
@@ -746,14 +753,14 @@ app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req: Au
     return res.status(400).json({ error: 'Pass has been cancelled by the student.', pass });
   }
 
-  // 2. Is it expired?
+  // Is it expired?
   const now = new Date();
   const returnTime = new Date(pass.return_time);
   if (now > returnTime) {
     return res.status(400).json({ error: 'Pass Expired: The return time window has lapsed.', pass, expired: true });
   }
 
-  // 3. Is it already closed?
+  // Is it already closed?
   if (pass.status === 'closed') {
     return res.status(400).json({ error: 'Single-Use Violation: This gate pass was already completed/returned and closed.', pass, duplicate: true });
   }
@@ -764,7 +771,7 @@ app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req: Au
   });
 });
 
-app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req, res) => {
   const { id } = req.body;
   if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
 
@@ -775,7 +782,7 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req: Auth
   }
 
   const updated = db.markExit(id);
-  db.addLog(req.user!.id, req.user!.name, 'guard', `Marked exit for Student ${pass.student_name} on pass ${id}`);
+  db.addLog(req.user.id, req.user.name, 'guard', `Marked exit for Student ${pass.student_name} on pass ${id}`);
 
   // Notify student of exit
   db.addNotification(
@@ -787,7 +794,7 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req: Auth
     id
   );
 
-  // Send SMS to parents when the student leaves the campus!
+  // Send SMS to parents
   const parentPhone = (pass.student_parent_phone && pass.student_parent_phone !== 'N/A')
     ? pass.student_parent_phone
     : (db.getOfficialParentPhone(pass.student_roll_no, '') || '+91 9876543210');
@@ -813,7 +820,7 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req: Auth
   res.json({ message: 'Student exit logged successfully.', pass: updated });
 });
 
-app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req, res) => {
   const { id } = req.body;
   if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
 
@@ -824,7 +831,7 @@ app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req: Au
   }
 
   const updated = db.markReturn(id);
-  db.addLog(req.user!.id, req.user!.name, 'guard', `Marked return for Student ${pass.student_name}, gate pass closed.`);
+  db.addLog(req.user.id, req.user.name, 'guard', `Marked return for Student ${pass.student_name}, gate pass closed.`);
 
   // Notify student of return
   db.addNotification(
@@ -839,8 +846,7 @@ app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req: Au
   res.json({ message: 'Student return logged successfully. Pass closed.', pass: updated });
 });
 
-app.get('/api/guard/entries', authenticateJWT, authorizeRoles('guard'), (req: AuthenticatedRequest, res: Response) => {
-  // Get all passes with active/recent gate activity today
+app.get('/api/guard/entries', authenticateJWT, authorizeRoles('guard'), (req, res) => {
   const passes = db.getGatePasses();
   const today = new Date().toDateString();
   const activeToday = passes.filter(p => {
@@ -853,18 +859,18 @@ app.get('/api/guard/entries', authenticateJWT, authorizeRoles('guard'), (req: Au
 });
 
 // 4.5 Centralized Notification API Routes
-app.get('/api/notifications', authenticateJWT, (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user!.id;
-  const role = req.user!.role;
-  const department = req.user!.department;
+app.get('/api/notifications', authenticateJWT, (req, res) => {
+  const userId = req.user.id;
+  const role = req.user.role;
+  const department = req.user.department;
   const list = db.getNotifications(userId, role, department);
   res.json(list);
 });
 
-app.post('/api/notifications/read', authenticateJWT, (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/notifications/read', authenticateJWT, (req, res) => {
   const { id, all } = req.body;
   if (all) {
-    db.markAllNotificationsAsRead(req.user!.id, req.user!.role, req.user!.department);
+    db.markAllNotificationsAsRead(req.user.id, req.user.role, req.user.department);
     return res.json({ success: true, message: 'All notifications marked as read.' });
   }
   if (!id) return res.status(400).json({ error: 'Notification ID is required.' });
@@ -873,11 +879,11 @@ app.post('/api/notifications/read', authenticateJWT, (req: AuthenticatedRequest,
 });
 
 // 5. Admin Dashboard & Operations Routes
-app.get('/api/admin/dashboard', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/dashboard', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const passes = db.getGatePasses();
   const students = db.getStudents();
   const depts = db.getDepartments();
-  const logs = db.getLogs().slice(0, 50); // last 50 logs
+  const logs = db.getLogs().slice(0, 50);
 
   const total = passes.length;
   const pending = passes.filter(p => p.status === 'pending').length;
@@ -889,7 +895,7 @@ app.get('/api/admin/dashboard', authenticateJWT, authorizeRoles('admin'), (req: 
   const rejectedToday = passes.filter(p => p.status === 'rejected' && new Date(p.created_at).toDateString() === today).length;
 
   // Requests by department
-  const requests_by_department: Record<string, number> = {};
+  const requests_by_department = {};
   depts.forEach(d => { requests_by_department[d.department_name] = 0; });
   passes.forEach(p => {
     if (p.student_department) {
@@ -898,7 +904,7 @@ app.get('/api/admin/dashboard', authenticateJWT, authorizeRoles('admin'), (req: 
   });
 
   // Requests by status
-  const requests_by_status: Record<string, number> = {
+  const requests_by_status = {
     pending: 0,
     approved: 0,
     rejected: 0,
@@ -927,34 +933,34 @@ app.get('/api/admin/dashboard', authenticateJWT, authorizeRoles('admin'), (req: 
   });
 });
 
-app.get('/api/admin/gatepasses', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/gatepasses', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getGatePasses());
 });
 
-app.get('/api/admin/reports', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/reports', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const csv = db.getCSVData();
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename=gatepass_reports.csv');
   res.status(200).send(csv);
 });
 
-app.get('/api/admin/sql-dump', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/sql-dump', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const sql = db.generateSQLDump();
   res.setHeader('Content-Type', 'text/sql');
   res.setHeader('Content-Disposition', 'attachment; filename=gatepass_dump.sql');
   res.status(200).send(sql);
 });
 
-app.get('/api/admin/logs', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/logs', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getLogs());
 });
 
 // Official Parent Contacts Directory APIs
-app.get('/api/admin/parent-contacts', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/parent-contacts', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getOfficialParentContacts());
 });
 
-app.post('/api/admin/upload-parent-contacts', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/admin/upload-parent-contacts', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { contacts } = req.body;
   if (!Array.isArray(contacts)) {
     return res.status(400).json({ error: 'Contacts list must be an array.' });
@@ -962,16 +968,16 @@ app.post('/api/admin/upload-parent-contacts', authenticateJWT, authorizeRoles('a
 
   try {
     db.saveOfficialParentContacts(contacts);
-    db.addLog(req.user!.id, req.user!.name, 'admin', `Uploaded/Updated official parent contact directory of ${contacts.length} records.`);
+    db.addLog(req.user.id, req.user.name, 'admin', `Uploaded/Updated official parent contact directory of ${contacts.length} records.`);
     res.json({ success: true, message: `Successfully registered/updated ${contacts.length} parent contact numbers.` });
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to update parent directory.' });
   }
 });
 
 // Student Late Come APIs
-app.post('/api/student/late-come', authenticateJWT, authorizeRoles('student'), (req: AuthenticatedRequest, res: Response) => {
-  const studentId = req.user!.id;
+app.post('/api/student/late-come', authenticateJWT, authorizeRoles('student'), (req, res) => {
+  const studentId = req.user.id;
   const { arrival_time, reason } = req.body;
 
   if (!arrival_time || !reason) {
@@ -980,64 +986,61 @@ app.post('/api/student/late-come', authenticateJWT, authorizeRoles('student'), (
 
   try {
     const entry = db.addLateComeEntry(studentId, arrival_time, reason);
-    db.addLog(studentId, req.user!.name, 'student', `Logged a late arrival entry for today: Reason: "${reason}"`);
+    db.addLog(studentId, req.user.name, 'student', `Logged a late arrival entry for today: Reason: "${reason}"`);
     res.status(201).json({ success: true, entry });
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to submit late come entry.' });
   }
 });
 
 // Role-Aware Late Come History
-app.get('/api/late-come', authenticateJWT, (req: AuthenticatedRequest, res: Response) => {
-  const { id, role, department } = req.user!;
+app.get('/api/late-come', authenticateJWT, (req, res) => {
+  const { id, role, department } = req.user;
   const allEntries = db.getLateComeEntries();
 
   if (role === 'student') {
     const studentEntries = allEntries.filter(e => e.student_id === id);
     return res.json(studentEntries);
   } else if (role === 'hod') {
-    // Only return entries for students in the HOD's department
     const hodEntries = allEntries.filter(e => e.student_department.toLowerCase() === department?.toLowerCase());
     return res.json(hodEntries);
   } else if (role === 'teacher') {
-    // Only return entries for students mapped to this Class Teacher
     const teacherEntries = allEntries.filter(e => e.class_teacher_id === id);
     return res.json(teacherEntries);
   } else if (role === 'admin') {
     return res.json(allEntries);
   } else {
-    // Guards or unrecognized roles
     return res.json([]);
   }
 });
 
 // Manage Departments
-app.get('/api/admin/departments', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/departments', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getDepartments());
 });
 
-app.post('/api/admin/departments', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/admin/departments', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Department name is required.' });
   const d = db.addDepartment(name);
-  db.addLog(req.user!.id, req.user!.name, 'admin', `Created department: ${name}`);
+  db.addLog(req.user.id, req.user.name, 'admin', `Created department: ${name}`);
   res.status(201).json(d);
 });
 
-app.delete('/api/admin/departments/:id', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.delete('/api/admin/departments/:id', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { id } = req.params;
   const success = db.deleteDepartment(id);
   if (!success) return res.status(404).json({ error: 'Department not found.' });
-  db.addLog(req.user!.id, req.user!.name, 'admin', `Deleted department ${id}`);
+  db.addLog(req.user.id, req.user.name, 'admin', `Deleted department ${id}`);
   res.json({ message: 'Department deleted successfully.' });
 });
 
 // Manage Students
-app.get('/api/admin/students', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/students', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getStudents());
 });
 
-app.post('/api/admin/students', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/admin/students', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { college_id, name, roll_no, department, email, phone, parent_phone, password } = req.body;
   if (!college_id || !name || !roll_no || !department || !email || !phone || !password) {
     return res.status(400).json({ error: 'All student details including password are required.' });
@@ -1054,27 +1057,27 @@ app.post('/api/admin/students', authenticateJWT, authorizeRoles('admin'), (req: 
       parent_phone: parent_phone || '+91 9876543210',
       password_plain: password
     });
-    db.addLog(req.user!.id, req.user!.name, 'admin', `Registered Student ${name} (${roll_no})`);
+    db.addLog(req.user.id, req.user.name, 'admin', `Registered Student ${name} (${roll_no})`);
     res.status(201).json(s);
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to register student.' });
   }
 });
 
-app.delete('/api/admin/students/:id', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.delete('/api/admin/students/:id', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { id } = req.params;
   const success = db.deleteStudent(id);
   if (!success) return res.status(404).json({ error: 'Student not found.' });
-  db.addLog(req.user!.id, req.user!.name, 'admin', `Deleted Student ID ${id}`);
+  db.addLog(req.user.id, req.user.name, 'admin', `Deleted Student ID ${id}`);
   res.json({ message: 'Student deleted successfully.' });
 });
 
 // Manage HODs
-app.get('/api/admin/hods', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/hods', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getHODs());
 });
 
-app.post('/api/admin/hods', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/admin/hods', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { name, department, email, password } = req.body;
   if (!name || !department || !email || !password) {
     return res.status(400).json({ error: 'All HOD details including password are required.' });
@@ -1082,27 +1085,27 @@ app.post('/api/admin/hods', authenticateJWT, authorizeRoles('admin'), (req: Auth
 
   try {
     const h = db.registerHOD({ name, department, email, password_plain: password });
-    db.addLog(req.user!.id, req.user!.name, 'admin', `Registered HOD Dr./Prof. ${name} for ${department}`);
+    db.addLog(req.user.id, req.user.name, 'admin', `Registered HOD Dr./Prof. ${name} for ${department}`);
     res.status(201).json(h);
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to register HOD.' });
   }
 });
 
-app.delete('/api/admin/hods/:id', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.delete('/api/admin/hods/:id', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { id } = req.params;
   const success = db.deleteHOD(id);
   if (!success) return res.status(404).json({ error: 'HOD not found.' });
-  db.addLog(req.user!.id, req.user!.name, 'admin', `Deleted HOD ID ${id}`);
+  db.addLog(req.user.id, req.user.name, 'admin', `Deleted HOD ID ${id}`);
   res.json({ message: 'HOD deleted successfully.' });
 });
 
 // Manage Guards
-app.get('/api/admin/guards', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/guards', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getGuards());
 });
 
-app.post('/api/admin/guards', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/admin/guards', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'All guard details including password are required.' });
@@ -1110,27 +1113,27 @@ app.post('/api/admin/guards', authenticateJWT, authorizeRoles('admin'), (req: Au
 
   try {
     const g = db.registerGuard({ name, email, password_plain: password });
-    db.addLog(req.user!.id, req.user!.name, 'admin', `Registered Security Guard ${name}`);
+    db.addLog(req.user.id, req.user.name, 'admin', `Registered Security Guard ${name}`);
     res.status(201).json(g);
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to register guard.' });
   }
 });
 
-app.delete('/api/admin/guards/:id', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.delete('/api/admin/guards/:id', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { id } = req.params;
   const success = db.deleteGuard(id);
   if (!success) return res.status(404).json({ error: 'Guard not found.' });
-  db.addLog(req.user!.id, req.user!.name, 'admin', `Deleted Guard ID ${id}`);
+  db.addLog(req.user.id, req.user.name, 'admin', `Deleted Guard ID ${id}`);
   res.json({ message: 'Guard deleted successfully.' });
 });
 
 // Manage Class Teachers (Class Incharges)
-app.get('/api/admin/teachers', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/admin/teachers', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getTeachers());
 });
 
-app.post('/api/admin/teachers', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/admin/teachers', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { name, class_name, department, email, password } = req.body;
   if (!name || !class_name || !department || !email || !password) {
     return res.status(400).json({ error: 'All teacher details including class, department, email and password are required.' });
@@ -1138,24 +1141,24 @@ app.post('/api/admin/teachers', authenticateJWT, authorizeRoles('admin'), (req: 
 
   try {
     const t = db.registerTeacher({ name, class_name, department, email, password_plain: password });
-    db.addLog(req.user!.id, req.user!.name, 'admin', `Registered Class Teacher ${name} for ${class_name} (${department})`);
+    db.addLog(req.user.id, req.user.name, 'admin', `Registered Class Teacher ${name} for ${class_name} (${department})`);
     res.status(201).json(t);
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to register class teacher.' });
   }
 });
 
-app.delete('/api/admin/teachers/:id', authenticateJWT, authorizeRoles('admin'), (req: AuthenticatedRequest, res: Response) => {
+app.delete('/api/admin/teachers/:id', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   const { id } = req.params;
   const success = db.deleteTeacher(id);
   if (!success) return res.status(404).json({ error: 'Class Teacher not found.' });
-  db.addLog(req.user!.id, req.user!.name, 'admin', `Deleted Class Teacher ID ${id}`);
+  db.addLog(req.user.id, req.user.name, 'admin', `Deleted Class Teacher ID ${id}`);
   res.json({ message: 'Class Teacher deleted successfully.' });
 });
 
 // Student Self-Service: Edit profile
-app.post('/api/student/profile', authenticateJWT, authorizeRoles('student'), (req: AuthenticatedRequest, res: Response) => {
-  const studentId = req.user!.id;
+app.post('/api/student/profile', authenticateJWT, authorizeRoles('student'), (req, res) => {
+  const studentId = req.user.id;
   const { name, roll_no, college_id, phone, email, password, photo } = req.body;
 
   const success = db.updateStudent(studentId, {
@@ -1172,7 +1175,7 @@ app.post('/api/student/profile', authenticateJWT, authorizeRoles('student'), (re
     return res.status(404).json({ error: 'Student profile not found.' });
   }
 
-  db.addLog(studentId, name || req.user!.name, 'student', `Updated profile information`);
+  db.addLog(studentId, name || req.user.name, 'student', `Updated profile information`);
   res.json({ message: 'Profile updated successfully.' });
 });
 
@@ -1180,7 +1183,6 @@ app.post('/api/student/profile', authenticateJWT, authorizeRoles('student'), (re
 // STATIC FRONTEND SERVING & VITE MIDDLEWARE
 // ==========================================
 async function startServer() {
-  // Synchronize memory cache with Google Cloud Firestore at startup
   await db.initFirestore();
 
   if (process.env.NODE_ENV !== 'production') {

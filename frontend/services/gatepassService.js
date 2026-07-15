@@ -4,52 +4,35 @@
  */
 
 import { apiFetch } from '../lib/api.js';
-import { GatePass, LateComeEntry, OfficialParentContact } from '../types.js';
 
 export const gatepassService = {
   // --- Student Dashboard APIs ---
-  getStudentHistory: async (): Promise<GatePass[]> => {
+  getStudentHistory: async () => {
     return apiFetch('/api/student/history');
   },
 
-  applyGatePass: async (payload: {
-    reason: string;
-    destination?: string;
-    exit_time: string;
-    return_time?: string;
-  }): Promise<GatePass> => {
+  applyGatePass: async (payload) => {
     return apiFetch('/api/student/apply', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
-  cancelGatePass: async (id: string): Promise<GatePass> => {
+  cancelGatePass: async (id) => {
     return apiFetch('/api/student/cancel', {
       method: 'POST',
       body: JSON.stringify({ id }),
     });
   },
 
-  updateStudentProfile: async (payload: {
-    phone?: string;
-    email?: string;
-    photo?: string;
-    name?: string;
-    roll_no?: string;
-    college_id?: string;
-    password?: string;
-  }): Promise<{ message: string }> => {
+  updateStudentProfile: async (payload) => {
     return apiFetch('/api/student/profile', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
-  submitLateCome: async (payload: {
-    arrival_time: string;
-    reason: string;
-  }): Promise<{ success: boolean; entry: LateComeEntry }> => {
+  submitLateCome: async (payload) => {
     return apiFetch('/api/student/late-come', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -57,22 +40,22 @@ export const gatepassService = {
   },
 
   // --- HOD Dashboard APIs ---
-  getHODPendingPasses: async (): Promise<GatePass[]> => {
+  getHODPendingPasses: async () => {
     return apiFetch('/api/hod/pending');
   },
 
-  getHODHistoryPasses: async (): Promise<GatePass[]> => {
+  getHODHistoryPasses: async () => {
     return apiFetch('/api/hod/history');
   },
 
-  approveGatePassHOD: async (id: string, remarks?: string): Promise<GatePass> => {
+  approveGatePassHOD: async (id, remarks) => {
     return apiFetch('/api/hod/approve', {
       method: 'POST',
       body: JSON.stringify({ id, remarks }),
     });
   },
 
-  rejectGatePassHOD: async (id: string, remarks: string): Promise<GatePass> => {
+  rejectGatePassHOD: async (id, remarks) => {
     return apiFetch('/api/hod/reject', {
       method: 'POST',
       body: JSON.stringify({ id, remarks }),
@@ -80,49 +63,36 @@ export const gatepassService = {
   },
 
   // --- Teacher Dashboard APIs ---
-  getTeacherGatePasses: async (): Promise<GatePass[]> => {
+  getTeacherGatePasses: async () => {
     return apiFetch('/api/teacher/gatepasses');
   },
 
-  getTeacherStudents: async (): Promise<any[]> => {
+  getTeacherStudents: async () => {
     return apiFetch('/api/teacher/students');
   },
 
-  approveGatePassTeacher: async (id: string, remarks?: string): Promise<GatePass> => {
+  approveGatePassTeacher: async (id, remarks) => {
     return apiFetch('/api/teacher/approve', {
       method: 'POST',
       body: JSON.stringify({ id, remarks }),
     });
   },
 
-  rejectGatePassTeacher: async (id: string, remarks: string): Promise<GatePass> => {
+  rejectGatePassTeacher: async (id, remarks) => {
     return apiFetch('/api/teacher/reject', {
       method: 'POST',
       body: JSON.stringify({ id, remarks }),
     });
   },
 
-  sendWarningSMS: async (payload: {
-    entryId: string;
-    parentPhone: string;
-    studentName: string;
-    arrivalTime: string;
-    teacherName: string;
-    className?: string;
-  }): Promise<{ success: boolean; message: string }> => {
+  sendWarningSMS: async (payload) => {
     return apiFetch('/api/sms/send-warning', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
-  triggerWarningSMS: async (payload: {
-    studentId: string;
-    studentName: string;
-    parentPhone: string;
-    arrivalTime: string;
-    teacherName: string;
-  }): Promise<{ success: boolean; message: string }> => {
+  triggerWarningSMS: async (payload) => {
     return apiFetch('/api/teacher/warning-sms', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -130,30 +100,25 @@ export const gatepassService = {
   },
 
   // --- Guard Dashboard APIs ---
-  getGuardEntries: async (): Promise<GatePass[]> => {
+  getGuardEntries: async () => {
     return apiFetch('/api/guard/entries');
   },
 
-  verifyGatePass: async (payload: { token?: string; id?: string }): Promise<{
-    message: string;
-    pass: GatePass;
-    expired?: boolean;
-    duplicate?: boolean;
-  }> => {
+  verifyGatePass: async (payload) => {
     return apiFetch('/api/guard/verify', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
-  markStudentExit: async (id: string): Promise<{ message: string; pass: GatePass }> => {
+  markStudentExit: async (id) => {
     return apiFetch('/api/guard/exit', {
       method: 'POST',
       body: JSON.stringify({ id }),
     });
   },
 
-  markStudentReturn: async (id: string): Promise<{ message: string; pass: GatePass }> => {
+  markStudentReturn: async (id) => {
     return apiFetch('/api/guard/return', {
       method: 'POST',
       body: JSON.stringify({ id }),
@@ -161,19 +126,19 @@ export const gatepassService = {
   },
 
   // --- General Common APIs ---
-  getLateComeEntries: async (): Promise<LateComeEntry[]> => {
+  getLateComeEntries: async () => {
     return apiFetch('/api/late-come');
   },
 
-  getPublicInfo: async (): Promise<{ hods: { id: string; name: string }[] }> => {
+  getPublicInfo: async () => {
     return apiFetch('/api/public/info');
   },
 
-  getNotifications: async (): Promise<any[]> => {
+  getNotifications: async () => {
     return apiFetch('/api/notifications');
   },
 
-  markNotificationRead: async (id?: string, all?: boolean): Promise<{ success: boolean }> => {
+  markNotificationRead: async (id, all) => {
     return apiFetch('/api/notifications/read', {
       method: 'POST',
       body: JSON.stringify({ id, all }),
@@ -181,109 +146,109 @@ export const gatepassService = {
   },
 
   // --- Admin Dashboard APIs ---
-  getAdminDashboard: async (): Promise<any> => {
+  getAdminDashboard: async () => {
     return apiFetch('/api/admin/dashboard');
   },
 
-  getAdminGatePasses: async (): Promise<GatePass[]> => {
+  getAdminGatePasses: async () => {
     return apiFetch('/api/admin/gatepasses');
   },
 
-  getAdminLogs: async (): Promise<any[]> => {
+  getAdminLogs: async () => {
     return apiFetch('/api/admin/logs');
   },
 
-  getAdminParentContacts: async (): Promise<OfficialParentContact[]> => {
+  getAdminParentContacts: async () => {
     return apiFetch('/api/admin/parent-contacts');
   },
 
-  uploadAdminParentContacts: async (contacts: OfficialParentContact[]): Promise<{ success: boolean; message: string }> => {
+  uploadAdminParentContacts: async (contacts) => {
     return apiFetch('/api/admin/upload-parent-contacts', {
       method: 'POST',
       body: JSON.stringify({ contacts }),
     });
   },
 
-  getAdminDepartments: async (): Promise<any[]> => {
+  getAdminDepartments: async () => {
     return apiFetch('/api/admin/departments');
   },
 
-  addAdminDepartment: async (name: string): Promise<any> => {
+  addAdminDepartment: async (name) => {
     return apiFetch('/api/admin/departments', {
       method: 'POST',
       body: JSON.stringify({ name }),
     });
   },
 
-  deleteAdminDepartment: async (id: string): Promise<{ message: string }> => {
+  deleteAdminDepartment: async (id) => {
     return apiFetch(`/api/admin/departments/${id}`, {
       method: 'DELETE',
     });
   },
 
-  getAdminStudents: async (): Promise<any[]> => {
+  getAdminStudents: async () => {
     return apiFetch('/api/admin/students');
   },
 
-  registerAdminStudent: async (studentData: any): Promise<any> => {
+  registerAdminStudent: async (studentData) => {
     return apiFetch('/api/admin/students', {
       method: 'POST',
       body: JSON.stringify(studentData),
     });
   },
 
-  deleteAdminStudent: async (id: string): Promise<{ message: string }> => {
+  deleteAdminStudent: async (id) => {
     return apiFetch(`/api/admin/students/${id}`, {
       method: 'DELETE',
     });
   },
 
-  getAdminHODs: async (): Promise<any[]> => {
+  getAdminHODs: async () => {
     return apiFetch('/api/admin/hods');
   },
 
-  registerAdminHOD: async (hodData: any): Promise<any> => {
+  registerAdminHOD: async (hodData) => {
     return apiFetch('/api/admin/hods', {
       method: 'POST',
       body: JSON.stringify(hodData),
     });
   },
 
-  deleteAdminHOD: async (id: string): Promise<{ message: string }> => {
+  deleteAdminHOD: async (id) => {
     return apiFetch(`/api/admin/hods/${id}`, {
       method: 'DELETE',
     });
   },
 
-  getAdminGuards: async (): Promise<any[]> => {
+  getAdminGuards: async () => {
     return apiFetch('/api/admin/guards');
   },
 
-  registerAdminGuard: async (guardData: any): Promise<any> => {
+  registerAdminGuard: async (guardData) => {
     return apiFetch('/api/admin/guards', {
       method: 'POST',
       body: JSON.stringify(guardData),
     });
   },
 
-  deleteAdminGuard: async (id: string): Promise<{ message: string }> => {
+  deleteAdminGuard: async (id) => {
     return apiFetch(`/api/admin/guards/${id}`, {
       method: 'DELETE',
     });
   },
 
-  getAdminTeachers: async (): Promise<any[]> => {
+  getAdminTeachers: async () => {
     return apiFetch('/api/admin/teachers');
   },
 
-  registerAdminTeacher: async (teacherData: any): Promise<any> => {
+  registerAdminTeacher: async (teacherData) => {
     return apiFetch('/api/admin/teachers', {
       method: 'POST',
       body: JSON.stringify(teacherData),
     });
   },
 
-  deleteAdminTeacher: async (id: string): Promise<{ message: string }> => {
+  deleteAdminTeacher: async (id) => {
     return apiFetch(`/api/admin/teachers/${id}`, {
       method: 'DELETE',
     });
