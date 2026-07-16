@@ -202,6 +202,9 @@ export default function GuardDashboard({ user, onLogout }) {
       const data = await gatepassService.verifyGatePass({ token: tokenValue });
       setVerifiedPass(data.pass);
       setVerificationSuccess(data.message);
+      if (data.expired) {
+        setExpiredWarning(true);
+      }
     } catch (err) {
       setVerificationError(err.message || "Verification failed.");
       if (err.message && (err.message.includes("Single-Use") || err.message.includes("already completed"))) {
@@ -544,13 +547,23 @@ export default function GuardDashboard({ user, onLogout }) {
     /* VERIFIED PASS DETAILS */
   }
               {verifiedPass && <div className="space-y-5">
-                  <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-center space-x-3 text-emerald-800">
-                    <ShieldCheck className="h-6 w-6 text-emerald-600 shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold uppercase tracking-wider">Pass Verification Clear</div>
-                      <div className="text-[11px] font-semibold">{verificationSuccess}</div>
+                  {expiredWarning ? (
+                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-center space-x-3 text-amber-800">
+                      <AlertTriangle className="h-6 w-6 text-amber-600 shrink-0" />
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wider">Late Return Alert</div>
+                        <div className="text-[11px] font-semibold">{verificationSuccess}</div>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-center space-x-3 text-emerald-800">
+                      <ShieldCheck className="h-6 w-6 text-emerald-600 shrink-0" />
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wider">Pass Verification Clear</div>
+                        <div className="text-[11px] font-semibold">{verificationSuccess}</div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex items-center space-x-3">
@@ -586,6 +599,13 @@ export default function GuardDashboard({ user, onLogout }) {
   >
                         <ArrowRight className="h-4 w-4" />
                         <span>Log Exit (Close Pass)</span>
+                      </button>}
+                    {verifiedPass.status === "exited" && <button
+    onClick={() => handleMarkReturn(verifiedPass.id)}
+    className="w-full flex items-center justify-center py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer space-x-1.5"
+  >
+                        <ArrowRight className="h-4 w-4" />
+                        <span>Log Return (Close Pass)</span>
                       </button>}
                   </div>
                 </div>}

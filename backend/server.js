@@ -446,36 +446,6 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
     return res.status(400).json({ error: 'Reason of application and leaving date/time are required.' });
   }
 
-  const getISTTimeDetails = (dateStringOrObject) => {
-    const date = new Date(dateStringOrObject);
-    const options = { timeZone: 'Asia/Kolkata', hour12: false };
-    const timeString = date.toLocaleTimeString('en-US', options);
-    const dateString = date.toLocaleDateString('en-US', options);
-    const [hour, minute] = timeString.split(':').map(Number);
-    return { hour, minute, dateString };
-  };
-
-  // 1. Validate exit timing (between 9:00 AM and 6:00 PM)
-  const exitDetails = getISTTimeDetails(exit_time);
-  if (exitDetails.hour < 9 || exitDetails.hour > 18 || (exitDetails.hour === 18 && exitDetails.minute > 0)) {
-    return res.status(400).json({ error: 'Selected exit timing must be strictly between 9:00 AM and 6:00 PM.' });
-  }
-
-  // 2. Limit to one gate pass per student per day
-  const currentDetails = getISTTimeDetails(new Date());
-  const hasPassOnSameDay = db.getGatePasses().some(p => {
-    if (p.student_id !== studentId) return false;
-    if (p.status === 'rejected' || p.status === 'cancelled') return false;
-
-    const passExitDetails = getISTTimeDetails(p.exit_time);
-    const passCreatedDetails = getISTTimeDetails(p.created_at);
-    return passExitDetails.dateString === exitDetails.dateString || passCreatedDetails.dateString === currentDetails.dateString;
-  });
-
-  if (hasPassOnSameDay) {
-    return res.status(400).json({ error: 'You are allowed only one gate pass per day. You already have a pending or approved gate pass for today or the scheduled date.' });
-  }
-
   const student = db.getStudents().find(s => s.id === studentId);
   if (!student) {
     return res.status(404).json({ error: 'Student profile not found.' });
@@ -756,8 +726,9 @@ app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req, re
   // Is it expired?
   const now = new Date();
   const returnTime = new Date(pass.return_time);
+  let expired = false;
   if (now > returnTime) {
-    return res.status(400).json({ error: 'Pass Expired: The return time window has lapsed.', pass, expired: true });
+    expired = true;
   }
 
   // Is it already closed?
@@ -766,8 +737,11 @@ app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req, re
   }
 
   res.json({
-    message: 'Gate Pass Verified successfully. Security checks clear.',
+    message: expired
+      ? (pass.status === 'approved' ? 'Gate Pass Verified: Student checked out LATE.' : 'Gate Pass Verified: Student returned LATE.')
+      : 'Gate Pass Verified successfully. Security checks clear.',
     pass,
+    expired,
   });
 });
 
@@ -957,6 +931,34 @@ app.get('/api/admin/sql-dump', authenticateJWT, authorizeRoles('admin'), (req, r
 
 app.get('/api/admin/logs', authenticateJWT, authorizeRoles('admin'), (req, res) => {
   res.json(db.getLogs());
+});
+
+// WhatsApp Engine Status and Log Monitor APIs
+app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
+  try {
+    if (db.firestore) {
+      const doc = await db.firestore.collection('settings').doc('whatsappStatus').get();
+      if (doc.exists) {
+        return res.json(doc.data());
+      }
+    }
+    res.json(db.getWhatsAppStatus());
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to retrieve WhatsApp status: ' + error.message });
+  }
+});
+
+app.get('/api/admin/whatsapp/logs', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
+  try {
+    if (db.firestore) {
+      const snapshot = await db.firestore.collection('whatsappLogs').orderBy('sent_at', 'desc').limit(50).get();
+      const logs = snapshot.docs.map(d => d.data());
+      return res.json(logs);
+    }
+    res.json(db.getWhatsAppLogs());
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to retrieve WhatsApp logs: ' + error.message });
+  }
 });
 
 // Official Parent Contacts Directory APIs

@@ -58,6 +58,7 @@ const client = new Client({
   authStrategy: new LocalAuth({
     dataPath: path.resolve(__dirname, '.wwebjs_auth') // Persists WhatsApp Web sessions in local directory
   }),
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
   puppeteer: {
     headless: true,
     args: [
@@ -77,6 +78,13 @@ client.on('qr', (qr) => {
   console.log('\n[WhatsApp] Scan this QR code with your WhatsApp Business app to log in:');
   qrcode.generate(qr, { small: true });
   console.log('[WhatsApp] QR code printed above. Waiting for authorization...\n');
+
+  // Save the connection status and QR token in Firestore settings
+  db.collection('settings').doc('whatsappStatus').set({
+    status: 'QR_READY',
+    qr,
+    updated_at: new Date().toISOString()
+  }).catch(err => console.error('[Firestore Error] Failed to update QR status:', err));
 
   // Save the QR code as a PNG file in the same directory for 100% reliable scanning
   const qrFilePath = path.resolve(__dirname, 'whatsapp-qr.png');
@@ -101,15 +109,37 @@ client.on('qr', (qr) => {
 
 client.on('ready', () => {
   console.log('\n[WhatsApp] Authentication successful! Client is ready to send messages.\n');
+
+  // Update status in Firestore
+  db.collection('settings').doc('whatsappStatus').set({
+    status: 'CONNECTED',
+    qr: null,
+    updated_at: new Date().toISOString()
+  }).catch(err => console.error('[Firestore Error] Failed to update ready status:', err));
+
   startFirestoreListener();
 });
 
 client.on('auth_failure', (msg) => {
   console.error('[WhatsApp] Authentication failure:', msg);
+
+  // Update status in Firestore
+  db.collection('settings').doc('whatsappStatus').set({
+    status: 'DISCONNECTED',
+    qr: null,
+    updated_at: new Date().toISOString()
+  }).catch(err => console.error('[Firestore Error] Failed to update auth_failure status:', err));
 });
 
 client.on('disconnected', (reason) => {
   console.warn('[WhatsApp] Client was disconnected:', reason);
+
+  // Update status in Firestore
+  db.collection('settings').doc('whatsappStatus').set({
+    status: 'DISCONNECTED',
+    qr: null,
+    updated_at: new Date().toISOString()
+  }).catch(err => console.error('[Firestore Error] Failed to update disconnected status:', err));
 });
 
 // Initialize the WhatsApp Web automation client (launches Puppeteer browser)
@@ -159,7 +189,7 @@ _Time: ${timeString}_`;
   });
 
   console.log(`[Queue] Added message for *${studentName}* (Roll No: ${rollNo}) to queue. Position: ${messageQueue.length}`);
-  
+
   // Trigger processing
   processQueue();
 }
@@ -179,12 +209,37 @@ async function processQueue() {
   console.log(`[Rate Limiter] Preparing to notify parent of ${currentMsg.studentName}. Delaying for ${delay}ms to prevent spam flag...`);
 
   setTimeout(async () => {
+    const logId = 'walog-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
     try {
       console.log(`[Sender] Dispatching WhatsApp message to ${currentMsg.to}...`);
       await client.sendMessage(currentMsg.to, currentMsg.body);
       console.log(`[Sender] SUCCESS: Message delivered successfully to ${currentMsg.to}`);
+
+      // Save success log in Firestore
+      db.collection('whatsappLogs').doc(logId).set({
+        id: logId,
+        studentName: currentMsg.studentName,
+        rollNo: currentMsg.rollNo,
+        parentPhone: currentMsg.to.replace('@c.us', ''),
+        message: currentMsg.body,
+        status: 'success',
+        error: null,
+        sent_at: new Date().toISOString()
+      }).catch(err => console.error('[Firestore Error] Failed to save success log:', err));
     } catch (error) {
       console.error(`[Sender] FAILED to deliver message to ${currentMsg.to}:`, error);
+
+      // Save failed log in Firestore
+      db.collection('whatsappLogs').doc(logId).set({
+        id: logId,
+        studentName: currentMsg.studentName,
+        rollNo: currentMsg.rollNo,
+        parentPhone: currentMsg.to.replace('@c.us', ''),
+        message: currentMsg.body,
+        status: 'failed',
+        error: error.message || 'Unknown error',
+        sent_at: new Date().toISOString()
+      }).catch(err => console.error('[Firestore Error] Failed to save failure log:', err));
     } finally {
       isProcessingQueue = false;
       // Move to the next queued message
@@ -196,7 +251,7 @@ async function processQueue() {
 // 6. Firestore listener on the 'students' collection using '.onSnapshot()'
 function startFirestoreListener() {
   console.log('[Firestore] Establishing real-time listener on the "students" collection...');
-  
+
   // Keep an in-memory cache of student status to monitor flip transitions
   const studentStatusCache = new Map();
 
@@ -213,7 +268,7 @@ function startFirestoreListener() {
         studentStatusCache.set(docId, newStatus);
       } else if (change.type === 'modified') {
         const oldStatus = studentStatusCache.get(docId);
-        
+
         console.log(`[Firestore Change] Student ${studentName} (${docId}): status changed from "${oldStatus}" to "${newStatus}"`);
 
         // Trigger the message ONLY when a student's 'status' field flips from something else to exactly "Left"

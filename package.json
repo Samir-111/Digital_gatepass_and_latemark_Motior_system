@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "// dev_comment": "RUN LOCALLY: This starts your project on your computer and injects your secret settings from the .env file before compiling your code.",
-    "dev": "node -r dotenv/config node_modules/tsx/dist/cli.mjs backend/server.js",
+    "dev": "tsx watch -r dotenv/config backend/server.js",
     "// build_comment": "PRODUCTION COMPILATION: This prepares your system to be deployed on the web. 1. It builds your frontend screens using Vite. 2. It compiles your server code into a small, fast package inside the 'dist' folder.",
     "build": "vite build && esbuild backend/server.js --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "// start_comment": "RUN ON CLOUD ENGINE: This is the command the hosting server (like Render) uses to run your website. It opens up the compiled production code file we created during the build step.",

@@ -18,7 +18,8 @@ import {
   BookOpen,
   Clock,
   Activity,
-  FileText
+  FileText,
+  MessageSquare
 } from "lucide-react";
 import { apiFetch } from "../lib/api.js";
 import { gatepassService } from "../services/gatepassService.js";
@@ -34,6 +35,9 @@ export default function AdminDashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [parentContacts, setParentContacts] = useState([]);
   const [activeTab, setActiveTab] = useState("analytics");
+  const [whatsappStatus, setWhatsappStatus] = useState({ status: 'DISCONNECTED', qr: null });
+  const [whatsappLogs, setWhatsappLogs] = useState([]);
+  const [whatsappLoading, setWhatsappLoading] = useState(false);
   const [adminDeptFilter, setAdminDeptFilter] = useState("all");
   const [adminStatusFilter, setAdminStatusFilter] = useState("all");
   const [adminSearch, setAdminSearch] = useState("");
@@ -104,9 +108,27 @@ export default function AdminDashboard({ user, onLogout }) {
       console.error("Failed to reload parent contacts:", err);
     }
   };
+  const fetchWhatsappInfo = async () => {
+    setWhatsappLoading(true);
+    try {
+      const statusData = await gatepassService.getWhatsappStatus();
+      setWhatsappStatus(statusData);
+      const logsData = await gatepassService.getWhatsappLogs();
+      setWhatsappLogs(logsData || []);
+    } catch (err) {
+      console.error("Failed to fetch WhatsApp details:", err);
+    } finally {
+      setWhatsappLoading(false);
+    }
+  };
   useEffect(() => {
     fetchAdminData();
   }, []);
+  useEffect(() => {
+    if (activeTab === "whatsapp") {
+      fetchWhatsappInfo();
+    }
+  }, [activeTab]);
   const downloadCSVReport = async () => {
     try {
       const csvContent = await apiFetch("/api/admin/reports");
@@ -565,6 +587,7 @@ export default function AdminDashboard({ user, onLogout }) {
     { id: "guards", label: "Manage Guards", icon: ShieldCheck },
     { id: "depts", label: "Manage Departments", icon: BookOpen },
     { id: "parent_contacts", label: "Parent Phone Mappings", icon: Phone },
+    { id: "whatsapp", label: "WhatsApp Engine", icon: MessageSquare },
     { id: "logs", label: "Audit Activity Logs", icon: Clock }
   ].map((tab) => {
     const Icon = tab.icon;
@@ -1349,6 +1372,125 @@ export default function AdminDashboard({ user, onLogout }) {
                     <span className="text-slate-200 font-medium">{log.action}</span>
                   </div>)}
                 {logs.length === 0 && <div className="text-slate-500 text-center py-12">No transactions recorded in safety register.</div>}
+              </div>
+            </div>}
+
+          {
+            /* TAB 7: WHATSAPP ALERT ENGINE */
+          }
+          {activeTab === "whatsapp" && <div className="space-y-6 animate-in fade-in duration-200">
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 gap-4">
+                <div>
+                  <h2 className="text-base font-extrabold text-slate-900">WhatsApp Alert Engine Control</h2>
+                  <p className="text-xs text-slate-500 font-medium">Monitor active connection status and audit real-time gatepass notifications sent to parents.</p>
+                </div>
+                <button
+                  onClick={fetchWhatsappInfo}
+                  disabled={whatsappLoading}
+                  className="inline-flex items-center px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${whatsappLoading ? "animate-spin" : ""}`} />
+                  Refresh Connection & Logs
+                </button>
+              </div>
+
+              {/* Status Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1 border border-slate-200 rounded-2xl p-5 bg-slate-50/50 flex flex-col items-center justify-center min-h-[300px]">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 self-start">Connection Status</h3>
+                  
+                  {whatsappStatus.status === 'CONNECTED' ? (
+                    <div className="text-center space-y-3">
+                      <div className="mx-auto h-16 w-16 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100">
+                        <MessageSquare className="h-8 w-8 text-emerald-600" />
+                      </div>
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        CONNECTED
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium px-4">
+                        WhatsApp is successfully linked with the college's business account. Real-time alerts will trigger instantly on student checkout.
+                      </p>
+                    </div>
+                  ) : whatsappStatus.status === 'QR_READY' && whatsappStatus.qr ? (
+                    <div className="text-center space-y-3 w-full">
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 mb-2">
+                        ACTION REQUIRED: SCAN QR
+                      </div>
+                      <div className="mx-auto p-3 bg-white border border-slate-200 rounded-2xl shadow-sm inline-block">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(whatsappStatus.qr)}`} 
+                          alt="WhatsApp Linking QR Code" 
+                          className="h-[200px] w-[200px]"
+                        />
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-semibold px-4">
+                        Scan this QR code with your WhatsApp Business mobile app to link the account. It expires within 20 seconds.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-3">
+                      <div className="mx-auto h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
+                        <MessageSquare className="h-8 w-8 text-slate-400" />
+                      </div>
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        DISCONNECTED
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium px-4">
+                        The WhatsApp automation service is offline or authentication failed. Please check that the whatsapp-automation script is running.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Audit Logs Table */}
+                <div className="lg:col-span-2 border border-slate-200 rounded-2xl p-5 bg-white flex flex-col">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 self-start">Alert Dispatches Audit Log</h3>
+                  
+                  <div className="overflow-x-auto flex-1 border border-slate-100 rounded-xl">
+                    <table className="min-w-full divide-y divide-slate-100 text-xs">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase">Student</th>
+                          <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase">Parent Phone</th>
+                          <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase">Timestamp</th>
+                          <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-700">
+                        {whatsappLogs.map((log) => (
+                          <tr key={log.id} className="hover:bg-slate-50/50">
+                            <td className="px-4 py-3">
+                              <div className="font-bold text-slate-900">{log.studentName}</div>
+                              <div className="text-[9px] text-slate-400 font-medium">Roll: {log.rollNo}</div>
+                            </td>
+                            <td className="px-4 py-3 font-mono font-bold">{log.parentPhone}</td>
+                            <td className="px-4 py-3 font-medium text-slate-500">
+                              {new Date(log.sent_at).toLocaleDateString()} {new Date(log.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {log.status === 'success' ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold">
+                                  DELIVERED
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-100 text-[10px] font-bold" title={log.error}>
+                                  FAILED
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        {whatsappLogs.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="text-center py-12 text-slate-400 font-medium">
+                              No WhatsApp notifications have been triggered/recorded yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>}
 

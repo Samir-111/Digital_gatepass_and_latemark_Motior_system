@@ -1,3 +1,2 @@
-2026/07/16-14:38:45.675 c260 Reusing MANIFEST C:\Users\ACER\OneDrive\Desktop\FINAL_MERN\Digital_gatepass_and_latemark_Motior_system\whatsapp-automation\.wwebjs_auth\session\Default\shared_proto_db\metadata/MANIFEST-000001
-2026/07/16-14:38:45.677 c260 Recovering log #3
-2026/07/16-14:38:45.682 c260 Reusing old log C:\Users\ACER\OneDrive\Desktop\FINAL_MERN\Digital_gatepass_and_latemark_Motior_system\whatsapp-automation\.wwebjs_auth\session\Default\shared_proto_db\metadata/000003.log 
+2026/07/16-22:05:01.999 cf14 Creating DB C:\Users\ACER\OneDrive\Desktop\FINAL_MERN\Digital_gatepass_and_latemark_Motior_system\whatsapp-automation\.wwebjs_auth\session\Default\shared_proto_db\metadata since it was missing.
+2026/07/16-22:05:02.034 cf14 Reusing MANIFEST C:\Users\ACER\OneDrive\Desktop\FINAL_MERN\Digital_gatepass_and_latemark_Motior_system\whatsapp-automation\.wwebjs_auth\session\Default\shared_proto_db\metadata/MANIFEST-000001

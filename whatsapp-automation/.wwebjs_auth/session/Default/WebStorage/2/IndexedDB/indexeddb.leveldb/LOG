@@ -1,2 +1,6 @@
-2026/07/16-14:50:57.072 c074 Creating DB C:\Users\ACER\OneDrive\Desktop\FINAL_MERN\Digital_gatepass_and_latemark_Motior_system\whatsapp-automation\.wwebjs_auth\session\Default\WebStorage\2\IndexedDB\indexeddb.leveldb since it was missing.
-2026/07/16-14:50:57.102 c074 Reusing MANIFEST C:\Users\ACER\OneDrive\Desktop\FINAL_MERN\Digital_gatepass_and_latemark_Motior_system\whatsapp-automation\.wwebjs_auth\session\Default\WebStorage\2\IndexedDB\indexeddb.leveldb/MANIFEST-000001
+2026/07/16-22:18:10.812 d28c Creating DB C:\Users\ACER\OneDrive\Desktop\FINAL_MERN\Digital_gatepass_and_latemark_Motior_system\whatsapp-automation\.wwebjs_auth\session\Default\WebStorage\2\IndexedDB\indexeddb.leveldb since it was missing.
+2026/07/16-22:18:10.829 d28c Reusing MANIFEST C:\Users\ACER\OneDrive\Desktop\FINAL_MERN\Digital_gatepass_and_latemark_Motior_system\whatsapp-automation\.wwebjs_auth\session\Default\WebStorage\2\IndexedDB\indexeddb.leveldb/MANIFEST-000001
+2026/07/16-22:18:12.844 cb28 Level-0 table #5: started
+2026/07/16-22:18:12.849 cb28 Level-0 table #5: 376 bytes OK
+2026/07/16-22:18:12.851 cb28 Delete type=0 #3
+2026/07/16-22:18:12.853 cb28 Manual compaction at level-0 from (begin) .. (end); will stop at (end)

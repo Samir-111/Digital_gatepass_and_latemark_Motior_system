@@ -118,22 +118,6 @@ export default function StudentDashboard({ user, onLogout }) {
     // Combine date and time (using local browser time)
     const combinedExitDateTime = new Date(`${exitDate}T${exitTimeOnly}:00`);
 
-    const getISTTimeDetails = (dateStringOrObject) => {
-      const date = new Date(dateStringOrObject);
-      const options = { timeZone: 'Asia/Kolkata', hour12: false };
-      const timeString = date.toLocaleTimeString('en-US', options);
-      const dateString = date.toLocaleDateString('en-US', options);
-      const [hour, minute] = timeString.split(':').map(Number);
-      return { hour, minute, dateString };
-    };
-
-    // 1. Validate exit timing (between 9:00 AM and 6:00 PM)
-    const exitDetails = getISTTimeDetails(combinedExitDateTime);
-    if (exitDetails.hour < 9 || exitDetails.hour > 18 || (exitDetails.hour === 18 && exitDetails.minute > 0)) {
-      showToast("Selected leaving time must be strictly between 9:00 AM and 6:00 PM.", "error");
-      return;
-    }
-
     setSubmitLoading(true);
     try {
       await gatepassService.applyGatePass({

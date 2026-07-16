@@ -42,6 +42,8 @@ export class Database {
     notifications: [],
     officialParentContacts: [],
     lateComeEntries: [],
+    whatsappStatus: { status: 'DISCONNECTED', qr: null },
+    whatsappLogs: [],
   };
 
   // Private constructor restricts instantiation from external modules
@@ -76,6 +78,8 @@ export class Database {
         this.data.notifications = this.data.notifications || [];
         this.data.officialParentContacts = this.data.officialParentContacts || [];
         this.data.lateComeEntries = this.data.lateComeEntries || [];
+        this.data.whatsappStatus = this.data.whatsappStatus || { status: 'DISCONNECTED', qr: null };
+        this.data.whatsappLogs = this.data.whatsappLogs || [];
       } catch (err) {
         console.error('Error reading gatepass.json', err);
       }
@@ -804,7 +808,13 @@ export class Database {
 
     // 2. Update in Firebase Cloud Firestore using merge: true to avoid deleting other student fields
     if (this.firestore) {
-      this.firestore.collection('students').doc(docId).set({ status }, { merge: true })
+      const updateData = { status };
+      if (student) {
+        updateData.name = student.name || '';
+        updateData.parent_phone = student.parent_phone || '';
+        updateData.roll_no = student.roll_no || '';
+      }
+      this.firestore.collection('students').doc(docId).set(updateData, { merge: true })
         .then(() => {
           console.log(`[Firestore] Successfully updated student ${docId} status to "${status}" (merge: true).`);
         })
@@ -1289,5 +1299,13 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
     }
 
     return false;
+  }
+
+  getWhatsAppStatus() {
+    return this.data.whatsappStatus || { status: 'DISCONNECTED', qr: null };
+  }
+
+  getWhatsAppLogs() {
+    return this.data.whatsappLogs || [];
   }
 }

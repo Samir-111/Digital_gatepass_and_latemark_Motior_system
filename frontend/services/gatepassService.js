@@ -253,4 +253,12 @@ export const gatepassService = {
       method: 'DELETE',
     });
   },
+
+  getWhatsappStatus: async () => {
+    return apiFetch('/api/admin/whatsapp/status');
+  },
+
+  getWhatsappLogs: async () => {
+    return apiFetch('/api/admin/whatsapp/logs');
+  },
 };
