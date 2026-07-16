@@ -414,29 +414,32 @@ export class Database {
 
   // Auth Operations
   authenticateUser(email, password_plain) {
+    if (!email) return null;
+    const emailLower = email.toLowerCase().trim();
+
     // Check Students
-    const student = this.data.students.find(s => s.email.toLowerCase() === email.toLowerCase());
+    const student = this.data.students.find(s => s.email && s.email.toLowerCase().trim() === emailLower);
     if (student && bcrypt.compareSync(password_plain, student.password_hash)) {
       const { password_hash, ...rest } = student;
       return { user: rest, role: 'student' };
     }
 
     // Check HODs
-    const hod = this.data.hods.find(h => h.email.toLowerCase() === email.toLowerCase());
+    const hod = this.data.hods.find(h => h.email && h.email.toLowerCase().trim() === emailLower);
     if (hod && bcrypt.compareSync(password_plain, hod.password_hash)) {
       const { password_hash, ...rest } = hod;
       return { user: rest, role: 'hod' };
     }
 
     // Check Guards
-    const guard = this.data.guards.find(g => g.email.toLowerCase() === email.toLowerCase());
+    const guard = this.data.guards.find(g => g.email && g.email.toLowerCase().trim() === emailLower);
     if (guard && bcrypt.compareSync(password_plain, guard.password_hash)) {
       const { password_hash, ...rest } = guard;
       return { user: rest, role: 'guard' };
     }
 
     // Check Admins
-    const admin = this.data.admins.find(a => a.email.toLowerCase() === email.toLowerCase());
+    const admin = this.data.admins.find(a => a.email && a.email.toLowerCase().trim() === emailLower);
     if (admin && bcrypt.compareSync(password_plain, admin.password_hash)) {
       const { password_hash, ...rest } = admin;
       return { user: rest, role: 'admin' };
@@ -444,7 +447,7 @@ export class Database {
 
     // Check Teachers / Class Incharges
     if (this.data.teachers) {
-      const teacher = this.data.teachers.find(t => t.email.toLowerCase() === email.toLowerCase());
+      const teacher = this.data.teachers.find(t => t.email && t.email.toLowerCase().trim() === emailLower);
       if (teacher && bcrypt.compareSync(password_plain, teacher.password_hash)) {
         const { password_hash, ...rest } = teacher;
         return { user: rest, role: 'teacher' };
@@ -481,9 +484,9 @@ export class Database {
 
   // Student Operations
   getOfficialParentPhone(roll_no, studentProvidedPhone) {
-    if (!this.data.officialParentContacts) return studentProvidedPhone;
+    if (!this.data.officialParentContacts || !roll_no) return studentProvidedPhone;
     const official = this.data.officialParentContacts.find(
-      c => c.roll_no.trim().toLowerCase() === roll_no.trim().toLowerCase()
+      c => c.roll_no && c.roll_no.trim().toLowerCase() === roll_no.trim().toLowerCase()
     );
     return official ? official.parent_phone : studentProvidedPhone;
   }
@@ -756,7 +759,7 @@ export class Database {
       const current = this.data.gatepasses[index];
       const updatedPass = {
         ...current,
-        status: 'closed',
+        status: 'exited',
         exit_marked_at: new Date().toISOString(),
       };
       this.data.gatepasses[index] = updatedPass;
@@ -782,6 +785,33 @@ export class Database {
       return this.getGatePassById(id);
     }
     return null;
+  }
+
+  updateStudentStatusByRollNo(rollNo, status) {
+    // 1. Update in local memory state cache
+    const student = this.data.students.find(
+      s => s.roll_no && rollNo && s.roll_no.trim().toLowerCase() === rollNo.trim().toLowerCase()
+    );
+    
+    // If student is found in local memory, use their actual DB ID (e.g., stud-XXXX).
+    // Otherwise, fall back to the Roll Number.
+    const docId = student ? student.id : rollNo;
+
+    if (student) {
+      student.status = status;
+      this.saveLocal();
+    }
+
+    // 2. Update in Firebase Cloud Firestore using merge: true to avoid deleting other student fields
+    if (this.firestore) {
+      this.firestore.collection('students').doc(docId).set({ status }, { merge: true })
+        .then(() => {
+          console.log(`[Firestore] Successfully updated student ${docId} status to "${status}" (merge: true).`);
+        })
+        .catch(err => {
+          console.error(`[Firestore] Failed to update student ${docId} status:`, err);
+        });
+    }
   }
 
   updateGatePassAIScore(id, risk_level, risk_remarks) {
@@ -1050,17 +1080,23 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
     this.data.officialParentContacts = contacts;
 
     this.data.students.forEach(student => {
-      const match = contacts.find(c => c.roll_no.trim().toLowerCase() === student.roll_no.trim().toLowerCase());
-      if (match) {
-        student.parent_phone = match.parent_phone;
-        this.saveDoc('students', student.id, student);
+      if (student.roll_no) {
+        const match = contacts.find(
+          c => c.roll_no && c.roll_no.trim().toLowerCase() === student.roll_no.trim().toLowerCase()
+        );
+        if (match) {
+          student.parent_phone = match.parent_phone;
+          this.saveDoc('students', student.id, student);
+        }
       }
     });
 
     // Save each to Firestore
     contacts.forEach(contact => {
-      const sanitizedId = contact.roll_no.replace(/[\/\\#?%]/g, '_');
-      this.saveDoc('officialParentContacts', sanitizedId, contact);
+      if (contact.roll_no) {
+        const sanitizedId = contact.roll_no.replace(/[\/\\#?%]/g, '_');
+        this.saveDoc('officialParentContacts', sanitizedId, contact);
+      }
     });
 
     this.saveLocal();
@@ -1135,28 +1171,29 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
 
   // Find a user across all roles by email
   findUserByEmail(email) {
+    if (!email) return null;
     const emailLower = email.toLowerCase().trim();
 
     // Check Students
-    const student = this.data.students.find(s => s.email.toLowerCase().trim() === emailLower);
+    const student = this.data.students.find(s => s.email && s.email.toLowerCase().trim() === emailLower);
     if (student) return { name: student.name, email: student.email, role: 'student' };
 
     // Check Teachers / Class Incharges
     if (this.data.teachers) {
-      const teacher = this.data.teachers.find(t => t.email.toLowerCase().trim() === emailLower);
+      const teacher = this.data.teachers.find(t => t.email && t.email.toLowerCase().trim() === emailLower);
       if (teacher) return { name: teacher.name, email: teacher.email, role: 'teacher' };
     }
 
     // Check HODs
-    const hod = this.data.hods.find(h => h.email.toLowerCase().trim() === emailLower);
+    const hod = this.data.hods.find(h => h.email && h.email.toLowerCase().trim() === emailLower);
     if (hod) return { name: hod.name, email: hod.email, role: 'hod' };
 
     // Check Guards
-    const guard = this.data.guards.find(g => g.email.toLowerCase().trim() === emailLower);
+    const guard = this.data.guards.find(g => g.email && g.email.toLowerCase().trim() === emailLower);
     if (guard) return { name: guard.name, email: guard.email, role: 'guard' };
 
     // Check Admins
-    const admin = this.data.admins.find(a => a.email.toLowerCase().trim() === emailLower);
+    const admin = this.data.admins.find(a => a.email && a.email.toLowerCase().trim() === emailLower);
     if (admin) return { name: admin.name, email: admin.email, role: 'admin' };
 
     return null;
@@ -1189,12 +1226,13 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
 
   // Update password for any role
   updateUserPassword(email, password_plain) {
+    if (!email) return false;
     const emailLower = email.toLowerCase().trim();
     const salt = bcrypt.genSaltSync(10);
     const password_hash = bcrypt.hashSync(password_plain, salt);
 
     // Update Student
-    const studentIndex = this.data.students.findIndex(s => s.email.toLowerCase().trim() === emailLower);
+    const studentIndex = this.data.students.findIndex(s => s.email && s.email.toLowerCase().trim() === emailLower);
     if (studentIndex !== -1) {
       const student = this.data.students[studentIndex];
       student.password_hash = password_hash;
@@ -1206,7 +1244,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
 
     // Update Teacher
     if (this.data.teachers) {
-      const teacherIndex = this.data.teachers.findIndex(t => t.email.toLowerCase().trim() === emailLower);
+      const teacherIndex = this.data.teachers.findIndex(t => t.email && t.email.toLowerCase().trim() === emailLower);
       if (teacherIndex !== -1) {
         const teacher = this.data.teachers[teacherIndex];
         teacher.password_hash = password_hash;
@@ -1218,7 +1256,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
     }
 
     // Update HOD
-    const hodIndex = this.data.hods.findIndex(h => h.email.toLowerCase().trim() === emailLower);
+    const hodIndex = this.data.hods.findIndex(h => h.email && h.email.toLowerCase().trim() === emailLower);
     if (hodIndex !== -1) {
       const hod = this.data.hods[hodIndex];
       hod.password_hash = password_hash;
@@ -1229,7 +1267,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
     }
 
     // Update Guard
-    const guardIndex = this.data.guards.findIndex(g => g.email.toLowerCase().trim() === emailLower);
+    const guardIndex = this.data.guards.findIndex(g => g.email && g.email.toLowerCase().trim() === emailLower);
     if (guardIndex !== -1) {
       const guard = this.data.guards[guardIndex];
       guard.password_hash = password_hash;
@@ -1240,7 +1278,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
     }
 
     // Update Admin
-    const adminIndex = this.data.admins.findIndex(a => a.email.toLowerCase().trim() === emailLower);
+    const adminIndex = this.data.admins.findIndex(a => a.email && a.email.toLowerCase().trim() === emailLower);
     if (adminIndex !== -1) {
       const admin = this.data.admins[adminIndex];
       admin.password_hash = password_hash;

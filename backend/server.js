@@ -220,8 +220,8 @@ app.post('/api/register', (req, res) => {
   }
 
   // Check if student already exists by email or roll number
-  const existingByEmail = db.getStudents().find(s => s.email.toLowerCase() === email.toLowerCase());
-  const existingByRoll = db.getStudents().find(s => s.roll_no.toLowerCase() === roll_no.toLowerCase());
+  const existingByEmail = db.getStudents().find(s => s.email && email && s.email.toLowerCase() === email.toLowerCase());
+  const existingByRoll = db.getStudents().find(s => s.roll_no && roll_no && s.roll_no.toLowerCase() === roll_no.toLowerCase());
 
   if (existingByEmail) {
     return res.status(400).json({ error: 'Student with this email address is already registered.' });
@@ -485,7 +485,7 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
   let finalHODName = student.selected_hod_name;
 
   if (!finalHODId && student.department) {
-    const deptHOD = db.getHODs().find(h => h.department.toLowerCase() === student.department.toLowerCase());
+    const deptHOD = db.getHODs().find(h => h.department && student.department && h.department.toLowerCase() === student.department.toLowerCase());
     if (deptHOD) {
       finalHODId = deptHOD.id;
       finalHODName = deptHOD.name;
@@ -784,6 +784,9 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req, res)
   const updated = db.markExit(id);
   db.addLog(req.user.id, req.user.name, 'guard', `Marked exit for Student ${pass.student_name} on pass ${id}`);
 
+  // Trigger real-time parent WhatsApp alert by changing student status to "Left" in Firestore
+  db.updateStudentStatusByRollNo(pass.student_roll_no, 'Left');
+
   // Notify student of exit
   db.addNotification(
     pass.student_id,
@@ -794,30 +797,28 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req, res)
     id
   );
 
-  // Send SMS to parents
+  // Parse phone number
   const parentPhone = (pass.student_parent_phone && pass.student_parent_phone !== 'N/A')
     ? pass.student_parent_phone
     : (db.getOfficialParentPhone(pass.student_roll_no, '') || '+91 9876543210');
 
-  const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const message = `Dear Parent, your ward ${pass.student_name} (Roll No: ${pass.student_roll_no}) has checked out and left the college campus at ${timeString}.`;
-
   console.log('====================================================');
-  console.log(`[CAMPUS EXIT SMS DISPATCHED]`);
+  console.log(`[CAMPUS EXIT WHATSAPP ALERT TRIGGERED]`);
   console.log(`To: ${parentPhone} (Parent of ${pass.student_name})`);
-  console.log(`Message: "${message}"`);
+  console.log(`Student Roll: ${pass.student_roll_no} status flipped to "Left" in Firestore.`);
   console.log('====================================================');
 
-  sendSMS(parentPhone, message).catch(console.error);
+  // Fast2SMS is bypassed; WhatsApp is used instead
+  // sendSMS(parentPhone, message).catch(console.error);
 
   db.addLog(
     'system',
-    'SMS Gateway',
+    'WhatsApp Gateway',
     'admin',
-    `SMS alert sent to Parent (${parentPhone}): ${message}`
+    `WhatsApp alert triggered for Parent of ${pass.student_name} (${parentPhone})`
   );
 
-  res.json({ message: 'Student exit logged successfully.', pass: updated });
+  res.json({ message: 'Student exit logged successfully. WhatsApp alert queued.', pass: updated });
 });
 
 app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req, res) => {
@@ -832,6 +833,9 @@ app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req, re
 
   const updated = db.markReturn(id);
   db.addLog(req.user.id, req.user.name, 'guard', `Marked return for Student ${pass.student_name}, gate pass closed.`);
+
+  // Reset student status in Firestore/database back to "Inside"
+  db.updateStudentStatusByRollNo(pass.student_roll_no, 'Inside');
 
   // Notify student of return
   db.addNotification(
