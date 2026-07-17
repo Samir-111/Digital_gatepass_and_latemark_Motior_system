@@ -145,6 +145,23 @@
       "created_at": "2026-07-16T18:46:13.138Z",
       "password_hash": "$2b$10$/jd2edz2PO8gv4Weib92euKsN6CmjW3uUyBInbA8RcD/LeBNIErru",
       "status": "Left"
+    },
+    {
+      "id": "stud-1784267755112",
+      "college_id": "CM23042",
+      "name": "Yash kapse",
+      "roll_no": "CM23042",
+      "department": "CSE(AIML)",
+      "email": "yashkapse.aiml23@sbjit.edu.in",
+      "phone": "234567890",
+      "parent_phone": "8767078967",
+      "photo": "",
+      "class_teacher_id": "teacher-1783979116925",
+      "class_teacher_name": "Prof. Nitesh Hatwar",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-17T05:55:55.273Z",
+      "password_hash": "$2b$10$O/cC6CXpvlv/wVk9cE0ydup9SKONTVC98H4MlBtfjqrOhO7w6Y4eq"
     }
   ],
   "teachers": [
@@ -3910,6 +3927,62 @@
       "role": "admin",
       "action": "Logged in successfully",
       "timestamp": "2026-07-16T19:00:04.661Z"
+    },
+    {
+      "id": "log-1784267443986",
+      "user_id": "stud-1784227037895",
+      "user_name": "Ashvin Vaidhya",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-17T05:50:43.986Z"
+    },
+    {
+      "id": "log-1784267499092",
+      "user_id": "stud-1784227037895",
+      "user_name": "Ashvin Vaidhya",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-17T05:51:39.092Z"
+    },
+    {
+      "id": "log-1784267507801",
+      "user_id": "stud-1784226525373",
+      "user_name": "samir khorgade",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-17T05:51:47.801Z"
+    },
+    {
+      "id": "log-1784267601574",
+      "user_id": "stud-1784227037895",
+      "user_name": "Ashvin Vaidhya",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-17T05:53:21.574Z"
+    },
+    {
+      "id": "log-1784267755280",
+      "user_id": "stud-1784267755112",
+      "user_name": "Yash kapse",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Nitesh Hatwar & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-17T05:55:55.280Z"
+    },
+    {
+      "id": "log-1784267758671",
+      "user_id": "stud-1784267755112",
+      "user_name": "Yash kapse",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-17T05:55:58.671Z"
+    },
+    {
+      "id": "log-1784274064310",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-17T07:41:04.310Z"
     }
   ],
   "notifications": [
