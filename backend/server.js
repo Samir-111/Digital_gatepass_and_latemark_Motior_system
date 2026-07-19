@@ -1188,6 +1188,20 @@ app.post('/api/student/profile', authenticateJWT, authorizeRoles('student'), (re
 // ==========================================
 // STATIC FRONTEND SERVING & VITE MIDDLEWARE
 // ==========================================
+// For Vercel Serverless, initialize DB on the first request
+let dbInitialized = false;
+app.use(async (req, res, next) => {
+  if (!dbInitialized) {
+    try {
+      await db.initFirestore();
+      dbInitialized = true;
+    } catch (err) {
+      console.error('Failed to initialize Firestore in Vercel:', err);
+    }
+  }
+  next();
+});
+
 async function startServer() {
   await db.initFirestore();
 
@@ -1210,4 +1224,10 @@ async function startServer() {
   });
 }
 
-startServer();
+// Only start the server automatically if NOT running on Vercel
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+// Export the app for Vercel Serverless Functions
+export default app;
