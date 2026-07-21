@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { apiFetch, setAuthToken } from "../lib/api.js";
 import campusImg from "../assets/campus.png";
+import sbjainLogo from "../assets/sbjain-logo.png";
+import naacLogo from "../assets/naac-logo.png";
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -228,34 +230,32 @@ export default function Login({ onLoginSuccess }) {
   };
   return <div className="relative min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8 font-sans overflow-hidden transition-colors duration-300">
 
-      {
-    /* Background Campus Image Layer (Low transparency / high visibility) */
-  }
+      {/* Background Campus Image Layer (Low transparency / high visibility) */}
       <div
-    className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80 dark:opacity-40"
-    style={{ backgroundImage: `url(${campusImg})` }}
-  />
-      {
-    /* Overlay gradient to ensure text readability */
-  }
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80 dark:opacity-40"
+        style={{ backgroundImage: `url(${campusImg})` }}
+      />
+      {/* Overlay gradient to ensure text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-100/10 via-slate-100/20 to-slate-100/30 dark:from-slate-950/40 dark:via-slate-950/70 dark:to-slate-950/90 pointer-events-none" />
 
-      <div className="relative z-10 sm:mx-auto w-full max-w-md text-center">
-        <div className="flex justify-center">
-          <div className="h-16 w-16 bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg transform transition-transform hover:scale-105">
-            <School className="h-9 w-9 text-emerald-400" />
+      {/* Top Header: Left Logo + Center Title + Right Logo */}
+      <div className="relative z-10 sm:mx-auto w-full max-w-4xl text-center px-4">
+        <div className="flex flex-row items-center justify-between gap-3 sm:gap-6 px-2">
+          <img src={sbjainLogo} alt="SB Jain Logo" className="h-16 sm:h-24 md:h-28 w-auto object-contain mix-blend-multiply dark:mix-blend-normal shrink-0 transition-transform duration-300 hover:scale-105" />
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans leading-tight">
+              S. B. Jain Institute of Technology, Management &amp; Research, Nagpur
+            </h1>
+            <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-bold tracking-wider uppercase">
+              Smart Digital Campus Access Portal
+            </p>
           </div>
+          <img src={naacLogo} alt="NAAC Grade A Logo" className="h-16 sm:h-24 md:h-28 w-auto object-contain mix-blend-multiply dark:mix-blend-normal shrink-0 transition-transform duration-300 hover:scale-105" />
         </div>
-        <h2 className="mt-5 text-xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans px-4">
-          S. B. Jain Institute of Technology, Management and Research
-        </h2>
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-bold tracking-wide uppercase">
-          Smart Digital Campus Access Portal
-        </p>
       </div>
 
-      <div className="relative z-10 mt-6 sm:mx-auto w-full sm:max-w-md px-4">
-        <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-xl rounded-2xl border border-slate-200 dark:border-slate-800 sm:px-10">
+      <div className="relative z-10 mt-4 sm:mx-auto w-full sm:max-w-md px-4 pb-6">
+        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl py-8 px-6 shadow-2xl rounded-3xl border border-white/50 dark:border-slate-800/80 sm:px-10">
           
           {
     /* Status Alert Panels */
