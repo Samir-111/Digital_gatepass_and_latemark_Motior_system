@@ -23,23 +23,6 @@
   ],
   "students": [
     {
-      "id": "stud-1783855347063",
-      "college_id": "CM23032",
-      "name": "Arpit Rangari",
-      "roll_no": "CM23032",
-      "department": "CSE(AIML)",
-      "email": "arpit@sbjit.edu.in",
-      "phone": "2233445512",
-      "parent_phone": "9049696329",
-      "photo": "",
-      "class_teacher_id": "teacher-1783850410091",
-      "class_teacher_name": "Prof. Shweta bokade",
-      "selected_hod_id": "hod-1783845686310",
-      "selected_hod_name": "Dr. Animesh Tayal",
-      "created_at": "2026-07-12T11:22:27.285Z",
-      "password_hash": "$2b$10$he2cOqc/3H7QIivXm7sdJOQRyw/h5ItiMsbgAq.4oR7xtmWuKoyKK"
-    },
-    {
       "id": "stud-1783968725126",
       "college_id": "CD23003",
       "name": "Jatin Lanjewar",
@@ -182,6 +165,41 @@
       "created_at": "2026-07-21T06:13:20.122Z",
       "password_hash": "$2b$10$AWJckx4jVM6QTVwETXYuBeLUfbekzmt59QpMHJVg1U90XB3kufXou",
       "status": "Left"
+    },
+    {
+      "id": "stud-1784703101482",
+      "college_id": "CM23032",
+      "name": "Arpit Rangri ",
+      "roll_no": "CM23032",
+      "department": "CSE(AIML)",
+      "email": "arpitrangari.aiml23@sbjit.edu.in",
+      "phone": "2345678908",
+      "parent_phone": "9049696329",
+      "photo": "",
+      "class_teacher_id": "teacher-1783979116925",
+      "class_teacher_name": "Prof. Nitesh Hatwar",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-22T06:51:41.747Z",
+      "password_hash": "$2b$10$Y0xMDafSwBmqo/uBy0tFLOldHfQ305w1rY6dHKtjLhV03IVC1vYw.",
+      "status": "Left"
+    },
+    {
+      "id": "stud-1784703830659",
+      "college_id": "CM23053",
+      "name": "Prathamesh Mowade",
+      "roll_no": "CM23053",
+      "department": "CSE(AIML)",
+      "email": "prathameshmowade.aiml23@sbjit.edu.in",
+      "phone": "987654321",
+      "parent_phone": "9175406926",
+      "photo": "",
+      "class_teacher_id": "teacher-1783979116925",
+      "class_teacher_name": "Prof. Nitesh Hatwar",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "created_at": "2026-07-22T07:03:50.975Z",
+      "password_hash": "$2b$10$FtqAHXHa1YcwybSW9rxhe.Bd25tnMnLdBCeuCn0GKvw4h4qy77A7e"
     }
   ],
   "teachers": [
@@ -192,6 +210,32 @@
       "department": "CSE(AIML)",
       "email": "nitesh@sbjit.edu.in",
       "password_hash": "$2b$10$4BWlMic39fTCmX7r1pjo7e0IrAUtZGJrV.UF8iEQ.G0PMWtZYjmZS"
+    },
+    {
+      "id": "teacher-1784697203419",
+      "name": "Suchita Meshkar",
+      "department": "CSE(AIML)",
+      "phone": "9226931531",
+      "email": "suchitameshkar@sbjit.edu.in",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "user_type": "faculty",
+      "class_name": "Faculty Member",
+      "created_at": "2026-07-22T05:13:23.698Z",
+      "password_hash": "$2b$10$1RPv2HuzL1LeIbQB5dGGfOEao/hOtlzdOwBjzlBREpSxSBDF.WbIu"
+    },
+    {
+      "id": "teacher-1784703714914",
+      "name": "Mayuri Getme",
+      "department": "CSE(AIML)",
+      "phone": "23456788765",
+      "email": "maurigetme@sbjit.edu.in",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "user_type": "faculty",
+      "class_name": "Faculty Member",
+      "created_at": "2026-07-22T07:01:55.208Z",
+      "password_hash": "$2b$10$RJG.brEwrB.uBRqcDm8cg..XCYMj4WdPGfk1Nxx089wW1yOL2etsG"
     }
   ],
   "hods": [
@@ -255,6 +299,45 @@
     }
   ],
   "gatepasses": [
+    {
+      "id": "fac-pass-1784697490801",
+      "user_type": "faculty",
+      "faculty_id": "teacher-1784697203419",
+      "faculty_name": "Suchita Meshkar",
+      "faculty_department": "CSE(AIML)",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "reason": "i have argent office work",
+      "destination": "N/A",
+      "exit_time": "2026-07-22T10:46",
+      "return_time": "2026-07-22T10:48",
+      "vehicle_no": "",
+      "remarks": "Approved by Principal",
+      "status": "exited",
+      "token": "fac_tok_pz9rolbi7lf_1784697490801",
+      "created_at": "2026-07-22T05:18:10.801Z",
+      "approved_by": "Dr. S. K. Principal",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARQAAAEUCAYAAADqcMl5AAAAAklEQVR4AewaftIAABlYSURBVO3Bwa0g145EwaPCM4BL+kD/TUkfckkPNFpydRsXVd3SHzDir7//wVprfeBhrbU+8rDWWh95WGutjzystdZHHtZa6yMPa631kYe11vrID78QWfxJbTFFFidtcSOyOGmLKbK40RY3IoupLabI4kZbTJHF1BZTZHHSFlNkcdIWU2Rxoy2myOJGW0yRxX9JW5xEFlNbnEQWf1JbnDystdZHHtZa6yMPa631kR8utcWXIouTtrgRWbwRWZy0xRRZTJHFSVv8SW0xRRYnbXGjLU7aYoosprY4aYspspja4qQtbkQWU1v8SW0xRRZTW5y0xZciixsPa631kYe11vrIw1prfeSHlyKLG21xI7L4UlvciCymyGJqi5PIYoospraYIoupLabIYmqLk8hiaospspgii5O2OIkspraY2mKKLG60xUlk8aXI4k9qiy9FFjfa4o2Htdb6yMNaa33kYa21PvLDf1xbTJHFSVucRBYnbXHSFieRxY3I4o3IYmqLG20xRRYnkcWNyGJqi6ktTiKLKbKY2mJqiymyuNEWU2Rxoy2myGJqiymymCKLqS3+lzystdZHHtZa6yMPa631kR/+x7XFFFlMbTG1xRRZTJHF1BZTZHGjLU4ii6ktpsjiS5HF79QWNyKLk7aYIospspja4qQtpshiiizeiCymtjhpi5PIYmqL/7KHtdb6yMNaa33kYa21PvLDS23xO0UWb0QWU1uctMUUWbwRWZy0xRttMUUWU1ucRBZTW9yILE4ii5O2mCKLKbKY2mKKLKbIYmqLKbK40RYnkcXUFjcii6ktprZ4oy3+pIe11vrIw1prfeRhrbU+8sOlyOLf1BZTZDG1xRRZfKktpshiaospspjaYoosprY4aYspspjaYoospra4EVlMbfFGW0yRxdQWU2Rxoy2myGJqiymymNpiiiymtrgRWUxtcSOymNriJLL4Nz2stdZHHtZa6yMPa631kR9+oS3+TW0xRRYnkcXUFidtMUUWN9riRmQxtcWNyGJqiymy+FJb3IgsbrTFjchiaosbkcWX2uJGZDG1xRtt8V/ysNZaH3lYa62PPKy11kd++IXIYmqLKbKY2uJGZHHSFm9EFidtcdIWU2TxO0UWU1ucRBY3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",
+      "exit_marked_at": "2026-07-22T05:39:49.837Z"
+    },
+    {
+      "id": "fac-pass-1784698036282",
+      "user_type": "faculty",
+      "faculty_id": "teacher-1784697203419",
+      "faculty_name": "Suchita Meshkar",
+      "faculty_department": "CSE(AIML)",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "reason": "asdfghjkl",
+      "destination": "N/A",
+      "exit_time": "2026-07-22T10:57",
+      "return_time": "2026-07-22T09:27:00.000Z",
+      "vehicle_no": "",
+      "remarks": "",
+      "status": "pending_hod",
+      "token": "fac_tok_t88hbve3lu_1784698036282",
+      "created_at": "2026-07-22T05:27:16.282Z"
+    },
     {
       "id": "pass-1784195957405",
       "student_id": "stud-1784191277816",
@@ -897,6 +980,27 @@
       "remarks": "Approved",
       "qr_code": "data:image/png;base64,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",
       "exit_marked_at": "2026-07-21T17:12:56.923Z"
+    },
+    {
+      "id": "pass-1784703141377",
+      "student_id": "stud-1784703101482",
+      "reason": "i go to my internship ",
+      "destination": "N/A",
+      "exit_time": "2026-07-22T10:30:00.000Z",
+      "return_time": "2026-07-22T14:30:00.000Z",
+      "status": "exited",
+      "token": "gp_tok_a43yrhx3bkk_1784703141377",
+      "selected_hod_id": "hod-1783845686310",
+      "selected_hod_name": "Dr. Animesh Tayal",
+      "class_teacher_id": "teacher-1783979116925",
+      "class_teacher_name": "Prof. Nitesh Hatwar",
+      "created_at": "2026-07-22T06:52:21.378Z",
+      "risk_level": "low",
+      "risk_remarks": "Student has applied for/received 1 gate pass(es) this month. (Low frequency)",
+      "approved_by": "Dr. Animesh Tayal",
+      "remarks": "Approved",
+      "qr_code": "data:image/png;base64,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",
+      "exit_marked_at": "2026-07-22T06:53:51.391Z"
     }
   ],
   "logs": [
@@ -5747,6 +5851,366 @@
       "role": "admin",
       "action": "WhatsApp alert delivered for Parent of Ashvin Vaidhya (9766233877)",
       "timestamp": "2026-07-21T17:12:58.613Z"
+    },
+    {
+      "id": "log-1784696117835",
+      "user_id": "principal-1",
+      "user_name": "Dr. S. K. Principal",
+      "role": "principal",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T04:55:17.835Z"
+    },
+    {
+      "id": "log-1784697203778",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Faculty self-registered new account with selected HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-22T05:13:23.778Z"
+    },
+    {
+      "id": "log-1784697219592",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:13:39.592Z"
+    },
+    {
+      "id": "log-1784697490822",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Faculty applied for gate pass: fac-pass-1784697490801 to HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-22T05:18:10.822Z"
+    },
+    {
+      "id": "log-1784697507531",
+      "user_id": "principal-1",
+      "user_name": "Dr. S. K. Principal",
+      "role": "principal",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:18:27.531Z"
+    },
+    {
+      "id": "log-1784697583566",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:19:43.566Z"
+    },
+    {
+      "id": "log-1784698036339",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Faculty applied for gate pass: fac-pass-1784698036282 to HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-22T05:27:16.339Z"
+    },
+    {
+      "id": "log-1784698065348",
+      "user_id": "principal-1",
+      "user_name": "Dr. S. K. Principal",
+      "role": "principal",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:27:45.348Z"
+    },
+    {
+      "id": "log-1784698106885",
+      "user_id": "hod-1783845686310",
+      "user_name": "Dr. Animesh Tayal",
+      "role": "hod",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:28:26.885Z"
+    },
+    {
+      "id": "log-1784698124250",
+      "user_id": "hod-1783845686310",
+      "user_name": "Dr. Animesh Tayal",
+      "role": "hod",
+      "action": "HOD approved faculty gate pass fac-pass-1784697490801 for Suchita Meshkar. Forwarded to Principal for final clearance.",
+      "timestamp": "2026-07-22T05:28:44.250Z"
+    },
+    {
+      "id": "log-1784698202994",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:30:02.994Z"
+    },
+    {
+      "id": "log-1784698225750",
+      "user_id": "principal-1",
+      "user_name": "Dr. S. K. Principal",
+      "role": "principal",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:30:25.750Z"
+    },
+    {
+      "id": "log-1784698248814",
+      "user_id": "principal-1",
+      "user_name": "Dr. S. K. Principal",
+      "role": "principal",
+      "action": "Principal approved faculty gate pass fac-pass-1784697490801 for Suchita Meshkar",
+      "timestamp": "2026-07-22T05:30:48.814Z"
+    },
+    {
+      "id": "log-1784698280051",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:31:20.051Z"
+    },
+    {
+      "id": "log-1784698466327",
+      "user_id": "guard-1783773190096",
+      "user_name": "sudha kaka",
+      "role": "guard",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:34:26.327Z"
+    },
+    {
+      "id": "log-1784698552633",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:35:52.633Z"
+    },
+    {
+      "id": "log-1784698760191",
+      "user_id": "guard-1783773190096",
+      "user_name": "sudha kaka",
+      "role": "guard",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:39:20.191Z"
+    },
+    {
+      "id": "log-1784698789855",
+      "user_id": "guard-1783773190096",
+      "user_name": "sudha kaka",
+      "role": "guard",
+      "action": "Marked exit for Faculty Suchita Meshkar on pass fac-pass-1784697490801",
+      "timestamp": "2026-07-22T05:39:49.855Z"
+    },
+    {
+      "id": "log-1784699210719",
+      "user_id": "guard-1783773190096",
+      "user_name": "sudha kaka",
+      "role": "guard",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T05:46:50.719Z"
+    },
+    {
+      "id": "log-1784701268358",
+      "user_id": "stud-1784267755112",
+      "user_name": "Yash kapse",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:21:08.358Z"
+    },
+    {
+      "id": "log-1784701300225",
+      "user_id": "teacher-1783979116925",
+      "user_name": "Prof. Nitesh Hatwar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:21:40.225Z"
+    },
+    {
+      "id": "log-1784701406715",
+      "user_id": "teacher-1783979116925",
+      "user_name": "Prof. Nitesh Hatwar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:23:26.715Z"
+    },
+    {
+      "id": "log-1784701430157",
+      "user_id": "teacher-1784697203419",
+      "user_name": "Suchita Meshkar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:23:50.157Z"
+    },
+    {
+      "id": "log-1784701499151",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:24:59.151Z"
+    },
+    {
+      "id": "log-1784701578964",
+      "user_id": "principal-1",
+      "user_name": "Dr. S. K. Principal",
+      "role": "principal",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:26:18.964Z"
+    },
+    {
+      "id": "log-1784702349369",
+      "user_id": "principal-1",
+      "user_name": "Dr. S. K. Principal",
+      "role": "principal",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:39:09.369Z"
+    },
+    {
+      "id": "log-1784702626809",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:43:46.809Z"
+    },
+    {
+      "id": "log-1784702666387",
+      "user_id": "teacher-1783979116925",
+      "user_name": "Prof. Nitesh Hatwar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:44:26.387Z"
+    },
+    {
+      "id": "log-1784702772245",
+      "user_id": "principal-1",
+      "user_name": "Dr. S. K. Principal",
+      "role": "principal",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:46:12.245Z"
+    },
+    {
+      "id": "log-1784703008696",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:50:08.696Z"
+    },
+    {
+      "id": "log-1784703035061",
+      "user_id": "admin-1",
+      "user_name": "System Administrator",
+      "role": "admin",
+      "action": "Deleted Student ID stud-1783855347063",
+      "timestamp": "2026-07-22T06:50:35.061Z"
+    },
+    {
+      "id": "log-1784703101757",
+      "user_id": "stud-1784703101482",
+      "user_name": "Arpit Rangri ",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Nitesh Hatwar & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-22T06:51:41.757Z"
+    },
+    {
+      "id": "log-1784703104775",
+      "user_id": "stud-1784703101482",
+      "user_name": "Arpit Rangri ",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:51:44.775Z"
+    },
+    {
+      "id": "log-1784703141398",
+      "user_id": "stud-1784703101482",
+      "user_name": "Arpit Rangri ",
+      "role": "student",
+      "action": "Applied for gate pass: pass-1784703141377 to HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-22T06:52:21.398Z"
+    },
+    {
+      "id": "log-1784703154190",
+      "user_id": "teacher-1783979116925",
+      "user_name": "Prof. Nitesh Hatwar",
+      "role": "teacher",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:52:34.190Z"
+    },
+    {
+      "id": "log-1784703167988",
+      "user_id": "teacher-1783979116925",
+      "user_name": "Prof. Nitesh Hatwar",
+      "role": "teacher",
+      "action": "Class Teacher approved gate pass pass-1784703141377 for student Arpit Rangri . Forwarding to HOD.",
+      "timestamp": "2026-07-22T06:52:47.988Z"
+    },
+    {
+      "id": "log-1784703185685",
+      "user_id": "hod-1783845686310",
+      "user_name": "Dr. Animesh Tayal",
+      "role": "hod",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:53:05.685Z"
+    },
+    {
+      "id": "log-1784703193391",
+      "user_id": "hod-1783845686310",
+      "user_name": "Dr. Animesh Tayal",
+      "role": "hod",
+      "action": "Approved gate pass pass-1784703141377 for student Arpit Rangri ",
+      "timestamp": "2026-07-22T06:53:13.391Z"
+    },
+    {
+      "id": "log-1784703193411",
+      "user_id": "system",
+      "user_name": "SMS Gateway",
+      "role": "admin",
+      "action": "SMS alert sent to Parent (9049696329): Dear Parent, your child Arpit Rangri  is leaving the college for the reason: \"i go to my internship \".",
+      "timestamp": "2026-07-22T06:53:13.411Z"
+    },
+    {
+      "id": "log-1784703209249",
+      "user_id": "stud-1784703101482",
+      "user_name": "Arpit Rangri ",
+      "role": "student",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:53:29.249Z"
+    },
+    {
+      "id": "log-1784703220143",
+      "user_id": "guard-1783773190096",
+      "user_name": "sudha kaka",
+      "role": "guard",
+      "action": "Logged in successfully",
+      "timestamp": "2026-07-22T06:53:40.143Z"
+    },
+    {
+      "id": "log-1784703231414",
+      "user_id": "guard-1783773190096",
+      "user_name": "sudha kaka",
+      "role": "guard",
+      "action": "Marked exit for Student Arpit Rangri  on pass pass-1784703141377",
+      "timestamp": "2026-07-22T06:53:51.414Z"
+    },
+    {
+      "id": "log-1784703232175",
+      "user_id": "system",
+      "user_name": "WhatsApp Gateway",
+      "role": "admin",
+      "action": "WhatsApp alert delivered for Parent of Arpit Rangri  (9049696329)",
+      "timestamp": "2026-07-22T06:53:52.175Z"
+    },
+    {
+      "id": "log-1784703715304",
+      "user_id": "teacher-1784703714914",
+      "user_name": "Mayuri Getme",
+      "role": "teacher",
+      "action": "Faculty self-registered new account with selected HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-22T07:01:55.304Z"
+    },
+    {
+      "id": "log-1784703830993",
+      "user_id": "stud-1784703830659",
+      "user_name": "Prathamesh Mowade",
+      "role": "student",
+      "action": "Self-registered new account with class teacher: Prof. Nitesh Hatwar & HOD: Dr. Animesh Tayal",
+      "timestamp": "2026-07-22T07:03:50.993Z"
     }
   ],
   "notifications": [
@@ -5781,7 +6245,7 @@
       "message": "Student Khushboo Gautam has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"i am not feeling well\"",
       "type": "pending_request",
       "reference_id": "pass-1784008578713",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T05:57:01.002Z"
     },
     {
@@ -5837,7 +6301,7 @@
       "message": "Student Samir Khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"way to Hometown\"",
       "type": "pending_request",
       "reference_id": "pass-1784010202050",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T06:26:30.246Z"
     },
     {
@@ -5893,7 +6357,7 @@
       "message": "Student samie khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"urgent work at hometown .\"",
       "type": "pending_request",
       "reference_id": "pass-1784043149442",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T15:32:51.291Z"
     },
     {
@@ -5949,7 +6413,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"XYZ\"",
       "type": "pending_request",
       "reference_id": "pass-1784047067335",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T16:39:35.075Z"
     },
     {
@@ -6005,7 +6469,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"sdfghjk\"",
       "type": "pending_request",
       "reference_id": "pass-1784047407793",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T16:43:51.609Z"
     },
     {
@@ -6061,7 +6525,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"dsa\"",
       "type": "pending_request",
       "reference_id": "pass-1784047871280",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T16:52:21.631Z"
     },
     {
@@ -6117,7 +6581,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"abcd\"",
       "type": "pending_request",
       "reference_id": "pass-1784049151799",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T17:12:49.963Z"
     },
     {
@@ -6173,7 +6637,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"xas\"",
       "type": "pending_request",
       "reference_id": "pass-1784049629056",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T17:21:13.693Z"
     },
     {
@@ -6229,7 +6693,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"xcvbn\"",
       "type": "pending_request",
       "reference_id": "pass-1784050472709",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-14T17:35:07.106Z"
     },
     {
@@ -6285,7 +6749,7 @@
       "message": "Student samie khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"sdfghj\"",
       "type": "pending_request",
       "reference_id": "pass-1784137320056",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-15T17:42:44.504Z"
     },
     {
@@ -6341,7 +6805,7 @@
       "message": "Student Samir Khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"go home \n\"",
       "type": "pending_request",
       "reference_id": "pass-1784191319556",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T08:42:17.968Z"
     },
     {
@@ -6397,7 +6861,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"ghjk\"",
       "type": "pending_request",
       "reference_id": "pass-1784193723803",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T09:22:35.156Z"
     },
     {
@@ -6453,7 +6917,7 @@
       "message": "Student Samir Khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"ghijsdjfufhgifsd  iojo jsjkfksjfksd sdjfs j\"",
       "type": "pending_request",
       "reference_id": "pass-1784195957405",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T09:59:34.018Z"
     },
     {
@@ -6509,7 +6973,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"home jana haii bhaii \n\"",
       "type": "pending_request",
       "reference_id": "pass-1784196323981",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T10:05:42.423Z"
     },
     {
@@ -6565,7 +7029,7 @@
       "message": "Student Khushboo Gautam has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"go home \"",
       "type": "pending_request",
       "reference_id": "pass-1784196818789",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T10:14:11.978Z"
     },
     {
@@ -6621,7 +7085,7 @@
       "message": "Student Samir Khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"WANT TO GO HOME \n\"",
       "type": "pending_request",
       "reference_id": "pass-1784198010877",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T10:33:51.722Z"
     },
     {
@@ -6677,7 +7141,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"ghar jane doo . \"",
       "type": "pending_request",
       "reference_id": "pass-1784216233949",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T15:37:35.636Z"
     },
     {
@@ -6755,7 +7219,7 @@
       "message": "Student sara ganvir has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"home\"",
       "type": "pending_request",
       "reference_id": "pass-1784218180295",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T16:09:57.464Z"
     },
     {
@@ -6811,7 +7275,7 @@
       "message": "Student Samir Khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"home\"",
       "type": "pending_request",
       "reference_id": "pass-1784218459812",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T16:14:34.510Z"
     },
     {
@@ -6856,7 +7320,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"homeeeeeeeeeeeeeeeeeee\"",
       "type": "pending_request",
       "reference_id": "pass-1784218594927",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T16:16:48.201Z"
     },
     {
@@ -6912,7 +7376,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
       "type": "pending_request",
       "reference_id": "pass-1784220729859",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T16:52:29.330Z"
     },
     {
@@ -6968,7 +7432,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"go home now \n\"",
       "type": "pending_request",
       "reference_id": "pass-1784225320061",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T18:08:53.670Z"
     },
     {
@@ -7024,7 +7488,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"want to go home \n\"",
       "type": "pending_request",
       "reference_id": "pass-1784226550356",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T18:29:25.991Z"
     },
     {
@@ -7080,7 +7544,7 @@
       "message": "Student sara ganvir has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"want to go home \n\"",
       "type": "pending_request",
       "reference_id": "pass-1784226846267",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T18:34:27.114Z"
     },
     {
@@ -7147,7 +7611,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"homeee\"",
       "type": "pending_request",
       "reference_id": "pass-1784227134176",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T18:39:08.514Z"
     },
     {
@@ -7170,7 +7634,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"go home \"",
       "type": "pending_request",
       "reference_id": "pass-1784227085422",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T18:39:12.445Z"
     },
     {
@@ -7259,7 +7723,7 @@
       "message": "Student neha musale has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"want to go home \n\"",
       "type": "pending_request",
       "reference_id": "pass-1784227594729",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-16T18:46:49.989Z"
     },
     {
@@ -7315,7 +7779,7 @@
       "message": "Student Yash kapse has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"asdfghjkl\"",
       "type": "pending_request",
       "reference_id": "pass-1784551543447",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-20T12:46:12.604Z"
     },
     {
@@ -7371,7 +7835,7 @@
       "message": "Student Yash kapse has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"i am not felling wall\n\"",
       "type": "pending_request",
       "reference_id": "pass-1784551868645",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-20T12:51:30.688Z"
     },
     {
@@ -7427,7 +7891,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"chikaldhara\n\"",
       "type": "pending_request",
       "reference_id": "pass-1784560421744",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-20T15:13:58.621Z"
     },
     {
@@ -7483,7 +7947,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"chikaldhara\n\"",
       "type": "pending_request",
       "reference_id": "pass-1784560625356",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-20T15:17:23.973Z"
     },
     {
@@ -7539,7 +8003,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"chikaldhara 2\"",
       "type": "pending_request",
       "reference_id": "pass-1784560760199",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-20T15:19:33.436Z"
     },
     {
@@ -7606,7 +8070,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"hii\"",
       "type": "pending_request",
       "reference_id": "pass-1784565003937",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-20T16:30:25.789Z"
     },
     {
@@ -7662,7 +8126,7 @@
       "message": "Student Parth Wadekar has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"I am not feeling well due to Breakup \"",
       "type": "pending_request",
       "reference_id": "pass-1784614444578",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-21T06:14:44.614Z"
     },
     {
@@ -7718,7 +8182,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"xyzzzzzzzzzzzzz\"",
       "type": "pending_request",
       "reference_id": "pass-1784617214422",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-21T07:00:31.249Z"
     },
     {
@@ -7774,7 +8238,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"xxxxxxxxxxxxxxxxxx\"",
       "type": "pending_request",
       "reference_id": "pass-1784617869429",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-21T07:11:24.309Z"
     },
     {
@@ -7841,7 +8305,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"asdfghjkl\"",
       "type": "pending_request",
       "reference_id": "pass-1784618592852",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-21T07:23:40.453Z"
     },
     {
@@ -7897,7 +8361,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"wwwwwwwwwwwwwwwwwww\"",
       "type": "pending_request",
       "reference_id": "pass-1784619520690",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-21T07:38:57.442Z"
     },
     {
@@ -7953,7 +8417,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"pppppppppppppppppppppppp\"",
       "type": "pending_request",
       "reference_id": "pass-1784620731444",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-21T07:59:17.980Z"
     },
     {
@@ -8009,7 +8473,7 @@
       "message": "Student samir khorgade has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"sdfghjkvvvvvvvvvvvvvvvvvvv\"",
       "type": "pending_request",
       "reference_id": "pass-1784624757381",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-21T09:07:25.280Z"
     },
     {
@@ -8065,7 +8529,7 @@
       "message": "Student Ashvin Vaidhya has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"i am go to hometown\n\"",
       "type": "pending_request",
       "reference_id": "pass-1784653742369",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-07-21T17:10:03.580Z"
     },
     {
@@ -8089,6 +8553,130 @@
       "reference_id": "pass-1784653742369",
       "is_read": false,
       "created_at": "2026-07-21T17:12:56.996Z"
+    },
+    {
+      "id": "notif-1784697490836-gt0n6",
+      "recipient_id": "hod-1783845686310",
+      "recipient_role": "hod",
+      "department": "CSE(AIML)",
+      "title": "New Faculty GatePass Application 📝",
+      "message": "Faculty Suchita Meshkar (CSE(AIML)) has requested a gate pass for: \"i have argent office work\". Ready for HOD clearance.",
+      "type": "pending_request",
+      "reference_id": "fac-pass-1784697490801",
+      "is_read": true,
+      "created_at": "2026-07-22T05:18:10.836Z"
+    },
+    {
+      "id": "notif-1784698036355-c8rwj",
+      "recipient_id": "hod-1783845686310",
+      "recipient_role": "hod",
+      "department": "CSE(AIML)",
+      "title": "New Faculty GatePass Application 📝",
+      "message": "Faculty Suchita Meshkar (CSE(AIML)) has requested a gate pass for: \"asdfghjkl\". Ready for HOD clearance.",
+      "type": "pending_request",
+      "reference_id": "fac-pass-1784698036282",
+      "is_read": true,
+      "created_at": "2026-07-22T05:27:16.355Z"
+    },
+    {
+      "id": "notif-1784698124266-pttol",
+      "recipient_id": "teacher-1784697203419",
+      "recipient_role": "teacher",
+      "title": "Faculty GatePass Cleared by HOD 📝",
+      "message": "Your gate pass request for \"i have argent office work\" was CLEARED by HOD Dr. Animesh Tayal. It has been forwarded to Principal for final authorization & QR generation.",
+      "type": "status_changed",
+      "reference_id": "fac-pass-1784697490801",
+      "is_read": false,
+      "created_at": "2026-07-22T05:28:44.266Z"
+    },
+    {
+      "id": "notif-1784698124281-n901x",
+      "recipient_id": "principal-1",
+      "recipient_role": "principal",
+      "title": "New Faculty GatePass Forwarded by HOD 🎓",
+      "message": "HOD Dr. Animesh Tayal has cleared & forwarded Faculty Suchita Meshkar's gate pass request (\"i have argent office work\"). Awaiting Principal sign-off.",
+      "type": "pending_request",
+      "reference_id": "fac-pass-1784697490801",
+      "is_read": false,
+      "created_at": "2026-07-22T05:28:44.281Z"
+    },
+    {
+      "id": "notif-1784698248845-aa1md",
+      "recipient_id": "teacher-1784697203419",
+      "recipient_role": "teacher",
+      "title": "Faculty GatePass Approved! 🎉",
+      "message": "Your gate pass request for \"i have argent office work\" has been APPROVED by Principal Dr. S. K. Principal. You can access & download your QR code now.",
+      "type": "status_changed",
+      "reference_id": "fac-pass-1784697490801",
+      "is_read": false,
+      "created_at": "2026-07-22T05:30:48.845Z"
+    },
+    {
+      "id": "notif-1784698789915-f77w6",
+      "recipient_id": "teacher-1784697203419",
+      "recipient_role": "teacher",
+      "title": "Campus Exit Marked 🚪",
+      "message": "You checked out of campus gate at 11:09:49 am. Have a safe trip!",
+      "type": "status_changed",
+      "reference_id": "fac-pass-1784697490801",
+      "is_read": false,
+      "created_at": "2026-07-22T05:39:49.916Z"
+    },
+    {
+      "id": "notif-1784703141429-q96eo",
+      "recipient_id": "teacher-1783979116925",
+      "recipient_role": "teacher",
+      "title": "New GatePass Request Pending",
+      "message": "Student Arpit Rangri  has requested a gate pass for \"i go to my internship \". Risk assessment: LOW. Please review and approve.",
+      "type": "pending_request",
+      "reference_id": "pass-1784703141377",
+      "is_read": false,
+      "created_at": "2026-07-22T06:52:21.429Z"
+    },
+    {
+      "id": "notif-1784703168001-xk2s3",
+      "recipient_id": "stud-1784703101482",
+      "recipient_role": "student",
+      "title": "GatePass Approved by Teacher 📝",
+      "message": "Your gate pass request has been APPROVED by Class Incharge Prof. Nitesh Hatwar. It has been forwarded to HOD Dr. Animesh Tayal for final authorization.",
+      "type": "status_changed",
+      "reference_id": "pass-1784703141377",
+      "is_read": false,
+      "created_at": "2026-07-22T06:52:48.002Z"
+    },
+    {
+      "id": "notif-1784703168016-p8esf",
+      "recipient_id": "hod-1783845686310",
+      "recipient_role": "hod",
+      "department": "CSE(AIML)",
+      "title": "New GatePass Approved by Teacher",
+      "message": "Student Arpit Rangri  has requested a gate pass. Class Incharge Prof. Nitesh Hatwar has APPROVED it. Ready for HOD final review. Reason: \"i go to my internship \"",
+      "type": "pending_request",
+      "reference_id": "pass-1784703141377",
+      "is_read": false,
+      "created_at": "2026-07-22T06:52:48.016Z"
+    },
+    {
+      "id": "notif-1784703193401-n4ehx",
+      "recipient_id": "stud-1784703101482",
+      "recipient_role": "student",
+      "title": "GatePass Approved! 🎉",
+      "message": "Your gate pass request for \"i go to my internship \" has been APPROVED by HOD Dr. Animesh Tayal. You can download your QR code now.",
+      "type": "status_changed",
+      "reference_id": "pass-1784703141377",
+      "is_read": false,
+      "created_at": "2026-07-22T06:53:13.401Z"
+    },
+    {
+      "id": "notif-1784703231450-t5ftr",
+      "recipient_id": "stud-1784703101482",
+      "recipient_role": "student",
+      "title": "Campus Exit Marked 🚪",
+      "message": "You checked out of the campus gate at 12:23:51 pm. Safe travels!",
+      "type": "status_changed",
+      "reference_id": "pass-1784703141377",
+      "is_read": false,
+      "created_at": "2026-07-22T06:53:51.450Z"
     }
   ],
   "officialParentContacts": [
@@ -8473,9 +9061,19 @@
   "whatsappStatus": {
     "status": "CONNECTED",
     "qr": null,
-    "updated_at": "2026-07-21T17:12:58.474Z"
+    "updated_at": "2026-07-22T06:53:52.149Z"
   },
   "whatsappLogs": [
+    {
+      "id": "walog-1784703231468-shbya72",
+      "studentName": "Arpit Rangri ",
+      "rollNo": "CM23032",
+      "parentPhone": "919049696329",
+      "message": "*GATEPASS EXIT ALERT* 🚪\n\nDear Parent, your ward *Arpit Rangri * (Roll No: CM23032) has checked out and departed the college premises.\n\n_Time: 12:23:51 pm_\n_Reason: i go to my internship _\n\n- S. B. Jain Institute of Technology, Management and Research",
+      "status": "success",
+      "error": null,
+      "sent_at": "2026-07-22T06:53:52.160Z"
+    },
     {
       "id": "walog-1784653977031-3yvt7e0",
       "studentName": "Ashvin Vaidhya",
@@ -8545,6 +9143,17 @@
       "status": "success",
       "error": null,
       "sent_at": "2026-07-21T07:01:33.998Z"
+    }
+  ],
+  "principals": [
+    {
+      "id": "principal-1",
+      "name": "Dr. S. K. Principal",
+      "email": "principal@sbjit.edu.in",
+      "phone": "9876543210",
+      "designation": "Principal",
+      "password_hash": "$2b$10$yCFT2Kv9H8OdS1zAULCaoeRHxzUv9IUHKvu/WKvG/2wbdv116UPFK",
+      "created_at": "2026-07-22T04:26:03.957Z"
     }
   ]
 }

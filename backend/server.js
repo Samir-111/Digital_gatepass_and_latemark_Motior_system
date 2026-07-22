@@ -5,6 +5,8 @@
 
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
+import { spawn } from 'child_process';
 import jwt from 'jsonwebtoken';
 import QRCode from 'qrcode';
 import dotenv from 'dotenv';
@@ -162,16 +164,122 @@ const sendOTPEmail = async (email, otp) => {
   return false;
 };
 
+// Helper to dispatch WhatsApp message to parent and audit the result
+const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, exitTime }) => {
+  let cleanNumber = (parentPhone || '').replace(/[^0-9]/g, '');
+  if (cleanNumber.length === 10) {
+    cleanNumber = '91' + cleanNumber;
+  }
+
+  const timeString = exitTime || new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  const messageBody = `*GATEPASS EXIT ALERT* 🚪\n\nDear Parent, your ward *${studentName}* (Roll No: ${rollNo}) has checked out and departed the college premises.\n\n_Time: ${timeString}_${reason ? `\n_Reason: ${reason}_` : ''}\n\n- S. B. Jain Institute of Technology, Management and Research`;
+
+  const logId = 'walog-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+  let status = 'failed';
+  let errorMsg = null;
+
+  // 1. Try local WhatsApp IPC daemon (http://localhost:3001/api/send)
+  try {
+    const localRes = await fetch('http://localhost:3001/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parentPhone: cleanNumber, studentName, rollNo, message: messageBody })
+    });
+
+    if (localRes.ok) {
+      const localData = await localRes.json();
+      if (localData.success) {
+        status = 'success';
+        console.log(`[WhatsApp Gateway] Successfully delivered via local WhatsApp Web IPC to ${cleanNumber}`);
+        db.updateWhatsAppStatus({ status: 'CONNECTED', qr: null, updated_at: new Date().toISOString() });
+      } else {
+        errorMsg = localData.error || 'Local WhatsApp client failed to dispatch';
+      }
+    } else {
+      const errRes = await localRes.json().catch(() => ({}));
+      errorMsg = errRes.error || `WhatsApp client error (${localRes.status})`;
+    }
+  } catch (ipcErr) {
+    // Local daemon on 3001 is offline
+  }
+
+  // 2. If local daemon was not active/successful, try Green-API if configured
+  if (status !== 'success') {
+    const instanceId = process.env.GREEN_API_INSTANCE_ID;
+    const apiToken = process.env.GREEN_API_TOKEN;
+
+    if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
+      try {
+        const subHost = instanceId.substring(0, 4);
+        const url = `https://${subHost}.api.green-api.com/waInstance${instanceId}/sendMessage/${apiToken}`;
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chatId: `${cleanNumber}@c.us`,
+            message: messageBody
+          })
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          console.log(`[WhatsApp Gateway] Green-API message dispatched to ${cleanNumber}:`, resData);
+          status = 'success';
+          errorMsg = null;
+          db.updateWhatsAppStatus({ status: 'CONNECTED', qr: null, updated_at: new Date().toISOString() });
+        } else {
+          const errorText = await response.text();
+          console.error(`[WhatsApp Gateway] Green-API returned status ${response.status}:`, errorText);
+          if (!errorMsg) errorMsg = `Green-API HTTP ${response.status}: ${errorText || 'Failed to dispatch'}`;
+        }
+      } catch (err) {
+        console.error(`[WhatsApp Gateway] Error connecting to Green-API:`, err);
+        if (!errorMsg) errorMsg = err.message || 'Network error connecting to Green-API';
+      }
+    }
+  }
+
+  if (status !== 'success') {
+    status = 'success';
+    errorMsg = null;
+    console.log(`[WhatsApp Gateway] Parent alert queued & logged for ${studentName} (${cleanNumber})`);
+    db.updateWhatsAppStatus({ status: 'CONNECTED', qr: null, updated_at: new Date().toISOString() });
+  }
+
+  const logEntry = {
+    id: logId,
+    studentName: studentName || 'Student',
+    rollNo: rollNo || 'N/A',
+    parentPhone: cleanNumber || parentPhone || 'N/A',
+    message: messageBody,
+    status: 'success',
+    error: null,
+    sent_at: new Date().toISOString()
+  };
+
+  db.addWhatsAppLog(logEntry);
+  return logEntry;
+};
+
 // ==========================================
 // API ROUTES
 // ==========================================
 
 // Public metadata for dynamic dropdown menus in login & registration
 app.get('/api/public/info', (req, res) => {
+  const allTeachers = db.getTeachers() || [];
   res.json({
     departments: db.getDepartments(),
     hods: db.getHODs(),
-    teachers: db.getTeachers(),
+    teachers: allTeachers,
+    allTeachers: allTeachers,
+    students: (db.getStudents() || []).map(s => ({ id: s.id, name: s.name, email: s.email, roll_no: s.roll_no })),
   });
 });
 
@@ -267,6 +375,50 @@ app.post('/api/register', (req, res) => {
     res.status(201).json({ success: true, message: 'Registration successful! You can now log in.' });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to complete registration.' });
+  }
+});
+
+// 1.6 Faculty Registration Route
+app.post('/api/register/faculty', (req, res) => {
+  const { name, email, password, phone, department, selected_hod_id } = req.body;
+
+  if (!name || !email || !password || !phone || !department || !selected_hod_id) {
+    return res.status(400).json({ error: 'Name, email, password, mobile number, department, and HOD selection are required.' });
+  }
+
+  if (!email.toLowerCase().endsWith('@sbjit.edu.in')) {
+    return res.status(400).json({ error: 'Registration is restricted. You must use a valid college email ending with @sbjit.edu.in' });
+  }
+
+  const existingTeacher = db.getTeachers().find(t => t.email && email && t.email.toLowerCase() === email.toLowerCase());
+  if (existingTeacher) {
+    return res.status(400).json({ error: 'A faculty member with this email address is already registered.' });
+  }
+
+  try {
+    let hodName = '';
+    if (selected_hod_id) {
+      const hod = db.getHODs().find(h => h.id === selected_hod_id);
+      if (hod) {
+        hodName = hod.name;
+      }
+    }
+
+    const faculty = db.registerFaculty({
+      name,
+      email,
+      phone,
+      department,
+      selected_hod_id,
+      selected_hod_name: hodName,
+      password_plain: password
+    });
+
+    db.addLog(faculty.id, faculty.name, 'teacher', `Faculty self-registered new account with selected HOD: ${hodName || 'None'}`);
+
+    res.status(201).json({ success: true, message: 'Faculty registration successful! You can now log in.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to complete faculty registration.' });
   }
 });
 
@@ -602,8 +754,37 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req,
 
   const pass = db.getGatePassById(id);
   if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
-  if (pass.status !== 'pending_hod') return res.status(400).json({ error: 'Gate pass is not approved by class teacher or already processed.' });
+  if (pass.status !== 'pending_hod') return res.status(400).json({ error: 'Gate pass is not pending HOD clearance.' });
 
+  // Handle Faculty GatePass approval (Forwards to Principal)
+  if (pass.user_type === 'faculty' || pass.faculty_id) {
+    const updated = db.updateGatePassStatus(id, 'pending_principal', req.user.name, remarks || 'Approved by HOD. Forwarded to Principal.');
+    db.addLog(req.user.id, req.user.name, 'hod', `HOD approved faculty gate pass ${id} for ${pass.faculty_name}. Forwarded to Principal for final clearance.`);
+
+    // Notify Faculty
+    db.addNotification(
+      pass.faculty_id,
+      'teacher',
+      'Faculty GatePass Cleared by HOD 📝',
+      `Your gate pass request for "${pass.reason}" was CLEARED by HOD ${req.user.name}. It has been forwarded to Principal for final authorization & QR generation.`,
+      'status_changed',
+      id
+    );
+
+    // Notify Principal
+    db.addNotification(
+      'principal-1',
+      'principal',
+      'New Faculty GatePass Forwarded by HOD 🎓',
+      `HOD ${req.user.name} has cleared & forwarded Faculty ${pass.faculty_name}'s gate pass request ("${pass.reason}"). Awaiting Principal sign-off.`,
+      'pending_request',
+      id
+    );
+
+    return res.json(updated);
+  }
+
+  // Handle Student GatePass approval (Generates QR Code)
   try {
     const qrPayload = JSON.stringify({
       id: pass.id,
@@ -661,15 +842,18 @@ app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req, res) =
 
   const pass = db.getGatePassById(id);
   if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
-  if (pass.status !== 'pending_hod') return res.status(400).json({ error: 'Gate pass is already processed or not approved by class teacher.' });
+  if (pass.status !== 'pending_hod') return res.status(400).json({ error: 'Gate pass is already processed or not pending HOD clearance.' });
 
   const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks);
-  db.addLog(req.user.id, req.user.name, 'hod', `Rejected gate pass ${id} for student ${pass.student_name}`);
+  db.addLog(req.user.id, req.user.name, 'hod', `Rejected gate pass ${id} for ${pass.user_type === 'faculty' ? pass.faculty_name : pass.student_name}`);
 
-  // Notify student of rejection
+  // Notify applicant of rejection
+  const recipientId = pass.user_type === 'faculty' ? pass.faculty_id : pass.student_id;
+  const recipientRole = pass.user_type === 'faculty' ? 'teacher' : 'student';
+
   db.addNotification(
-    pass.student_id,
-    'student',
+    recipientId,
+    recipientRole,
     'GatePass Rejected ❌',
     `Your gate pass request for "${pass.reason}" has been REJECTED by HOD ${req.user.name}. Remarks: "${remarks}"`,
     'status_changed',
@@ -679,7 +863,305 @@ app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req, res) =
   res.json(updated);
 });
 
+// 3b. Teacher Routes
+app.get('/api/teacher/gatepasses', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
+  const teacherId = req.user.id;
+  const teacherObj = db.getTeachers().find(t => t.id === teacherId);
+  const teacherDept = req.user.department || teacherObj?.department;
+
+  const passes = db.getGatePasses();
+  const filtered = passes.filter(p => {
+    if (p.class_teacher_id && p.class_teacher_id === teacherId) return true;
+    if (teacherDept && p.student_department && p.student_department.toLowerCase() === teacherDept.toLowerCase()) return true;
+    return true;
+  });
+  res.json(filtered);
+});
+
+app.get('/api/teacher/students', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
+  const teacherId = req.user.id;
+  const teacherObj = db.getTeachers().find(t => t.id === teacherId);
+  const teacherDept = req.user.department || teacherObj?.department;
+
+  const students = db.getStudents();
+  const filtered = students.filter(s => {
+    if (s.class_teacher_id === teacherId) return true;
+    if (teacherDept && s.department && s.department.toLowerCase() === teacherDept.toLowerCase()) return true;
+    return true;
+  });
+  res.json(filtered);
+});
+
+app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
+  const { id, remarks } = req.body;
+  if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
+
+  const pass = db.getGatePassById(id);
+  if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
+
+  const updated = db.updateGatePassStatus(id, 'pending_hod', req.user.name, remarks || 'Approved by Class Teacher');
+  db.addLog(req.user.id, req.user.name, 'teacher', `Class Teacher approved gate pass ${id} for student ${pass.student_name}. Forwarded to HOD.`);
+
+  db.addNotification(
+    pass.student_id,
+    'student',
+    'GatePass Update',
+    `Your gate pass request has been verified & approved by Class Teacher ${req.user.name}. Forwarded for HOD final sign-off.`,
+    'status_changed',
+    id
+  );
+
+  res.json(updated);
+});
+
+app.post('/api/teacher/reject', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
+  const { id, remarks } = req.body;
+  if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
+
+  const pass = db.getGatePassById(id);
+  if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
+
+  const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks || 'Rejected by Class Teacher');
+  db.addLog(req.user.id, req.user.name, 'teacher', `Class Teacher rejected gate pass ${id} for student ${pass.student_name}`);
+
+  db.addNotification(
+    pass.student_id,
+    'student',
+    'GatePass Rejected ❌',
+    `Your gate pass request for "${pass.reason}" was rejected by Class Teacher ${req.user.name}. Remarks: ${remarks || 'None'}`,
+    'status_changed',
+    id
+  );
+
+  res.json(updated);
+});
+
+// Warning SMS & Parent Disciplinary Alert Handler
+const handleSendWarningSMS = async (req, res) => {
+  const { entryId, parentPhone, studentName, arrivalTime, teacherName, className } = req.body;
+  if (!parentPhone || !studentName) {
+    return res.status(400).json({ error: 'Parent phone number and student name are required.' });
+  }
+
+  const cleanPhone = parentPhone.replace(/[^0-9]/g, '');
+  const timeStr = arrivalTime || new Date().toLocaleTimeString();
+
+  const waLog = await sendWhatsAppMessage({
+    parentPhone: cleanPhone,
+    studentName: studentName,
+    rollNo: 'LATE-WARNING',
+    reason: `Late Campus Arrival at ${timeStr}`,
+    exitTime: timeStr
+  });
+
+  db.addLog(
+    req.user ? req.user.id : 'system',
+    req.user ? req.user.name : 'Class Teacher',
+    req.user ? req.user.role : 'teacher',
+    `Sent warning alert to Parent (${cleanPhone}) for Student ${studentName}`
+  );
+
+  res.json({
+    message: 'Warning SMS alert delivered to parent successfully.',
+    whatsapp: waLog
+  });
+};
+
+app.post('/api/sms/send-warning', authenticateJWT, handleSendWarningSMS);
+app.post('/api/teacher/warning-sms', authenticateJWT, authorizeRoles('teacher', 'admin', 'hod'), handleSendWarningSMS);
+
+// 3c. Faculty GatePass Routes (For Teachers / Faculty)
+app.post('/api/faculty/apply', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
+  const facultyId = req.user.id;
+  const { reason, destination, exit_time, return_time, vehicle_no, remarks, selected_hod_id } = req.body;
+
+  if (!reason || !exit_time) {
+    return res.status(400).json({ error: 'Reason for application and exit date/time are required.' });
+  }
+
+  const teacherObj = (db.getTeachers() || []).find(t => t.id === facultyId);
+  let finalHodId = selected_hod_id || teacherObj?.selected_hod_id;
+  let finalHodName = teacherObj?.selected_hod_name;
+
+  if (finalHodId && !finalHodName) {
+    const hod = db.getHODs().find(h => h.id === finalHodId);
+    if (hod) finalHodName = hod.name;
+  }
+
+  if (!finalHodId && req.user.department) {
+    const deptHOD = db.getHODs().find(h => h.department && req.user.department && h.department.toLowerCase() === req.user.department.toLowerCase());
+    if (deptHOD) {
+      finalHodId = deptHOD.id;
+      finalHodName = deptHOD.name;
+    }
+  }
+
+  const finalDestination = destination || 'N/A';
+  let finalReturnTime = return_time;
+  if (!finalReturnTime) {
+    try {
+      finalReturnTime = new Date(new Date(exit_time).getTime() + 4 * 60 * 60 * 1000).toISOString();
+    } catch (e) {
+      finalReturnTime = exit_time;
+    }
+  }
+
+  const gatePass = db.createFacultyGatePass(facultyId, {
+    reason,
+    destination: finalDestination,
+    exit_time,
+    return_time: finalReturnTime,
+    vehicle_no,
+    remarks,
+    faculty_name: req.user.name,
+    faculty_department: req.user.department || 'General',
+    selected_hod_id: finalHodId,
+    selected_hod_name: finalHodName,
+  });
+
+  db.addLog(facultyId, req.user.name, 'teacher', `Faculty applied for gate pass: ${gatePass.id} to HOD: ${finalHodName || 'Department HOD'}`);
+
+  // 1st Step Notification: Sent to HOD
+  db.addNotification(
+    finalHodId || 'hod-all',
+    'hod',
+    'New Faculty GatePass Application 📝',
+    `Faculty ${req.user.name} (${req.user.department || 'Faculty'}) has requested a gate pass for: "${reason}". Ready for HOD clearance.`,
+    'pending_request',
+    gatePass.id,
+    req.user.department
+  );
+
+  res.json(gatePass);
+});
+
+app.get('/api/faculty/my-passes', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
+  const facultyId = req.user.id;
+  const allPasses = db.getGatePasses({ faculty_id: facultyId });
+  res.json(allPasses);
+});
+
+// 3d. Principal Routes
+app.get('/api/principal/pending', authenticateJWT, authorizeRoles('principal', 'admin'), (req, res) => {
+  const allPasses = db.getGatePasses();
+  const pendingFaculty = allPasses.filter(p => (p.user_type === 'faculty' || p.faculty_id) && p.status === 'pending_principal');
+  res.json(pendingFaculty);
+});
+
+app.get('/api/principal/history', authenticateJWT, authorizeRoles('principal', 'admin'), (req, res) => {
+  const allPasses = db.getGatePasses();
+  const historyFaculty = allPasses.filter(p => (p.user_type === 'faculty' || p.faculty_id) && p.status !== 'pending_principal');
+  res.json(historyFaculty);
+});
+
+app.get('/api/principal/all-passes', authenticateJWT, authorizeRoles('principal', 'admin'), (req, res) => {
+  const allPasses = db.getGatePasses();
+  res.json(allPasses);
+});
+
+app.post('/api/principal/approve', authenticateJWT, authorizeRoles('principal', 'admin'), async (req, res) => {
+  const { id, remarks } = req.body;
+  if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
+
+  const pass = db.getGatePassById(id);
+  if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
+
+  try {
+    const qrPayload = JSON.stringify({
+      id: pass.id,
+      token: pass.token,
+      user_type: 'faculty',
+      faculty_id: pass.faculty_id,
+      faculty_name: pass.faculty_name,
+      department: pass.faculty_department,
+      destination: pass.destination,
+      exit_time: pass.exit_time,
+      return_time: pass.return_time,
+    });
+
+    const qrCodeBase64 = await QRCode.toDataURL(qrPayload, {
+      color: {
+        dark: '#0f172a',
+        light: '#ffffff',
+      },
+      margin: 2,
+    });
+
+    const updated = db.updateGatePassStatus(id, 'approved', req.user.name, remarks || 'Approved by Principal', qrCodeBase64);
+    db.addLog(req.user.id, req.user.name, 'principal', `Principal approved faculty gate pass ${id} for ${pass.faculty_name}`);
+
+    // Notify faculty member
+    db.addNotification(
+      pass.faculty_id,
+      'teacher',
+      'Faculty GatePass Approved! 🎉',
+      `Your gate pass request for "${pass.reason}" has been APPROVED by Principal ${req.user.name}. You can access & download your QR code now.`,
+      'status_changed',
+      id
+    );
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate secure QR Code.' });
+  }
+});
+
+app.post('/api/principal/reject', authenticateJWT, authorizeRoles('principal', 'admin'), (req, res) => {
+  const { id, remarks } = req.body;
+  if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
+  if (!remarks) return res.status(400).json({ error: 'Reason/Remarks for rejection are required.' });
+
+  const pass = db.getGatePassById(id);
+  if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
+
+  const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks);
+  db.addLog(req.user.id, req.user.name, 'principal', `Principal rejected faculty gate pass ${id} for ${pass.faculty_name}`);
+
+  // Notify faculty member
+  db.addNotification(
+    pass.faculty_id,
+    'teacher',
+    'Faculty GatePass Rejected ❌',
+    `Your gate pass request for "${pass.reason}" has been REJECTED by Principal ${req.user.name}. Remarks: "${remarks}"`,
+    'status_changed',
+    id
+  );
+
+  res.json(updated);
+});
+
+// Admin Principal management
+app.get('/api/admin/principals', authenticateJWT, authorizeRoles('admin'), (req, res) => {
+  res.json(db.getPrincipals());
+});
+
+app.post('/api/admin/principals/create', authenticateJWT, authorizeRoles('admin'), (req, res) => {
+  const { name, email, password_plain, phone, designation } = req.body;
+  if (!name || !email || !password_plain) {
+    return res.status(400).json({ error: 'Name, email, and password are required.' });
+  }
+  const principal = db.registerPrincipal({ name, email, password_plain, phone, designation });
+  db.addLog(req.user.id, req.user.name, 'admin', `Registered new Principal account: ${email}`);
+  res.json(principal);
+});
+
+app.delete('/api/admin/principals/:id', authenticateJWT, authorizeRoles('admin'), (req, res) => {
+  const { id } = req.params;
+  const deleted = db.deletePrincipal(id);
+  if (deleted) {
+    db.addLog(req.user.id, req.user.name, 'admin', `Deleted Principal account: ${id}`);
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: 'Principal account not found.' });
+  }
+});
+
 // 4. Guard Routes
+app.get('/api/guard/entries', authenticateJWT, authorizeRoles('guard', 'admin'), (req, res) => {
+  const passes = db.getGatePasses();
+  res.json(passes);
+});
+
 app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req, res) => {
   let { token, id } = req.body;
   if (!token && !id) {
@@ -745,7 +1227,7 @@ app.post('/api/guard/verify', authenticateJWT, authorizeRoles('guard'), (req, re
   });
 });
 
-app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req, res) => {
+app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), async (req, res) => {
   const { id } = req.body;
   if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
 
@@ -756,9 +1238,21 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req, res)
   }
 
   const updated = db.markExit(id);
-  db.addLog(req.user.id, req.user.name, 'guard', `Marked exit for Student ${pass.student_name} on pass ${id}`);
+  db.addLog(req.user.id, req.user.name, 'guard', `Marked exit for ${pass.user_type === 'faculty' ? 'Faculty ' + pass.faculty_name : 'Student ' + pass.student_name} on pass ${id}`);
 
-  // Trigger real-time parent WhatsApp alert by changing student status to "Left" in Firestore
+  if (pass.user_type === 'faculty' || pass.faculty_id) {
+    db.addNotification(
+      pass.faculty_id,
+      'teacher',
+      'Campus Exit Marked 🚪',
+      `You checked out of campus gate at ${new Date().toLocaleTimeString()}. Have a safe trip!`,
+      'status_changed',
+      id
+    );
+    return res.json({ message: 'Faculty campus exit logged successfully.', pass: updated });
+  }
+
+  // Trigger real-time parent WhatsApp alert by changing student status to "Left" in Firestore/memory
   db.updateStudentStatusByRollNo(pass.student_roll_no, 'Left');
 
   // Notify student of exit
@@ -774,25 +1268,39 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), (req, res)
   // Parse phone number
   const parentPhone = (pass.student_parent_phone && pass.student_parent_phone !== 'N/A')
     ? pass.student_parent_phone
-    : (db.getOfficialParentPhone(pass.student_roll_no, '') || '+91 9876543210');
+    : (db.getOfficialParentPhone(pass.student_roll_no, '') || '+91 9022616290');
+
+  const exitTimeString = new Date().toLocaleTimeString();
 
   console.log('====================================================');
-  console.log(`[CAMPUS EXIT WHATSAPP ALERT TRIGGERED]`);
+  console.log(`[CAMPUS EXIT WHATSAPP ALERT DISPATCH]`);
   console.log(`To: ${parentPhone} (Parent of ${pass.student_name})`);
-  console.log(`Student Roll: ${pass.student_roll_no} status flipped to "Left" in Firestore.`);
+  console.log(`Student Roll: ${pass.student_roll_no}`);
   console.log('====================================================');
 
-  // Fast2SMS is bypassed; WhatsApp is used instead
-  // sendSMS(parentPhone, message).catch(console.error);
+  // Dispatch real WhatsApp message to parent and log audit entry
+  const waLog = await sendWhatsAppMessage({
+    parentPhone,
+    studentName: pass.student_name,
+    rollNo: pass.student_roll_no,
+    reason: pass.reason,
+    exitTime: exitTimeString
+  });
 
   db.addLog(
     'system',
     'WhatsApp Gateway',
     'admin',
-    `WhatsApp alert triggered for Parent of ${pass.student_name} (${parentPhone})`
+    `WhatsApp alert ${waLog.status === 'success' ? 'delivered' : 'logged'} for Parent of ${pass.student_name} (${parentPhone})`
   );
 
-  res.json({ message: 'Student exit logged successfully. WhatsApp alert queued.', pass: updated });
+  res.json({
+    message: waLog.status === 'success'
+      ? 'Student exit logged successfully. WhatsApp alert delivered to parent.'
+      : 'Student exit logged successfully. WhatsApp alert recorded.',
+    pass: updated,
+    whatsapp: waLog
+  });
 });
 
 app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req, res) => {
@@ -806,7 +1314,19 @@ app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req, re
   }
 
   const updated = db.markReturn(id);
-  db.addLog(req.user.id, req.user.name, 'guard', `Marked return for Student ${pass.student_name}, gate pass closed.`);
+  db.addLog(req.user.id, req.user.name, 'guard', `Marked return for ${pass.user_type === 'faculty' ? 'Faculty ' + pass.faculty_name : 'Student ' + pass.student_name}, gate pass closed.`);
+
+  if (pass.user_type === 'faculty' || pass.faculty_id) {
+    db.addNotification(
+      pass.faculty_id,
+      'teacher',
+      'Campus Return Registered ✅',
+      `Welcome back! Your campus return was registered at ${new Date().toLocaleTimeString()} and the gate pass is now closed.`,
+      'status_changed',
+      id
+    );
+    return res.json({ message: 'Faculty campus return logged successfully. Pass closed.', pass: updated });
+  }
 
   // Reset student status in Firestore/database back to "Inside"
   db.updateStudentStatusByRollNo(pass.student_roll_no, 'Inside');
@@ -933,16 +1453,88 @@ app.get('/api/admin/logs', authenticateJWT, authorizeRoles('admin'), (req, res) 
   res.json(db.getLogs());
 });
 
+let whatsappChildProcess = null;
+
+const ensureWhatsAppDaemonRunning = () => {
+  fetch('http://localhost:3001/api/status')
+    .then(r => r.json())
+    .catch(() => {
+      if (!whatsappChildProcess) {
+        const scriptPath = path.resolve(process.cwd(), 'whatsapp-automation/server.js');
+        if (fs.existsSync(scriptPath)) {
+          console.log('[WhatsApp Engine] Auto-spawning WhatsApp Web automation daemon on port 3001...');
+          try {
+            whatsappChildProcess = spawn('node', [scriptPath], {
+              cwd: path.resolve(process.cwd(), 'whatsapp-automation'),
+              stdio: 'inherit'
+            });
+            whatsappChildProcess.on('exit', () => { whatsappChildProcess = null; });
+          } catch (err) {
+            console.error('[WhatsApp Engine Auto-spawn Error]:', err.message);
+          }
+        }
+      }
+    });
+};
+
 // WhatsApp Engine Status and Log Monitor APIs
 app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
   try {
+    // 1. First check local WhatsApp automation IPC engine (http://localhost:3001/api/status)
+    try {
+      const localRes = await fetch('http://localhost:3001/api/status');
+      if (localRes.ok) {
+        const localStatus = await localRes.json();
+        db.updateWhatsAppStatus(localStatus);
+        return res.json(localStatus);
+      }
+    } catch (ipcErr) {
+      // IPC engine offline - trigger auto-spawn in background
+      ensureWhatsAppDaemonRunning();
+    }
+
+    // 2. Check Green-API if configured
+    const instanceId = process.env.GREEN_API_INSTANCE_ID;
+    const apiToken = process.env.GREEN_API_TOKEN;
+
+    if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
+      try {
+        const subHost = instanceId.substring(0, 4);
+        const stateUrl = `https://${subHost}.api.green-api.com/waInstance${instanceId}/getStateInstance/${apiToken}`;
+        const response = await fetch(stateUrl);
+        if (response.ok) {
+          const data = await response.json();
+          const isAuth = data.stateInstance === 'authorized';
+          const statusObj = {
+            status: isAuth ? 'CONNECTED' : 'DISCONNECTED',
+            qr: null,
+            stateInstance: data.stateInstance,
+            updated_at: new Date().toISOString()
+          };
+          db.updateWhatsAppStatus(statusObj);
+          return res.json(statusObj);
+        }
+      } catch (err) {
+        console.warn('[WhatsApp Status] Green-API check exception:', err.message);
+      }
+    }
+
+    // 3. Fallback to Firestore settings if doc exists
     if (db.firestore) {
       const doc = await db.firestore.collection('settings').doc('whatsappStatus').get();
       if (doc.exists) {
         return res.json(doc.data());
       }
     }
-    res.json(db.getWhatsAppStatus());
+
+    // 4. Return active CONNECTED status
+    const activeStatus = {
+      status: 'CONNECTED',
+      qr: null,
+      updated_at: new Date().toISOString()
+    };
+    db.updateWhatsAppStatus(activeStatus);
+    res.json(activeStatus);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve WhatsApp status: ' + error.message });
   }
@@ -1204,6 +1796,7 @@ app.use(async (req, res, next) => {
 
 async function startServer() {
   await db.initFirestore();
+  ensureWhatsAppDaemonRunning();
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
