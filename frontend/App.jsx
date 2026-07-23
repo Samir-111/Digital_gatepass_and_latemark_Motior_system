@@ -11,6 +11,8 @@ import HODDashboard from './components/HODDashboard';
 import GuardDashboard from './components/GuardDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import TeacherDashboard from './components/TeacherDashboard';
+import PrincipalDashboard from './components/PrincipalDashboard';
+import FacultyDashboard from './components/FacultyDashboard';
 import { getAuthToken, getAuthUser, getAuthRole, removeAuthToken } from './lib/api.js';
 
 /**
@@ -19,7 +21,55 @@ import { getAuthToken, getAuthUser, getAuthRole, removeAuthToken } from './lib/a
  * Master router, dynamically rendering the correct portal (Student, HOD, Guard, or Admin)
  * based on the authenticated user's role.
  */
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Portal Error Boundary caught an exception:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center p-6 text-center">
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md w-full">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Portal Session Error</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              A temporary rendering issue occurred. Please reset your session to continue.
+            </p>
+            <button
+              onClick={() => {
+                removeAuthToken();
+                window.location.reload();
+              }}
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+            >
+              Reset Session & Log In
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <MainPortal />
+    </ErrorBoundary>
+  );
+}
+
+function MainPortal() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +148,12 @@ export default function App() {
         break;
       case 'teacher':
         content = <TeacherDashboard user={user} onLogout={handleLogout} />;
+        break;
+      case 'faculty':
+        content = <FacultyDashboard user={user} onLogout={handleLogout} />;
+        break;
+      case 'principal':
+        content = <PrincipalDashboard user={user} onLogout={handleLogout} />;
         break;
       default:
         content = <Login onLoginSuccess={handleLoginSuccess} />;

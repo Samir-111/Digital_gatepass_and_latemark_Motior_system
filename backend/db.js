@@ -37,6 +37,7 @@ export class Database {
     guards: [],
     admins: [],
     teachers: [],
+    principals: [],
     gatepasses: [],
     logs: [],
     notifications: [],
@@ -75,11 +76,26 @@ export class Database {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         this.data = JSON.parse(raw);
         this.data.teachers = this.data.teachers || [];
+        this.data.principals = this.data.principals || [];
         this.data.notifications = this.data.notifications || [];
         this.data.officialParentContacts = this.data.officialParentContacts || [];
         this.data.lateComeEntries = this.data.lateComeEntries || [];
         this.data.whatsappStatus = this.data.whatsappStatus || { status: 'DISCONNECTED', qr: null };
         this.data.whatsappLogs = this.data.whatsappLogs || [];
+
+        if (this.data.principals.length === 0) {
+          const salt = bcrypt.genSaltSync(10);
+          const defaultHash = bcrypt.hashSync('password', salt);
+          this.data.principals.push({
+            id: 'principal-1',
+            name: 'Dr. S. K. Principal',
+            email: 'principal@sbjit.edu.in',
+            phone: '9876543210',
+            designation: 'Principal',
+            password_hash: defaultHash,
+            created_at: new Date().toISOString()
+          });
+        }
       } catch (err) {
         console.error('Error reading gatepass.json', err);
       }
@@ -210,6 +226,18 @@ export class Database {
       }
     ];
 
+    const principals = [
+      {
+        id: 'principal-1',
+        name: 'Dr. S. K. Principal',
+        email: 'principal@sbjit.edu.in',
+        phone: '9876543210',
+        designation: 'Principal',
+        password_hash: defaultHash,
+        created_at: new Date().toISOString()
+      }
+    ];
+
     const gatepasses = [];
 
     const logs = [
@@ -223,14 +251,14 @@ export class Database {
       }
     ];
 
-    return { depts, teachers, students, hods, guards, admins, gatepasses, logs };
+    return { depts, teachers, students, hods, guards, admins, principals, gatepasses, logs };
   }
 
   /**
    * Seeds database cache locally when Firestore is bypassed or fails.
    */
   seedLocal() {
-    const { depts, teachers, students, hods, guards, admins, gatepasses, logs } = this.getSeedData();
+    const { depts, teachers, students, hods, guards, admins, principals, gatepasses, logs } = this.getSeedData();
 
     this.data = {
       departments: depts,
@@ -239,6 +267,7 @@ export class Database {
       hods,
       guards,
       admins,
+      principals,
       gatepasses,
       logs,
       notifications: [],
@@ -447,6 +476,15 @@ export class Database {
     if (admin && bcrypt.compareSync(password_plain, admin.password_hash)) {
       const { password_hash, ...rest } = admin;
       return { user: rest, role: 'admin' };
+    }
+
+    // Check Principals
+    if (this.data.principals) {
+      const principal = this.data.principals.find(p => p.email && p.email.toLowerCase().trim() === emailLower);
+      if (principal && bcrypt.compareSync(password_plain, principal.password_hash)) {
+        const { password_hash, ...rest } = principal;
+        return { user: rest, role: 'principal' };
+      }
     }
 
     // Check Teachers / Class Incharges
@@ -660,13 +698,70 @@ export class Database {
     return false;
   }
 
+  // Principal Operations
+  getPrincipals() {
+    if (!this.data.principals) this.data.principals = [];
+    return this.data.principals.map(({ password_hash, ...rest }) => rest);
+  }
+
+  registerPrincipal(principalData) {
+    if (!this.data.principals) this.data.principals = [];
+    const id = `principal-${Date.now()}`;
+    const salt = bcrypt.genSaltSync(10);
+    const password_hash = bcrypt.hashSync(principalData.password_plain, salt);
+
+    const newPrincipal = {
+      id,
+      name: principalData.name,
+      email: principalData.email,
+      password_hash,
+    };
+
+    this.data.principals.push(newPrincipal);
+    this.saveLocal();
+    this.saveDoc('principals', id, newPrincipal);
+
+    const { password_hash: _, ...rest } = newPrincipal;
+    return rest;
+  }
+
+  deletePrincipal(id) {
+    if (!this.data.principals) return false;
+    const index = this.data.principals.findIndex(p => p.id === id);
+    if (index !== -1) {
+      this.data.principals.splice(index, 1);
+      this.saveLocal();
+      this.deleteDoc('principals', id);
+      return true;
+    }
+    return false;
+  }
+
   // GatePass Operations
   getGatePasses(filters) {
     let list = this.data.gatepasses.map(pass => {
+      if (pass.user_type === 'faculty' || pass.faculty_id) {
+        const faculty = (this.data.teachers || []).find(t => t.id === pass.faculty_id);
+        return {
+          ...pass,
+          user_type: 'faculty',
+          faculty_name: faculty?.name || pass.faculty_name || 'Faculty Member',
+          faculty_department: faculty?.department || pass.faculty_department || 'General',
+          faculty_email: faculty?.email || 'N/A',
+          faculty_phone: faculty?.phone || 'N/A',
+          student_name: faculty?.name || pass.faculty_name || 'Faculty Member',
+          student_roll_no: 'FACULTY',
+          student_department: faculty?.department || pass.faculty_department || 'General',
+          student_phone: faculty?.phone || 'N/A',
+          student_parent_phone: 'N/A',
+        };
+      }
+
       const student = this.data.students.find(s => s.id === pass.student_id);
       const parentPhone = student ? this.getOfficialParentPhone(student.roll_no, student.parent_phone) : 'N/A';
       return {
         ...pass,
+        user_type: pass.user_type || 'student',
         student_name: student?.name || 'Unknown Student',
         student_roll_no: student?.roll_no || 'N/A',
         student_department: student?.department || 'N/A',
@@ -681,11 +776,17 @@ export class Database {
       if (filters.student_id) {
         list = list.filter(p => p.student_id === filters.student_id);
       }
+      if (filters.faculty_id) {
+        list = list.filter(p => p.faculty_id === filters.faculty_id);
+      }
       if (filters.department) {
-        list = list.filter(p => p.student_department === filters.department);
+        list = list.filter(p => (p.student_department === filters.department || p.faculty_department === filters.department));
       }
       if (filters.status) {
         list = list.filter(p => p.status === filters.status);
+      }
+      if (filters.user_type) {
+        list = list.filter(p => p.user_type === filters.user_type);
       }
     }
 
@@ -695,10 +796,27 @@ export class Database {
   getGatePassById(id) {
     const pass = this.data.gatepasses.find(p => p.id === id);
     if (!pass) return null;
+    if (pass.user_type === 'faculty' || pass.faculty_id) {
+      const faculty = (this.data.teachers || []).find(t => t.id === pass.faculty_id);
+      return {
+        ...pass,
+        user_type: 'faculty',
+        faculty_name: faculty?.name || pass.faculty_name || 'Faculty Member',
+        faculty_department: faculty?.department || pass.faculty_department || 'General',
+        faculty_email: faculty?.email || 'N/A',
+        faculty_phone: faculty?.phone || 'N/A',
+        student_name: faculty?.name || pass.faculty_name || 'Faculty Member',
+        student_roll_no: 'FACULTY',
+        student_department: faculty?.department || pass.faculty_department || 'General',
+        student_phone: faculty?.phone || 'N/A',
+        student_parent_phone: 'N/A',
+      };
+    }
     const student = this.data.students.find(s => s.id === pass.student_id);
     const parentPhone = student ? this.getOfficialParentPhone(student.roll_no, student.parent_phone) : 'N/A';
     return {
       ...pass,
+      user_type: 'student',
       student_name: student?.name || 'Unknown Student',
       student_roll_no: student?.roll_no || 'N/A',
       student_department: student?.department || 'N/A',
@@ -734,6 +852,107 @@ export class Database {
     this.saveLocal();
     this.saveDoc('gatepasses', id, newPass);
     return this.getGatePassById(id);
+  }
+
+  createFacultyGatePass(facultyId, data) {
+    const id = `fac-pass-${Date.now()}`;
+    const token = `fac_tok_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
+    const faculty = (this.data.teachers || []).find(t => t.id === facultyId);
+
+    const selectedHodId = data.selected_hod_id || faculty?.selected_hod_id;
+    const selectedHodName = data.selected_hod_name || faculty?.selected_hod_name;
+
+    const newPass = {
+      id,
+      user_type: 'faculty',
+      faculty_id: facultyId,
+      faculty_name: faculty?.name || data.faculty_name || 'Faculty Member',
+      faculty_department: faculty?.department || data.faculty_department || 'General',
+      selected_hod_id: selectedHodId,
+      selected_hod_name: selectedHodName,
+      reason: data.reason,
+      destination: data.destination || 'N/A',
+      exit_time: data.exit_time,
+      return_time: data.return_time,
+      vehicle_no: data.vehicle_no || '',
+      remarks: data.remarks || '',
+      status: 'pending_hod', // 1st Step: Pending HOD Clearance
+      token,
+      created_at: new Date().toISOString(),
+    };
+
+    this.data.gatepasses.push(newPass);
+    this.saveLocal();
+    this.saveDoc('gatepasses', id, newPass);
+    return this.getGatePassById(id);
+  }
+
+  getPrincipals() {
+    return (this.data.principals || []).map(({ password_hash, ...rest }) => rest);
+  }
+
+  registerPrincipal(data) {
+    const id = `principal-${Date.now()}`;
+    const salt = bcrypt.genSaltSync(10);
+    const password_hash = bcrypt.hashSync(data.password_plain || 'password', salt);
+
+    const newPrincipal = {
+      id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone || '',
+      designation: data.designation || 'Principal',
+      created_at: new Date().toISOString(),
+      password_hash,
+    };
+
+    this.data.principals = this.data.principals || [];
+    this.data.principals.push(newPrincipal);
+    this.saveLocal();
+    this.saveDoc('principals', id, newPrincipal);
+
+    const { password_hash: _, ...userWithoutPassword } = newPrincipal;
+    return userWithoutPassword;
+  }
+
+  deletePrincipal(id) {
+    this.data.principals = this.data.principals || [];
+    const index = this.data.principals.findIndex(p => p.id === id);
+    if (index !== -1) {
+      this.data.principals.splice(index, 1);
+      this.saveLocal();
+      this.deleteDoc('principals', id);
+      return true;
+    }
+    return false;
+  }
+
+  registerFaculty(facultyData) {
+    const id = `teacher-${Date.now()}`;
+    const salt = bcrypt.genSaltSync(10);
+    const password_hash = bcrypt.hashSync(facultyData.password_plain, salt);
+
+    const newFaculty = {
+      id,
+      name: facultyData.name,
+      department: facultyData.department,
+      phone: facultyData.phone,
+      email: facultyData.email,
+      selected_hod_id: facultyData.selected_hod_id,
+      selected_hod_name: facultyData.selected_hod_name,
+      user_type: 'faculty',
+      class_name: facultyData.class_name || 'Faculty Member',
+      created_at: new Date().toISOString(),
+      password_hash,
+    };
+
+    this.data.teachers = this.data.teachers || [];
+    this.data.teachers.push(newFaculty);
+    this.saveLocal();
+    this.saveDoc('teachers', id, newFaculty);
+
+    const { password_hash: _, ...rest } = newFaculty;
+    return rest;
   }
 
   updateGatePassStatus(id, status, approvedBy, remarks, qrCode) {
@@ -1305,7 +1524,33 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
     return this.data.whatsappStatus || { status: 'DISCONNECTED', qr: null };
   }
 
+  updateWhatsAppStatus(statusObj) {
+    this.data.whatsappStatus = statusObj;
+    this.saveLocal();
+    if (this.firestore) {
+      this.firestore.collection('settings').doc('whatsappStatus').set(statusObj).catch(err => {
+        console.error('[Firestore Error] Failed to update whatsapp status:', err);
+      });
+    }
+  }
+
   getWhatsAppLogs() {
     return this.data.whatsappLogs || [];
+  }
+
+  addWhatsAppLog(log) {
+    if (!this.data.whatsappLogs) {
+      this.data.whatsappLogs = [];
+    }
+    this.data.whatsappLogs.unshift(log);
+    if (this.data.whatsappLogs.length > 100) {
+      this.data.whatsappLogs = this.data.whatsappLogs.slice(0, 100);
+    }
+    this.saveLocal();
+    if (this.firestore) {
+      this.firestore.collection('whatsappLogs').doc(log.id).set(log).catch(err => {
+        console.error('[Firestore Error] Failed to save whatsapp log:', err);
+      });
+    }
   }
 }

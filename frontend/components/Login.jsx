@@ -224,7 +224,7 @@ export default function Login({ onLoginSuccess }) {
       case "teacher":
         return "Class Incharge Portal";
       case "faculty":
-        return "Faculty GatePass Portal";
+        return "Teacher Staff Portal";
       case "hod":
         return "HOD Portal";
       case "principal":
@@ -383,7 +383,7 @@ export default function Login({ onLoginSuccess }) {
                 <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
               </button>
 
-              {/* Row 2: Class Incharge */}
+              {/* Row 2: Class Incharge Portal */}
               <button
                 type="button"
                 onClick={() => handleSelectPortal("teacher")}
@@ -394,14 +394,14 @@ export default function Login({ onLoginSuccess }) {
                     <School className="h-4 w-4" />
                   </div>
                   <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">Class Incharge</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Teacher Dashboard</span>
+                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">Class Incharge Portal</span>
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Approve Student GatePasses &amp; Monitor Late Arrivals</span>
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
               </button>
 
-              {/* Row 3: Faculty GatePass */}
+              {/* Row 3: Teacher Staff Portal */}
               <button
                 type="button"
                 onClick={() => handleSelectPortal("faculty")}
@@ -412,8 +412,8 @@ export default function Login({ onLoginSuccess }) {
                     <ClipboardList className="h-4 w-4" />
                   </div>
                   <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">Faculty GatePass Portal</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Apply Gate Pass & Digital QR</span>
+                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">Teacher Staff Portal</span>
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Apply Outing Gate Pass &amp; Submit Late Mark</span>
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
@@ -538,7 +538,7 @@ export default function Login({ onLoginSuccess }) {
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span>Select Different Portal</span>
               </button>
-              {selectedPortal !== "principal" && selectedPortal !== "admin" && (
+              {(selectedPortal === "student" || selectedPortal === "faculty") && (
                 <button
                   onClick={() => {
                     setIsRegistering(true);

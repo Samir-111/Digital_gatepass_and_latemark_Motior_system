@@ -261,4 +261,67 @@ export const gatepassService = {
   getWhatsappLogs: async () => {
     return apiFetch('/api/admin/whatsapp/logs');
   },
+
+  // --- Faculty Gatepass APIs ---
+  registerFaculty: async (payload) => {
+    return apiFetch('/api/register/faculty', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  applyFacultyGatePass: async (payload) => {
+    return apiFetch('/api/faculty/apply', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  getFacultyGatePasses: async () => {
+    return apiFetch('/api/faculty/my-passes');
+  },
+
+  // --- Principal Dashboard APIs ---
+  getPrincipalPendingPasses: async () => {
+    return apiFetch('/api/principal/pending');
+  },
+
+  getPrincipalHistoryPasses: async () => {
+    return apiFetch('/api/principal/history');
+  },
+
+  getPrincipalAllPasses: async () => {
+    return apiFetch('/api/principal/all-passes');
+  },
+
+  approveFacultyGatePassPrincipal: async (id, remarks) => {
+    return apiFetch('/api/principal/approve', {
+      method: 'POST',
+      body: JSON.stringify({ id, remarks }),
+    });
+  },
+
+  rejectFacultyGatePassPrincipal: async (id, remarks) => {
+    return apiFetch('/api/principal/reject', {
+      method: 'POST',
+      body: JSON.stringify({ id, remarks }),
+    });
+  },
+
+  getAdminPrincipals: async () => {
+    return apiFetch('/api/admin/principals');
+  },
+
+  registerAdminPrincipal: async (principalData) => {
+    return apiFetch('/api/admin/principals/create', {
+      method: 'POST',
+      body: JSON.stringify(principalData),
+    });
+  },
+
+  deleteAdminPrincipal: async (id) => {
+    return apiFetch(`/api/admin/principals/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };

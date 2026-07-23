@@ -17,6 +17,14 @@ import { Database } from './db.js';
 
 dotenv.config();
 
+process.on('uncaughtException', (err) => {
+  console.warn('[Server Warning] Uncaught Exception:', err.message || err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.warn('[Server Warning] Unhandled Rejection:', reason?.message || reason);
+});
+
 const app = express();
 const PORT = 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'college_gatepass_super_secret_key_2026';
@@ -1136,13 +1144,22 @@ app.get('/api/admin/principals', authenticateJWT, authorizeRoles('admin'), (req,
 });
 
 app.post('/api/admin/principals/create', authenticateJWT, authorizeRoles('admin'), (req, res) => {
-  const { name, email, password_plain, phone, designation } = req.body;
-  if (!name || !email || !password_plain) {
+  const body = req.body || {};
+  const name = (body.name || body.principalName || '').trim();
+  const email = (body.email || body.principalEmail || '').trim();
+  const password = body.password || body.password_plain || body.principalPass || '';
+
+  if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email, and password are required.' });
   }
-  const principal = db.registerPrincipal({ name, email, password_plain, phone, designation });
-  db.addLog(req.user.id, req.user.name, 'admin', `Registered new Principal account: ${email}`);
-  res.json(principal);
+
+  try {
+    const p = db.registerPrincipal({ name, email, password_plain: password, phone: body.phone, designation: body.designation });
+    db.addLog(req.user.id, req.user.name, 'admin', `Registered Principal Account: ${name} (${email})`);
+    res.status(201).json(p);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to register principal.' });
+  }
 });
 
 app.delete('/api/admin/principals/:id', authenticateJWT, authorizeRoles('admin'), (req, res) => {
@@ -1795,9 +1812,6 @@ app.use(async (req, res, next) => {
 });
 
 async function startServer() {
-  await db.initFirestore();
-  ensureWhatsAppDaemonRunning();
-
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -1815,6 +1829,16 @@ async function startServer() {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[GatePass Server] Running securely on http://localhost:${PORT}`);
   });
+
+  // Background async DB & daemon init (does not block HTTP listener)
+  db.initFirestore()
+    .then(() => {
+      ensureWhatsAppDaemonRunning();
+    })
+    .catch((err) => {
+      console.warn('[Firestore] Async initialization note:', err.message);
+      ensureWhatsAppDaemonRunning();
+    });
 }
 
 // Only start the server automatically if NOT running on Vercel

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
 import NotificationCenter from "./NotificationCenter";
+import sbjainLogo from "../assets/sbjain-logo.png";
 export default function HODDashboard({ user, onLogout }) {
   const [pending, setPending] = useState([]);
   const [history, setHistory] = useState([]);
@@ -27,6 +28,13 @@ export default function HODDashboard({ user, onLogout }) {
   const [riskFilter, setRiskFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("pending");
   const [lateEntries, setLateEntries] = useState([]);
+
+  const studentHistory = history.filter(
+    (p) => !p.faculty_id && p.user_type !== "faculty" && !p.faculty_name
+  );
+  const facultyHistory = history.filter(
+    (p) => p.faculty_id || p.user_type === "faculty" || p.faculty_name || (p.reason && p.reason.includes("[TEACHER LATE MARK]"))
+  );
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
@@ -137,9 +145,7 @@ export default function HODDashboard({ user, onLogout }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="h-9 w-9 bg-slate-900 rounded-lg flex items-center justify-center shadow-sm shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-              </div>
+              <img src={sbjainLogo} alt="SB Jain Logo" className="h-10 w-10 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-100" />
               <span className="font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm md:text-base leading-tight max-w-[150px] sm:max-w-none line-clamp-2">S. B. Jain Institute of Technology, Management and Research</span>
               <span className="hidden lg:inline bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-emerald-200 shrink-0">HOD</span>
             </div>
@@ -216,24 +222,30 @@ export default function HODDashboard({ user, onLogout }) {
           <div className="border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex space-x-1 shrink-0 bg-slate-50 p-1 rounded-xl border border-slate-200 overflow-x-auto">
               <button
-    onClick={() => setActiveTab("pending")}
-    className={`px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer shrink-0 ${activeTab === "pending" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"}`}
-  >
+                onClick={() => setActiveTab("pending")}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer shrink-0 ${activeTab === "pending" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"}`}
+              >
                 Approval Queue ({pending.length})
               </button>
               <button
-    onClick={() => setActiveTab("history")}
-    className={`px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer shrink-0 ${activeTab === "history" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"}`}
-  >
-                Department History ({history.length})
+                onClick={() => setActiveTab("student_history")}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer shrink-0 ${activeTab === "student_history" || activeTab === "history" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"}`}
+              >
+                Student History ({studentHistory.length})
               </button>
               <button
-    onClick={() => {
-      setActiveTab("late_come");
-      fetchLateEntries();
-    }}
-    className={`px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer shrink-0 flex items-center space-x-1 ${activeTab === "late_come" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"}`}
-  >
+                onClick={() => setActiveTab("faculty_history")}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer shrink-0 ${activeTab === "faculty_history" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"}`}
+              >
+                Faculty &amp; Staff History ({facultyHistory.length})
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("late_come");
+                  fetchLateEntries();
+                }}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition cursor-pointer shrink-0 flex items-center space-x-1 ${activeTab === "late_come" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"}`}
+              >
                 <Clock className="h-3.5 w-3.5" />
                 <span>Late-Comers Directory ({lateEntries.length})</span>
               </button>
@@ -292,26 +304,30 @@ export default function HODDashboard({ user, onLogout }) {
   }
                       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 mb-4 gap-4">
                         <div className="flex items-center space-x-3">
-                          {pass.student_id ? <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-600 text-xs">
-                              {pass.student_name ? pass.student_name.slice(0, 2).toUpperCase() : "ST"}
-                            </div> : null}
+                          <div className={`h-10 w-10 rounded-full border flex items-center justify-center font-bold text-xs ${pass.user_type === 'faculty' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                            {(pass.faculty_name || pass.student_name || "US").slice(0, 2).toUpperCase()}
+                          </div>
                           <div>
-                            <h3 className="text-sm font-bold text-slate-800">{pass.student_name}</h3>
-                            <p className="text-[11px] text-slate-500 font-medium">Roll: <span className="font-semibold text-slate-700">{pass.student_roll_no}</span> • Phone: <span className="font-semibold text-slate-700">{pass.student_phone}</span></p>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-sm font-bold text-slate-800">{pass.faculty_name || pass.student_name}</h3>
+                              {pass.user_type === 'faculty' && (
+                                <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300">
+                                  FACULTY GATEPASS
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-500 font-medium">
+                              Dept: <span className="font-semibold text-slate-700">{pass.faculty_department || pass.student_department}</span>
+                              {pass.student_roll_no && pass.student_roll_no !== "FACULTY" && ` • Roll: ${pass.student_roll_no}`}
+                            </p>
                           </div>
                         </div>
 
-                        {
-    /* AI Advisory check card */
-  }
                         <div className="flex items-center gap-2">
                           {getRiskIndicator(pass.risk_level)}
                         </div>
                       </div>
 
-                      {
-    /* AI Risk Remarks box */
-  }
                       {pass.risk_level && <div className={`p-3.5 rounded-xl border mb-4 flex items-start space-x-2.5 ${pass.risk_level === "high" ? "bg-rose-50/50 border-rose-100 text-rose-800" : pass.risk_level === "medium" ? "bg-amber-50/50 border-amber-100 text-amber-800" : "bg-blue-50/50 border-blue-100 text-blue-800"}`}>
                           <Sparkles className="h-4 w-4 text-current shrink-0 mt-0.5" />
                           <div className="text-xs font-semibold leading-relaxed">
@@ -320,9 +336,6 @@ export default function HODDashboard({ user, onLogout }) {
                           </div>
                         </div>}
 
-                      {
-    /* Outing details */
-  }
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium text-slate-600 mb-5 bg-slate-50 p-4 rounded-xl">
                         <div>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Leave Scheduled</span>
@@ -334,9 +347,6 @@ export default function HODDashboard({ user, onLogout }) {
                         </div>
                       </div>
 
-                      {
-    /* Action forms */
-  }
                       <div className="flex flex-col sm:flex-row items-center gap-3">
                         <input
     type="text"
@@ -348,17 +358,18 @@ export default function HODDashboard({ user, onLogout }) {
                         <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
                           <button
     onClick={() => handleReject(pass.id)}
-    className="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer transition"
+    className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center space-x-1"
   >
-                            <X className="h-4 w-4 mr-1" />
-                            Reject
+                            <X className="h-3.5 w-3.5" />
+                            <span>Reject</span>
                           </button>
+                          
                           <button
     onClick={() => handleApprove(pass.id)}
-    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center justify-center cursor-pointer transition shadow-md"
+    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold shadow-sm transition cursor-pointer flex items-center space-x-1"
   >
-                            <Check className="h-4 w-4 mr-1 text-emerald-400" />
-                            Approve Pass
+                            <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            <span>{pass.user_type === 'faculty' ? 'Clear & Forward to Principal' : 'Approve Outing'}</span>
                           </button>
                         </div>
                       </div>
@@ -366,10 +377,9 @@ export default function HODDashboard({ user, onLogout }) {
                 </div>}
             </div>}
 
-          {
-    /* TAB 2: HISTORICAL LOGS */
-  }
-          {activeTab === "history" && <div className="overflow-x-auto">
+          {/* TAB 2: STUDENT HISTORICAL LOGS */}
+          {(activeTab === "student_history" || activeTab === "history") && (
+            <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-100">
                 <thead className="bg-slate-50">
                   <tr>
@@ -382,7 +392,8 @@ export default function HODDashboard({ user, onLogout }) {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-100 text-xs">
-                  {history.map((pass) => <tr key={pass.id} className="hover:bg-slate-50/50">
+                  {studentHistory.map((pass) => (
+                    <tr key={pass.id} className="hover:bg-slate-50/50">
                       <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-800">{pass.id}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-bold text-slate-800">{pass.student_name}</div>
@@ -391,21 +402,71 @@ export default function HODDashboard({ user, onLogout }) {
                       <td className="px-6 py-4">
                         <div className="font-semibold text-slate-800 max-w-xs truncate">{pass.reason}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                        {new Date(pass.exit_time).toLocaleString()}
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-mono">
+                        {new Date(pass.exit_time).toLocaleString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
                       <td className="px-6 py-4 text-slate-500 italic max-w-xs truncate">
                         "{pass.remarks || "No HOD remarks"}"
                       </td>
-                    </tr>)}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
-              {history.length === 0 && <div className="text-center py-12 p-8 text-slate-400">
+              {studentHistory.length === 0 && (
+                <div className="text-center py-12 p-8 text-slate-400">
                   <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300" />
-                  <span className="text-sm font-semibold">No historical records found for your department.</span>
-                </div>}
-            </div>}
+                  <span className="text-sm font-semibold">No student gate pass history found.</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: FACULTY & STAFF HISTORICAL LOGS */}
+          {activeTab === "faculty_history" && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-100">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pass ID</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Faculty / Staff Name</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Type / Reason</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date &amp; Time</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-100 text-xs">
+                  {facultyHistory.map((pass) => (
+                    <tr key={pass.id} className="hover:bg-slate-50/50">
+                      <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-800">{pass.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-bold text-slate-800">{pass.faculty_name || pass.student_name || "Faculty Member"}</div>
+                        <div className="text-[10px] text-amber-600 font-semibold">{pass.faculty_department || user.department}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-slate-800 max-w-xs truncate">{pass.reason}</div>
+                        {pass.destination && <div className="text-[10px] text-slate-400">Dest: {pass.destination}</div>}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-mono">
+                        {new Date(pass.exit_time).toLocaleString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
+                      <td className="px-6 py-4 text-slate-500 italic max-w-xs truncate">
+                        "{pass.remarks || "No remarks"}"
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {facultyHistory.length === 0 && (
+                <div className="text-center py-12 p-8 text-slate-400">
+                  <Sparkles className="h-10 w-10 mx-auto mb-2 text-slate-300" />
+                  <span className="text-sm font-semibold">No faculty / teacher staff history found.</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {
     /* TAB 3: LATE COMERS REGISTER */

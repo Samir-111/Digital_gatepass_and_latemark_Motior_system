@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { apiFetch } from "../lib/api.js";
 import { gatepassService } from "../services/gatepassService.js";
+import sbjainLogo from "../assets/sbjain-logo.png";
 export default function AdminDashboard({ user, onLogout }) {
   const [stats, setStats] = useState(null);
   const [deptList, setDeptList] = useState([]);
@@ -61,6 +62,10 @@ export default function AdminDashboard({ user, onLogout }) {
   const [teacherDept, setTeacherDept] = useState("");
   const [teacherEmail, setTeacherEmail] = useState("");
   const [teacherPass, setTeacherPass] = useState("");
+  const [principalList, setPrincipalList] = useState([]);
+  const [principalName, setPrincipalName] = useState("");
+  const [principalEmail, setPrincipalEmail] = useState("");
+  const [principalPass, setPrincipalPass] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [toast, setToast] = useState(null);
   const [parentContactsInput, setParentContactsInput] = useState("");
@@ -90,6 +95,8 @@ export default function AdminDashboard({ user, onLogout }) {
       setGuardList(guards);
       const teachers = await gatepassService.getAdminTeachers();
       setTeacherList(teachers || []);
+      const principals = await gatepassService.getAdminPrincipals();
+      setPrincipalList(principals || []);
       const passes = await gatepassService.getAdminGatePasses();
       setGatePassList(passes || []);
       const contacts = await gatepassService.getAdminParentContacts();
@@ -452,6 +459,35 @@ export default function AdminDashboard({ user, onLogout }) {
     const teacher = teacherList.find((t) => t.id === id);
     setDeleteConfirm({ type: "teacher", id, name: teacher?.name || "Class Teacher" });
   };
+  const handleAddPrincipal = async (e) => {
+    e.preventDefault();
+    const name = principalName.trim();
+    const email = principalEmail.trim();
+    const password = principalPass;
+
+    if (!name || !email || !password) {
+      showToast("Please fill out all Principal credentials.", "error");
+      return;
+    }
+    try {
+      await gatepassService.registerAdminPrincipal({
+        name,
+        email,
+        password
+      });
+      setPrincipalName("");
+      setPrincipalEmail("");
+      setPrincipalPass("");
+      showToast(`Principal "${name}" account registered successfully.`);
+      fetchAdminData();
+    } catch (err) {
+      showToast(err.message || "Failed to register Principal account.", "error");
+    }
+  };
+  const handleDeletePrincipal = (id) => {
+    const principal = principalList.find((p) => p.id === id);
+    setDeleteConfirm({ type: "principal", id, name: principal?.name || "Principal" });
+  };
   const executeDelete = async () => {
     if (!deleteConfirm) return;
     const { type, id, name } = deleteConfirm;
@@ -471,6 +507,9 @@ export default function AdminDashboard({ user, onLogout }) {
       } else if (type === "teacher") {
         await gatepassService.deleteAdminTeacher(id);
         showToast(`Class Teacher "${name}" deleted successfully.`);
+      } else if (type === "principal") {
+        await gatepassService.deleteAdminPrincipal(id);
+        showToast(`Principal account "${name}" deleted successfully.`);
       }
       setDeleteConfirm(null);
       fetchAdminData();
@@ -486,9 +525,7 @@ export default function AdminDashboard({ user, onLogout }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="h-9 w-9 bg-slate-900 rounded-lg flex items-center justify-center shadow-sm shrink-0">
-                <Activity className="h-5 w-5 text-emerald-400" />
-              </div>
+              <img src={sbjainLogo} alt="SB Jain Logo" className="h-10 w-10 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-100" />
               <span className="font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm md:text-base leading-tight max-w-[150px] sm:max-w-none line-clamp-2">S. B. Jain Institute of Technology, Management and Research</span>
               <span className="hidden lg:inline bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-slate-200 shrink-0">Admin</span>
             </div>
@@ -584,6 +621,7 @@ export default function AdminDashboard({ user, onLogout }) {
     { id: "students", label: "Manage Students", icon: Users },
     { id: "hods", label: "Manage HODs", icon: Layers },
     { id: "teachers", label: "Manage Class Teachers", icon: Users },
+    { id: "principals", label: "Manage Principals", icon: ShieldCheck },
     { id: "guards", label: "Manage Guards", icon: ShieldCheck },
     { id: "depts", label: "Manage Departments", icon: BookOpen },
     { id: "parent_contacts", label: "Parent Phone Mappings", icon: Phone },
@@ -1107,6 +1145,67 @@ export default function AdminDashboard({ user, onLogout }) {
                 </table>
               </div>
             </div>}
+
+          {/* TAB: MANAGE PRINCIPALS */}
+          {activeTab === "principals" && (
+            <div className="space-y-6">
+              <form onSubmit={handleAddPrincipal} className="border border-slate-200 bg-slate-50/40 p-5 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-3 pb-2 border-b border-slate-200">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">Register Executive Principal Account</h3>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Principal Full Name</label>
+                  <input required type="text" placeholder="Dr. S. B. Jain" value={principalName} onChange={(e) => setPrincipalName(e.target.value)} className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Institutional Email</label>
+                  <input required type="email" placeholder="principal@sbjit.edu.in" value={principalEmail} onChange={(e) => setPrincipalEmail(e.target.value)} className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Password</label>
+                  <input required type="password" placeholder="••••••••" value={principalPass} onChange={(e) => setPrincipalPass(e.target.value)} className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs" />
+                </div>
+                <div className="md:col-span-3 flex justify-end">
+                  <button type="submit" className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer">
+                    <Plus className="h-4 w-4" />
+                    <span>Create Principal Account</span>
+                  </button>
+                </div>
+              </form>
+
+              <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+                <table className="min-w-full divide-y divide-slate-100 text-xs">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Principal Name</th>
+                      <th className="px-6 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Institutional Email</th>
+                      <th className="px-6 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-3 text-left font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-100 text-slate-700">
+                    {principalList.map((principal) => (
+                      <tr key={principal.id} className="hover:bg-slate-50/50">
+                        <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-950">{principal.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap font-mono">{principal.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap font-semibold text-amber-700">Executive Principal</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button onClick={() => handleDeletePrincipal(principal.id)} className="p-1.5 hover:bg-red-50 text-red-500 hover:text-red-700 border border-transparent hover:border-red-100 rounded-lg transition cursor-pointer">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {principalList.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-slate-400 font-semibold">No registered Principal accounts found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {
     /* TAB 4: MANAGE GUARDS */
