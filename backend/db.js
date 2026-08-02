@@ -354,7 +354,12 @@ export class Database {
       // Save locally to keep backup robust
       this.saveLocal();
     } catch (err) {
-      console.error('[Firestore] Initialization error. Running on local fallback cache:', err);
+      const errorMsg = err?.message || String(err || '');
+      if (err?.code === 8 || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('Quota exceeded')) {
+        console.warn('[Firestore] Quota limit exceeded (RESOURCE_EXHAUSTED). Running smoothly on local fallback database cache.');
+      } else {
+        console.warn('[Firestore] Initialization error. Running on local fallback cache:', errorMsg);
+      }
       this.firestore = undefined;
       this.initLocalOnlySeed();
     }

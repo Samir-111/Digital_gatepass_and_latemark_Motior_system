@@ -254,10 +254,7 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
   }
 
   if (status !== 'success') {
-    status = 'success';
-    errorMsg = null;
-    console.log(`[WhatsApp Gateway] Parent alert queued & logged for ${studentName} (${cleanNumber})`);
-    db.updateWhatsAppStatus({ status: 'CONNECTED', qr: null, updated_at: new Date().toISOString() });
+    console.warn(`[WhatsApp Gateway Warning] Parent alert dispatch failed for ${studentName} (${cleanNumber}): ${errorMsg || 'WhatsApp client disconnected'}`);
   }
 
   const logEntry = {
@@ -266,8 +263,8 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
     rollNo: rollNo || 'N/A',
     parentPhone: cleanNumber || parentPhone || 'N/A',
     message: messageBody,
-    status: 'success',
-    error: null,
+    status,
+    error: errorMsg || null,
     sent_at: new Date().toISOString()
   };
 

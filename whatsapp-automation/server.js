@@ -25,7 +25,15 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('unhandledRejection', (reason) => {
-  console.warn('[WhatsApp Daemon Warning] Unhandled Rejection:', reason?.message || reason);
+  const msg = reason?.message || String(reason || '');
+  if (
+    msg.includes('detached Frame') ||
+    msg.includes('Execution context was destroyed') ||
+    msg.includes('Target closed')
+  ) {
+    return; // Non-fatal Puppeteer frame lifecycle noise during WhatsApp Web DOM changes
+  }
+  console.warn('[WhatsApp Daemon Warning] Unhandled Rejection:', msg);
 });
 
 console.log('==================================================================');
@@ -129,7 +137,6 @@ const client = new Client({
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
-      '--single-process',
       '--disable-gpu',
       '--disable-blink-features=AutomationControlled'
     ]
@@ -222,6 +229,15 @@ const httpServer = http.createServer((req, res) => {
 
   res.writeHead(404);
   res.end(JSON.stringify({ error: 'Endpoint not found' }));
+});
+
+httpServer.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.warn('[WhatsApp Engine] Port 3001 is already bound to an active WhatsApp daemon. Exiting duplicate instance gracefully.');
+    process.exit(0);
+  } else {
+    console.error('[WhatsApp Engine HTTP Error]:', err.message);
+  }
 });
 
 httpServer.listen(3001, () => {
@@ -466,7 +482,12 @@ function startFirestoreListener() {
         });
       },
       (error) => {
-        console.warn('[Firestore Listener] Snapshot connection paused/retryable:', error.message);
+        const msg = error?.message || String(error || '');
+        if (error?.code === 8 || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('Quota exceeded')) {
+          console.warn('[Firestore Listener] Quota limit reached (RESOURCE_EXHAUSTED). Real-time cloud sync paused.');
+          return;
+        }
+        console.warn('[Firestore Listener] Snapshot connection paused/retryable:', msg);
         setTimeout(() => {
           try {
             startFirestoreListener();
