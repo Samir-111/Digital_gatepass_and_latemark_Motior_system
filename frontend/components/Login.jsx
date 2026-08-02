@@ -54,6 +54,21 @@ export default function Login({ onLoginSuccess }) {
   const [selectedDemoHOD, setSelectedDemoHOD] = useState("");
   const [showHODDropdown, setShowHODDropdown] = useState(false);
 
+  // 2-Step Authentication (2FA) State
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [challengeId, setChallengeId] = useState("");
+  const [maskedPhone, setMaskedPhone] = useState("");
+  const [twoFactorOtp, setTwoFactorOtp] = useState("");
+  const [resendCountdown, setResendCountdown] = useState(0);
+
+  useEffect(() => {
+    let timer;
+    if (resendCountdown > 0) {
+      timer = setTimeout(() => setResendCountdown(prev => prev - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCountdown]);
+
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
@@ -85,12 +100,64 @@ export default function Login({ onLoginSuccess }) {
         method: "POST",
         body: JSON.stringify({ email, password })
       });
+
+      if (data.requires2FA) {
+        setRequires2FA(true);
+        setChallengeId(data.challengeId);
+        setMaskedPhone(data.maskedPhone || "");
+        setSuccessMsg(data.message || "A 6-digit verification code has been sent to your registered WhatsApp number.");
+        setResendCountdown(60);
+        return;
+      }
+
       setAuthToken(data.token);
       localStorage.setItem("gatepass_user", JSON.stringify(data.user));
       localStorage.setItem("gatepass_role", data.role);
       onLoginSuccess(data.user, data.role);
     } catch (err) {
       setError(err.message || "Invalid email or password. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify2FA = async (e) => {
+    e.preventDefault();
+    if (!twoFactorOtp || twoFactorOtp.length < 6) {
+      setError("Please enter the complete 6-digit WhatsApp verification code.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiFetch("/api/login/verify-2fa", {
+        method: "POST",
+        body: JSON.stringify({ challengeId, otp: twoFactorOtp })
+      });
+      setAuthToken(data.token);
+      localStorage.setItem("gatepass_user", JSON.stringify(data.user));
+      localStorage.setItem("gatepass_role", data.role);
+      onLoginSuccess(data.user, data.role);
+    } catch (err) {
+      setError(err.message || "Invalid verification code. Please check your WhatsApp.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend2FA = async () => {
+    if (resendCountdown > 0) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiFetch("/api/login/resend-2fa", {
+        method: "POST",
+        body: JSON.stringify({ challengeId })
+      });
+      setSuccessMsg(data.message || "A new 6-digit verification code has been dispatched to your WhatsApp.");
+      setResendCountdown(60);
+    } catch (err) {
+      setError(err.message || "Failed to resend verification code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -525,6 +592,97 @@ export default function Login({ onLoginSuccess }) {
                 <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
               </button>
             </div>
+          </div>
+        ) : requires2FA ? (
+          /* STEP 2-FACTOR: WHATSAPP OTP VERIFICATION VIEW */
+          <div className="space-y-6">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setRequires2FA(false);
+                  setTwoFactorOtp("");
+                  setError(null);
+                  setSuccessMsg(null);
+                }}
+                className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center space-x-1 transition cursor-pointer"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Login</span>
+              </button>
+              <span className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20">
+                Step 2 of 2
+              </span>
+            </div>
+
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/80 text-center shadow-sm">
+              <div className="h-12 w-12 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-2 border border-emerald-500/30">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
+                2-Step WhatsApp Verification
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                A 6-digit verification code has been sent to your registered WhatsApp mobile number:
+              </p>
+              <div className="mt-2.5 inline-block px-3.5 py-1.5 bg-white dark:bg-slate-900 rounded-xl text-xs font-black text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 shadow-sm tracking-wider">
+                📱 {maskedPhone || "+91 **********"}
+              </div>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleVerify2FA}>
+              <div>
+                <label htmlFor="twoFactorOtp" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                  Enter 6-Digit WhatsApp Verification Code
+                </label>
+                <div className="mt-2 relative">
+                  <input
+                    id="twoFactorOtp"
+                    type="text"
+                    maxLength={6}
+                    required
+                    value={twoFactorOtp}
+                    onChange={(e) => setTwoFactorOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="block w-full text-center tracking-[0.5em] text-lg font-black py-3 px-4 border border-slate-300 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-300 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner"
+                    placeholder="••••••"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || twoFactorOtp.length < 6}
+                className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-all cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
+                    Verifying 2FA Code...
+                  </>
+                ) : (
+                  <>
+                    <span>Verify &amp; Log In</span>
+                    <ChevronRight className="ml-1.5 h-4 w-4 text-emerald-200" />
+                  </>
+                )}
+              </button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={handleResend2FA}
+                  disabled={resendCountdown > 0 || loading}
+                  className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-50 transition cursor-pointer"
+                >
+                  {resendCountdown > 0 ? (
+                    `Resend OTP via WhatsApp in ${resendCountdown}s`
+                  ) : (
+                    `Didn't receive code? Resend via WhatsApp`
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         ) : !isRegistering && !isForgotPassword ? (
           /* STEP 2: SIGN IN VIEW FOR SELECTED PORTAL */

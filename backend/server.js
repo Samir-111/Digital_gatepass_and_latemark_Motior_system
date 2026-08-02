@@ -173,7 +173,7 @@ const sendOTPEmail = async (email, otp) => {
 };
 
 // Helper to dispatch WhatsApp message to parent and audit the result
-const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, exitTime }) => {
+const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, exitTime, customMessage }) => {
   let cleanNumber = (parentPhone || '').replace(/[^0-9]/g, '');
   if (cleanNumber.length === 10) {
     cleanNumber = '91' + cleanNumber;
@@ -185,7 +185,7 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
     hour12: true
   });
 
-  const messageBody = `*GATEPASS EXIT ALERT* 🚪\n\nDear Parent, your ward *${studentName}* (Roll No: ${rollNo}) has checked out and departed the college premises.\n\n_Time: ${timeString}_${reason ? `\n_Reason: ${reason}_` : ''}\n\n- S. B. Jain Institute of Technology, Management and Research`;
+  const messageBody = customMessage || `*GATEPASS EXIT ALERT* 🚪\n\nDear Parent, your ward *${studentName}* (Roll No: ${rollNo}) has checked out and departed the college premises.\n\n_Time: ${timeString}_${reason ? `\n_Reason: ${reason}_` : ''}\n\n- S. B. Jain Institute of Technology, Management and Research`;
 
   const logId = 'walog-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
   let status = 'failed';
@@ -291,8 +291,21 @@ app.get('/api/public/info', (req, res) => {
   });
 });
 
-// 1. General Auth Route
-app.post('/api/login', (req, res) => {
+// 2-Step Authentication (2FA) Challenges Store (5-minute TTL)
+const twoFactorChallenges = new Map();
+
+// Periodic cleanup for expired 2FA challenges
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of twoFactorChallenges.entries()) {
+    if (val.expiresAt < now) {
+      twoFactorChallenges.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
+// 1. General Auth Route (Step 1: Password Verification & Dispatch WhatsApp OTP)
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
@@ -303,22 +316,146 @@ app.post('/api/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
-  const tokenPayload = {
-    id: authResult.user.id,
-    name: authResult.user.name,
-    email: authResult.user.email,
+  // Look up registered mobile number from user object
+  const userPhone = authResult.user.phone || authResult.user.parent_phone || authResult.user.mobile || '';
+
+  if (!userPhone || userPhone.trim() === '') {
+    // If no mobile number is associated, proceed directly with standard login fallback
+    const tokenPayload = {
+      id: authResult.user.id,
+      name: authResult.user.name,
+      email: authResult.user.email,
+      role: authResult.role,
+      department: authResult.user.department || undefined,
+    };
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '12h' });
+    db.addLog(authResult.user.id, authResult.user.name, authResult.role, `Logged in successfully (No registered mobile number)`);
+    return res.json({ token, user: authResult.user, role: authResult.role });
+  }
+
+  // Generate 6-digit OTP code
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const challengeId = '2fa-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+  const expiresAt = Date.now() + (5 * 60 * 1000); // Expires in 5 minutes
+
+  twoFactorChallenges.set(challengeId, {
+    challengeId,
+    otp,
+    expiresAt,
+    user: authResult.user,
     role: authResult.role,
-    department: authResult.user.department || undefined,
+    phone: userPhone
+  });
+
+  const cleanDigits = userPhone.replace(/[^0-9]/g, '');
+  const maskedPhone = cleanDigits.length >= 10
+    ? `+91 ******${cleanDigits.slice(-4)}`
+    : `+91 ${userPhone}`;
+
+  const otpMessage = `🔐 *COLLEGE DIGITAL GATEPASS 2-STEP VERIFICATION*\n\nDear *${authResult.user.name}*,\n\nYour 6-digit login verification OTP is:\n\n👉 *${otp}* 👈\n\nThis code is valid for 5 minutes. Do NOT share this code with anyone.\n\n- S. B. Jain Institute of Technology, Management and Research`;
+
+  try {
+    await sendWhatsAppMessage({
+      parentPhone: userPhone,
+      studentName: authResult.user.name,
+      rollNo: authResult.user.roll_no || '2FA-LOGIN',
+      customMessage: otpMessage
+    });
+  } catch (err) {
+    console.warn('[2FA WhatsApp Alert Error]:', err.message);
+  }
+
+  res.json({
+    requires2FA: true,
+    challengeId,
+    maskedPhone,
+    message: `A 6-digit verification code has been sent to your WhatsApp number (${maskedPhone}).`
+  });
+});
+
+// Step 2: 2FA WhatsApp OTP Verification Endpoint
+app.post('/api/login/verify-2fa', (req, res) => {
+  const { challengeId, otp } = req.body;
+
+  if (!challengeId || !otp) {
+    return res.status(400).json({ error: 'Challenge ID and 6-digit verification code are required.' });
+  }
+
+  const challenge = twoFactorChallenges.get(challengeId);
+  if (!challenge) {
+    return res.status(400).json({ error: 'Invalid or expired verification session. Please try logging in again.' });
+  }
+
+  if (Date.now() > challenge.expiresAt) {
+    twoFactorChallenges.delete(challengeId);
+    return res.status(400).json({ error: 'Verification code has expired. Please click resend to get a new code.' });
+  }
+
+  if (challenge.otp.trim() !== otp.toString().trim()) {
+    return res.status(400).json({ error: 'Incorrect 6-digit verification code. Please check your WhatsApp.' });
+  }
+
+  // OTP verified successfully! Clear challenge and issue JWT token
+  twoFactorChallenges.delete(challengeId);
+
+  const tokenPayload = {
+    id: challenge.user.id,
+    name: challenge.user.name,
+    email: challenge.user.email,
+    role: challenge.role,
+    department: challenge.user.department || undefined,
   };
 
   const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '12h' });
 
-  db.addLog(authResult.user.id, authResult.user.name, authResult.role, `Logged in successfully`);
+  db.addLog(challenge.user.id, challenge.user.name, challenge.role, `Logged in successfully via 2-Step WhatsApp Verification`);
 
   res.json({
     token,
-    user: authResult.user,
-    role: authResult.role,
+    user: challenge.user,
+    role: challenge.role,
+  });
+});
+
+// Step 3: Resend 2FA WhatsApp OTP Endpoint
+app.post('/api/login/resend-2fa', async (req, res) => {
+  const { challengeId } = req.body;
+
+  if (!challengeId) {
+    return res.status(400).json({ error: 'Challenge ID is required.' });
+  }
+
+  const challenge = twoFactorChallenges.get(challengeId);
+  if (!challenge) {
+    return res.status(400).json({ error: 'Invalid or expired verification session. Please log in again.' });
+  }
+
+  const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  challenge.otp = newOtp;
+  challenge.expiresAt = Date.now() + (5 * 60 * 1000);
+  twoFactorChallenges.set(challengeId, challenge);
+
+  const otpMessage = `🔐 *COLLEGE DIGITAL GATEPASS 2-STEP VERIFICATION*\n\nDear *${challenge.user.name}*,\n\nYour new 6-digit login verification OTP is:\n\n👉 *${newOtp}* 👈\n\nThis code is valid for 5 minutes. Do NOT share this code with anyone.\n\n- S. B. Jain Institute of Technology, Management and Research`;
+
+  try {
+    await sendWhatsAppMessage({
+      parentPhone: challenge.phone,
+      studentName: challenge.user.name,
+      rollNo: challenge.user.roll_no || '2FA-LOGIN',
+      customMessage: otpMessage
+    });
+  } catch (err) {
+    console.warn('[2FA WhatsApp Resend Error]:', err.message);
+  }
+
+  const cleanDigits = challenge.phone.replace(/[^0-9]/g, '');
+  const maskedPhone = cleanDigits.length >= 10
+    ? `+91 ******${cleanDigits.slice(-4)}`
+    : `+91 ${challenge.phone}`;
+
+  res.json({
+    success: true,
+    message: `A new 6-digit verification code has been sent to your WhatsApp number (${maskedPhone}).`
   });
 });
 
