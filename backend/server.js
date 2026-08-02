@@ -1620,6 +1620,7 @@ const ensureWhatsAppDaemonRunning = () => {
           try {
             whatsappChildProcess = spawn('node', [scriptPath], {
               cwd: path.resolve(process.cwd(), 'whatsapp-automation'),
+              env: { ...process.env },
               stdio: 'inherit'
             });
             whatsappChildProcess.on('exit', () => { whatsappChildProcess = null; });

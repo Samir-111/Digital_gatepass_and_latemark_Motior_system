@@ -1540,18 +1540,37 @@ export default function AdminDashboard({ user, onLogout }) {
                         The WhatsApp automation service is currently disconnected. Click below to re-initialize and generate a fresh QR code.
                       </p>
                       <button
+                        disabled={whatsappLoading}
                         onClick={async () => {
                           setWhatsappLoading(true);
                           try {
                             await apiFetch("/api/admin/whatsapp/reconnect", { method: "POST" });
-                            setTimeout(fetchWhatsappInfo, 1000);
-                          } catch (e) {}
-                          setWhatsappLoading(false);
+                            showToast("Launching WhatsApp engine & generating QR code... Please wait 5-10 seconds.");
+                            let attempts = 0;
+                            const interval = setInterval(async () => {
+                              attempts++;
+                              try {
+                                const statusData = await gatepassService.getWhatsappStatus();
+                                setWhatsappStatus(statusData);
+                                if (statusData.status === 'QR_READY' || statusData.status === 'CONNECTED' || attempts >= 10) {
+                                  clearInterval(interval);
+                                  setWhatsappLoading(false);
+                                }
+                              } catch (err) {
+                                if (attempts >= 10) {
+                                  clearInterval(interval);
+                                  setWhatsappLoading(false);
+                                }
+                              }
+                            }, 2000);
+                          } catch (e) {
+                            setWhatsappLoading(false);
+                          }
                         }}
-                        className="mt-2 inline-flex items-center px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
+                        className="mt-2 inline-flex items-center px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer disabled:opacity-50"
                       >
-                        <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                        Generate QR Code / Re-link
+                        <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${whatsappLoading ? "animate-spin" : ""}`} />
+                        {whatsappLoading ? "Launching Chrome & Generating QR..." : "Generate QR Code / Re-link"}
                       </button>
                     </div>
                   )}
