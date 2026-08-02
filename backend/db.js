@@ -116,7 +116,7 @@ export class Database {
         if (process.env.FIREBASE_PROJECT_ID === undefined && config.projectId) {
           projectId = config.projectId;
         }
-        if (process.env.FIRESTORE_DATABASE_ID === undefined && config.firestoreDatabaseId) {
+        if (process.env.FIRESTORE_DATABASE_ID === undefined && config.firestoreDatabaseId && projectId === config.projectId) {
           databaseId = config.firestoreDatabaseId;
         }
       }
