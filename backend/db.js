@@ -156,7 +156,15 @@ export class Database {
       }
     } else if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
       try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+        let rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim();
+        // Handle base64 encoded JSON if user encoded it
+        if (!rawJson.startsWith('{') && !rawJson.startsWith('"')) {
+          rawJson = Buffer.from(rawJson, 'base64').toString('utf-8');
+        }
+        const serviceAccount = JSON.parse(rawJson);
+        if (serviceAccount.private_key) {
+          serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+        }
         credential = cert(serviceAccount);
         this.hasExplicitCredential = true;
         if (serviceAccount.project_id && !process.env.FIREBASE_PROJECT_ID) {
@@ -698,44 +706,7 @@ export class Database {
     return false;
   }
 
-  // Principal Operations
-  getPrincipals() {
-    if (!this.data.principals) this.data.principals = [];
-    return this.data.principals.map(({ password_hash, ...rest }) => rest);
-  }
 
-  registerPrincipal(principalData) {
-    if (!this.data.principals) this.data.principals = [];
-    const id = `principal-${Date.now()}`;
-    const salt = bcrypt.genSaltSync(10);
-    const password_hash = bcrypt.hashSync(principalData.password_plain, salt);
-
-    const newPrincipal = {
-      id,
-      name: principalData.name,
-      email: principalData.email,
-      password_hash,
-    };
-
-    this.data.principals.push(newPrincipal);
-    this.saveLocal();
-    this.saveDoc('principals', id, newPrincipal);
-
-    const { password_hash: _, ...rest } = newPrincipal;
-    return rest;
-  }
-
-  deletePrincipal(id) {
-    if (!this.data.principals) return false;
-    const index = this.data.principals.findIndex(p => p.id === id);
-    if (index !== -1) {
-      this.data.principals.splice(index, 1);
-      this.saveLocal();
-      this.deleteDoc('principals', id);
-      return true;
-    }
-    return false;
-  }
 
   // GatePass Operations
   getGatePasses(filters) {
@@ -1015,7 +986,7 @@ export class Database {
     const student = this.data.students.find(
       s => s.roll_no && rollNo && s.roll_no.trim().toLowerCase() === rollNo.trim().toLowerCase()
     );
-    
+
     // If student is found in local memory, use their actual DB ID (e.g., stud-XXXX).
     // Otherwise, fall back to the Roll Number.
     const docId = student ? student.id : rollNo;
