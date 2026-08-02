@@ -35,8 +35,10 @@ console.log('=================================================================='
 const http = require('http');
 
 let db = null;
-let credentialsPath = path.resolve(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS || './firebase-service-account.json');
+let credential = null;
+let projectId = process.env.FIREBASE_PROJECT_ID || 'college-digital-gatepass';
 
+let credentialsPath = path.resolve(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS || './firebase-service-account.json');
 if (!fs.existsSync(credentialsPath)) {
   const parentCredentialsPath = path.resolve(__dirname, '..', process.env.GOOGLE_APPLICATION_CREDENTIALS || './firebase-service-account.json');
   if (fs.existsSync(parentCredentialsPath)) {
@@ -47,12 +49,37 @@ if (!fs.existsSync(credentialsPath)) {
 if (fs.existsSync(credentialsPath)) {
   try {
     const serviceAccount = require(credentialsPath);
+    credential = cert(serviceAccount);
+    if (serviceAccount.project_id) projectId = serviceAccount.project_id;
+  } catch (err) {
+    console.warn('[Firebase Admin Warning] Could not load service account file:', err.message);
+  }
+} else if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  try {
+    let rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim();
+    if (!rawJson.startsWith('{') && !rawJson.startsWith('"')) {
+      rawJson = Buffer.from(rawJson, 'base64').toString('utf-8');
+    }
+    const serviceAccount = JSON.parse(rawJson);
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+    credential = cert(serviceAccount);
+    if (serviceAccount.project_id) projectId = serviceAccount.project_id;
+    console.log('[Firebase Admin] Loaded service account credentials from FIREBASE_SERVICE_ACCOUNT_JSON');
+  } catch (err) {
+    console.warn('[Firebase Admin Warning] Could not parse FIREBASE_SERVICE_ACCOUNT_JSON:', err.message);
+  }
+}
+
+if (credential) {
+  try {
     initializeApp({
-      credential: cert(serviceAccount),
-      projectId: process.env.FIREBASE_PROJECT_ID
+      credential,
+      projectId
     });
     db = getFirestore();
-    console.log(`[Firebase Admin] Firestore database initialized for project: ${process.env.FIREBASE_PROJECT_ID}`);
+    console.log(`[Firebase Admin] Firestore database initialized for project: ${projectId}`);
   } catch (err) {
     console.warn('[Firebase Admin Warning] Could not initialize Firestore:', err.message);
   }
@@ -101,6 +128,8 @@ const client = new Client({
       '--disable-dev-shm-usage',
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
+      '--no-zygote',
+      '--single-process',
       '--disable-gpu',
       '--disable-blink-features=AutomationControlled'
     ]
