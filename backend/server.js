@@ -1557,6 +1557,19 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
   }
 });
 
+app.post('/api/admin/whatsapp/reconnect', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
+  try {
+    const localRes = await fetch('http://localhost:3001/api/reset', { method: 'POST' });
+    if (localRes.ok) {
+      const data = await localRes.json();
+      return res.json(data);
+    }
+  } catch (err) {
+    ensureWhatsAppDaemonRunning();
+  }
+  res.json({ success: true, message: 'Re-initialization triggered.' });
+});
+
 app.get('/api/admin/whatsapp/logs', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
   try {
     if (db.firestore) {

@@ -134,6 +134,8 @@ export default function AdminDashboard({ user, onLogout }) {
   useEffect(() => {
     if (activeTab === "whatsapp") {
       fetchWhatsappInfo();
+      const interval = setInterval(fetchWhatsappInfo, 3000);
+      return () => clearInterval(interval);
     }
   }, [activeTab]);
   const downloadCSVReport = async () => {
@@ -1517,7 +1519,7 @@ export default function AdminDashboard({ user, onLogout }) {
                       </div>
                       <div className="mx-auto p-3 bg-white border border-slate-200 rounded-2xl shadow-sm inline-block">
                         <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(whatsappStatus.qr)}`} 
+                          src={whatsappStatus.qr_image || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(whatsappStatus.qr)}`} 
                           alt="WhatsApp Linking QR Code" 
                           className="h-[200px] w-[200px]"
                         />
@@ -1535,8 +1537,22 @@ export default function AdminDashboard({ user, onLogout }) {
                         DISCONNECTED
                       </div>
                       <p className="text-xs text-slate-500 font-medium px-4">
-                        The WhatsApp automation service is offline or authentication failed. Please check that the whatsapp-automation script is running.
+                        The WhatsApp automation service is currently disconnected. Click below to re-initialize and generate a fresh QR code.
                       </p>
+                      <button
+                        onClick={async () => {
+                          setWhatsappLoading(true);
+                          try {
+                            await apiFetch("/api/admin/whatsapp/reconnect", { method: "POST" });
+                            setTimeout(fetchWhatsappInfo, 1000);
+                          } catch (e) {}
+                          setWhatsappLoading(false);
+                        }}
+                        className="mt-2 inline-flex items-center px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                        Generate QR Code / Re-link
+                      </button>
                     </div>
                   )}
                 </div>

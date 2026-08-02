@@ -9,3 +9,7 @@ coverage/
 firebase-service-account.json
 .wwebjs_auth/
 .wwebjs_cache/
+whatsapp-automation/.wwebjs_auth/
+whatsapp-automation/.wwebjs_cache/
+whatsapp-automation/whatsapp-qr.png
+database/gatepass.json
