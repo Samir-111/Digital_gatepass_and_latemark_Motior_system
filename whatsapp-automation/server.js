@@ -120,6 +120,23 @@ const httpServer = http.createServer((req, res) => {
     return res.end(JSON.stringify(clientState));
   }
 
+  if (req.method === 'POST' && (req.url === '/api/reset' || req.url === '/reset' || req.url === '/api/reconnect')) {
+    console.log('[WhatsApp Engine] Reset request received! Re-initializing WhatsApp Web client...');
+    clientState = {
+      status: 'DISCONNECTED',
+      qr: null,
+      qr_image: null,
+      updated_at: new Date().toISOString()
+    };
+    try {
+      client.destroy().then(() => client.initialize()).catch(() => client.initialize());
+    } catch (err) {
+      client.initialize();
+    }
+    res.writeHead(200);
+    return res.end(JSON.stringify({ success: true, message: 'Re-initialization triggered.' }));
+  }
+
   if (req.method === 'POST' && (req.url === '/api/send' || req.url === '/send')) {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -178,30 +195,46 @@ httpServer.listen(3001, () => {
   console.log('[WhatsApp Engine IPC] HTTP Server listening on http://localhost:3001');
 });
 
-// Print scannable QR code directly into the terminal console using 'qrcode-terminal'
-client.on('qr', (qr) => {
+// Print scannable QR code directly into the terminal console and generate DataURL image
+client.on('qr', async (qr) => {
+  console.log('\n==================================================================');
+  console.log('   WHATSAPP QR CODE GENERATED! SCAN TO CONNECT PARENT ALERTS:     ');
+  console.log('==================================================================\n');
+  qrcode.generate(qr, { small: true });
+
+  let qrDataUrl = null;
+  try {
+    qrDataUrl = await QRCodeImage.toDataURL(qr);
+  } catch (err) {
+    console.warn('[WhatsApp QR] Failed to encode DataURL:', err.message);
+  }
+
   clientState = {
     status: 'QR_READY',
     qr,
+    qr_image: qrDataUrl,
     updated_at: new Date().toISOString()
   };
 
   if (db) {
-    db.collection('settings').doc('whatsappStatus').set(clientState).catch(err => console.error('[Firestore Error] Failed to update QR status:', err));
+    db.collection('settings').doc('whatsappStatus').set({ status: 'QR_READY', updated_at: clientState.updated_at }).catch(err => console.error('[Firestore Error] Failed to update QR status:', err));
   }
 });
 
 client.on('ready', () => {
-  console.log('[WhatsApp Engine] SUCCESS: Business WhatsApp account authenticated & READY!');
+  console.log('\n==================================================================');
+  console.log('   SUCCESS: WHATSAPP BUSINESS ACCOUNT IS AUTHENTICATED & READY!   ');
+  console.log('==================================================================\n');
 
   clientState = {
     status: 'CONNECTED',
     qr: null,
+    qr_image: null,
     updated_at: new Date().toISOString()
   };
 
   if (db) {
-    db.collection('settings').doc('whatsappStatus').set(clientState).catch(err => console.error('[Firestore Error] Failed to update ready status:', err));
+    db.collection('settings').doc('whatsappStatus').set({ status: 'CONNECTED', updated_at: clientState.updated_at }).catch(err => console.error('[Firestore Error] Failed to update ready status:', err));
     startFirestoreListener();
   }
 });
@@ -212,11 +245,12 @@ client.on('auth_failure', (msg) => {
   clientState = {
     status: 'DISCONNECTED',
     qr: null,
+    qr_image: null,
     updated_at: new Date().toISOString()
   };
 
   if (db) {
-    db.collection('settings').doc('whatsappStatus').set(clientState).catch(err => console.error('[Firestore Error] Failed to update auth_failure status:', err));
+    db.collection('settings').doc('whatsappStatus').set({ status: 'DISCONNECTED', updated_at: clientState.updated_at }).catch(err => console.error('[Firestore Error] Failed to update auth_failure status:', err));
   }
 });
 
@@ -226,12 +260,23 @@ client.on('disconnected', (reason) => {
   clientState = {
     status: 'DISCONNECTED',
     qr: null,
+    qr_image: null,
     updated_at: new Date().toISOString()
   };
 
   if (db) {
-    db.collection('settings').doc('whatsappStatus').set(clientState).catch(err => console.error('[Firestore Error] Failed to update disconnected status:', err));
+    db.collection('settings').doc('whatsappStatus').set({ status: 'DISCONNECTED', updated_at: clientState.updated_at }).catch(err => console.error('[Firestore Error] Failed to update disconnected status:', err));
   }
+
+  // Attempt auto re-initialize after 5s to generate a fresh QR code
+  setTimeout(() => {
+    try {
+      console.log('[WhatsApp] Auto re-initializing client to generate new QR scan code...');
+      client.initialize();
+    } catch (err) {
+      console.warn('[WhatsApp] Re-initialization error:', err.message);
+    }
+  }, 5000);
 });
 
 // Initialize the WhatsApp Web automation client (launches Puppeteer browser)
@@ -376,12 +421,9 @@ function startFirestoreListener() {
             console.log(`[Firestore Change] Student ${studentName} (${docId}): status changed from "${oldStatus}" to "${newStatus}"`);
 
             if (newStatus === 'Left' && oldStatus !== 'Left') {
-              if (parentPhone) {
-                const rollNo = data.roll_no || data.rollNo || docId;
-                queueWhatsAppMessage(parentPhone, studentName, rollNo);
-              } else {
-                console.warn(`[Warning] Student ${studentName} (${docId}) checked out, but parentPhone is missing or undefined.`);
-              }
+              // Disabled to avoid duplicate message delivery.
+              // The backend API (/api/send) already dispatches the complete GATEPASS EXIT ALERT with reason.
+              console.log(`[Firestore Listener] Student ${studentName} status changed to Left. (API alert handled by backend)`);
             }
 
             studentStatusCache.set(docId, newStatus);

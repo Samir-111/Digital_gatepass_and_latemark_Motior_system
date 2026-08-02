@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
 import { Html5Qrcode } from "html5-qrcode";
+import sbjainLogo from "../assets/sbjain-logo.png";
 export default function GuardDashboard({ user, onLogout }) {
   const [todayEntries, setTodayEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -260,9 +261,7 @@ export default function GuardDashboard({ user, onLogout }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="h-9 w-9 bg-slate-900 rounded-lg flex items-center justify-center shadow-sm shrink-0">
-                <QrCode className="h-5 w-5 text-emerald-400" />
-              </div>
+              <img src={sbjainLogo} alt="SB Jain Logo" className="h-10 w-10 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-100" />
               <span className="font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm md:text-base leading-tight max-w-[150px] sm:max-w-none line-clamp-2">S. B. Jain Institute of Technology, Management and Research</span>
               <span className="hidden lg:inline bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-amber-200 shrink-0">Guard</span>
             </div>
@@ -568,11 +567,23 @@ export default function GuardDashboard({ user, onLogout }) {
                   <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex items-center space-x-3">
                       <div className="h-12 w-12 rounded-xl bg-slate-200 border border-slate-300 flex items-center justify-center shadow-inner font-bold text-slate-700">
-                        {verifiedPass.student_name ? verifiedPass.student_name.slice(0, 2).toUpperCase() : "ST"}
+                        {(verifiedPass.faculty_name || verifiedPass.student_name || "US").slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-slate-800">{verifiedPass.student_name}</h4>
-                        <p className="text-xs text-slate-500 font-medium">{verifiedPass.student_department} • Roll: <span className="font-semibold text-slate-700">{verifiedPass.student_roll_no}</span></p>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-slate-800">
+                            {verifiedPass.faculty_name || verifiedPass.student_name}
+                          </h4>
+                          {verifiedPass.user_type === "faculty" && (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300">
+                              FACULTY GATEPASS
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium">
+                          {verifiedPass.faculty_department || verifiedPass.student_department}
+                          {verifiedPass.student_roll_no && verifiedPass.student_roll_no !== "FACULTY" && ` • Roll: ${verifiedPass.student_roll_no}`}
+                        </p>
                       </div>
                     </div>
                     {getStatusBadge(verifiedPass.status)}
@@ -598,14 +609,14 @@ export default function GuardDashboard({ user, onLogout }) {
     className="w-full flex items-center justify-center py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer space-x-1.5"
   >
                         <ArrowRight className="h-4 w-4" />
-                        <span>Log Exit (Close Pass)</span>
+                        <span>Log Exit (Mark Outing)</span>
                       </button>}
                     {verifiedPass.status === "exited" && <button
     onClick={() => handleMarkReturn(verifiedPass.id)}
     className="w-full flex items-center justify-center py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer space-x-1.5"
   >
                         <ArrowRight className="h-4 w-4" />
-                        <span>Log Return (Close Pass)</span>
+                        <span>Log Campus Return (Close Pass)</span>
                       </button>}
                   </div>
                 </div>}

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
 import NotificationCenter from "./NotificationCenter";
+import sbjainLogo from "../assets/sbjain-logo.png";
 export default function StudentDashboard({ user, onLogout }) {
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -107,6 +108,10 @@ export default function StudentDashboard({ user, onLogout }) {
       }
     };
     fetchHodsData();
+    const interval = setInterval(() => {
+      fetchPasses();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
   const handleApply = async (e) => {
     e.preventDefault();
@@ -219,9 +224,7 @@ export default function StudentDashboard({ user, onLogout }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="h-9 w-9 bg-slate-900 rounded-lg flex items-center justify-center shadow-sm shrink-0">
-                <FileText className="h-5 w-5 text-emerald-400" />
-              </div>
+              <img src={sbjainLogo} alt="SB Jain Logo" className="h-10 w-10 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-100" />
               <span className="font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm md:text-base leading-tight max-w-[150px] sm:max-w-none line-clamp-2">S. B. Jain Institute of Technology, Management and Research</span>
               <span className="hidden lg:inline bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-emerald-200 shrink-0">Student</span>
             </div>
@@ -321,15 +324,19 @@ export default function StudentDashboard({ user, onLogout }) {
                 <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
                   <h3 className="text-sm font-bold text-slate-800 mb-4">Gate Pass QR Code</h3>
                   
-                  {activePass.qr_code ? <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 inline-block mb-4 shadow-inner">
+                  {activePass.qr_code && activePass.status !== "exited" ? <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 inline-block mb-4 shadow-inner">
                       <img src={activePass.qr_code} alt="GatePass QR Code" className="h-52 w-52" />
                       <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-2">Single Use Verified</div>
+                    </div> : activePass.status === "exited" ? <div className="bg-emerald-50 rounded-2xl border border-emerald-200 h-52 w-52 flex flex-col items-center justify-center mb-4 p-4 text-emerald-700">
+                      <CheckCircle className="h-12 w-12 text-emerald-500 mb-2" />
+                      <span className="text-xs font-bold text-center">QR Code Expired</span>
+                      <span className="text-[10px] text-emerald-600 mt-1 font-medium text-center">Exit scanned &amp; logged at gate by security</span>
                     </div> : <div className="bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 h-52 w-52 flex flex-col items-center justify-center mb-4 p-4 text-slate-400">
                       <ShieldAlert className="h-10 w-10 text-slate-300 mb-2" />
                       <span className="text-xs font-bold text-center">QR Code will generate upon HOD approval</span>
                     </div>}
 
-                  {activePass.qr_code && <a
+                  {activePass.qr_code && activePass.status !== "exited" && <a
     href={activePass.qr_code}
     download={`gatepass-${activePass.id}.png`}
     className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition"
