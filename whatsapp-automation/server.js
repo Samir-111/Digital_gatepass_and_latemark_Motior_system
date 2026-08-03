@@ -121,26 +121,31 @@ const getChromeExecutablePath = () => {
 
 const chromePath = getChromeExecutablePath();
 
+const puppeteerConfig = {
+  headless: true,
+  bypassCSP: true,
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-accelerated-2d-canvas',
+    '--no-first-run',
+    '--no-zygote',
+    '--disable-gpu',
+    '--disable-blink-features=AutomationControlled'
+  ]
+};
+
+if (chromePath) {
+  puppeteerConfig.executablePath = chromePath;
+}
+
 // 3. Configure the whatsapp-web.js client
 const client = new Client({
   authStrategy: new LocalAuth({
     dataPath: path.resolve(__dirname, '.wwebjs_auth') // Persists WhatsApp Web sessions in local directory
   }),
-  puppeteer: {
-    executablePath: chromePath,
-    headless: true,
-    bypassCSP: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--disable-gpu',
-      '--disable-blink-features=AutomationControlled'
-    ]
-  }
+  puppeteer: puppeteerConfig
 });
 
 // 4. IPC HTTP Service on port 3001

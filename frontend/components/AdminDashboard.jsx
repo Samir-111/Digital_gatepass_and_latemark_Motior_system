@@ -1512,14 +1512,14 @@ export default function AdminDashboard({ user, onLogout }) {
                         WhatsApp is successfully linked with the college's business account. Real-time alerts will trigger instantly on student checkout.
                       </p>
                     </div>
-                  ) : whatsappStatus.status === 'QR_READY' && whatsappStatus.qr ? (
+                  ) : (whatsappStatus.status === 'QR_READY' || whatsappStatus.qr_image || whatsappStatus.qr) ? (
                     <div className="text-center space-y-3 w-full">
                       <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 mb-2">
                         ACTION REQUIRED: SCAN QR
                       </div>
                       <div className="mx-auto p-3 bg-white border border-slate-200 rounded-2xl shadow-sm inline-block">
                         <img 
-                          src={whatsappStatus.qr_image || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(whatsappStatus.qr)}`} 
+                          src={whatsappStatus.qr_image || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(whatsappStatus.qr || '')}`} 
                           alt="WhatsApp Linking QR Code" 
                           className="h-[200px] w-[200px]"
                         />
@@ -1545,19 +1545,19 @@ export default function AdminDashboard({ user, onLogout }) {
                           setWhatsappLoading(true);
                           try {
                             await apiFetch("/api/admin/whatsapp/reconnect", { method: "POST" });
-                            showToast("Launching WhatsApp engine & generating QR code... Please wait 5-10 seconds.");
+                            showToast("Launching Chrome & generating WhatsApp QR... Please wait 10-20 seconds.");
                             let attempts = 0;
                             const interval = setInterval(async () => {
                               attempts++;
                               try {
                                 const statusData = await gatepassService.getWhatsappStatus();
                                 setWhatsappStatus(statusData);
-                                if (statusData.status === 'QR_READY' || statusData.status === 'CONNECTED' || attempts >= 10) {
+                                if (statusData.status === 'QR_READY' || statusData.qr_image || statusData.qr || statusData.status === 'CONNECTED' || attempts >= 25) {
                                   clearInterval(interval);
                                   setWhatsappLoading(false);
                                 }
                               } catch (err) {
-                                if (attempts >= 10) {
+                                if (attempts >= 25) {
                                   clearInterval(interval);
                                   setWhatsappLoading(false);
                                 }

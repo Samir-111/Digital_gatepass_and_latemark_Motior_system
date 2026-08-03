@@ -1679,14 +1679,13 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
       }
     }
 
-    // 4. Return active CONNECTED status
-    const activeStatus = {
-      status: 'CONNECTED',
+    // 4. Return current cached database status
+    const currentStatus = db.getWhatsAppStatus() || {
+      status: 'DISCONNECTED',
       qr: null,
       updated_at: new Date().toISOString()
     };
-    db.updateWhatsAppStatus(activeStatus);
-    res.json(activeStatus);
+    res.json(currentStatus);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve WhatsApp status: ' + error.message });
   }
