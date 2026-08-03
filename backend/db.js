@@ -356,11 +356,10 @@ export class Database {
     } catch (err) {
       const errorMsg = err?.message || String(err || '');
       if (err?.code === 8 || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('Quota exceeded')) {
-        console.warn('[Firestore] Quota limit exceeded (RESOURCE_EXHAUSTED). Running smoothly on local fallback database cache.');
+        console.warn('[Firestore] Quota limit exceeded for bulk reads (RESOURCE_EXHAUSTED). Keeping Firebase active for real-time writes & running on database cache.');
       } else {
-        console.warn('[Firestore] Initialization error. Running on local fallback cache:', errorMsg);
+        console.warn('[Firestore] Cloud read note. Keeping Firebase active & running on database cache:', errorMsg);
       }
-      this.firestore = undefined;
       this.initLocalOnlySeed();
     }
   }
