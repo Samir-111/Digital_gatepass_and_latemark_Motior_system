@@ -244,12 +244,9 @@ httpServer.listen(3001, () => {
   console.log('[WhatsApp Engine IPC] HTTP Server listening on http://localhost:3001');
 });
 
-// Print scannable QR code directly into the terminal console and generate DataURL image
+// QR code generated: update state & DataURL for Admin Web Dashboard
 client.on('qr', async (qr) => {
-  console.log('\n==================================================================');
-  console.log('   WHATSAPP QR CODE GENERATED! SCAN TO CONNECT PARENT ALERTS:     ');
-  console.log('==================================================================\n');
-  qrcode.generate(qr, { small: true });
+  console.log('[WhatsApp Engine] QR code generated! View and scan QR in Admin Control Panel.');
 
   let qrDataUrl = null;
   try {

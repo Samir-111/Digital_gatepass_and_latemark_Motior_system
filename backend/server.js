@@ -26,7 +26,7 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'college_gatepass_super_secret_key_2026';
 const db = Database.getInstance();
 
