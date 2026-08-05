@@ -258,8 +258,8 @@ httpServer.on('error', (err) => {
   }
 });
 
-httpServer.listen(3001, () => {
-  console.log('[WhatsApp Engine IPC] HTTP Server listening on http://localhost:3001');
+httpServer.listen(3001, '0.0.0.0', () => {
+  console.log('[WhatsApp Engine IPC] HTTP Server listening on http://127.0.0.1:3001');
 });
 
 // QR code generated: update state & DataURL for Admin Web Dashboard

@@ -191,9 +191,9 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
   let status = 'failed';
   let errorMsg = null;
 
-  // 1. Try local WhatsApp IPC daemon (http://localhost:3001/api/send)
+  // 1. Try local WhatsApp IPC daemon (http://127.0.0.1:3001/api/send)
   try {
-    const localRes = await fetch('http://localhost:3001/api/send', {
+    const localRes = await fetch('http://127.0.0.1:3001/api/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ parentPhone: cleanNumber, studentName, rollNo, message: messageBody })
@@ -1607,7 +1607,7 @@ app.get('/api/admin/logs', authenticateJWT, authorizeRoles('admin'), (req, res) 
 let whatsappChildProcess = null;
 
 const ensureWhatsAppDaemonRunning = () => {
-  fetch('http://localhost:3001/api/status')
+  fetch('http://127.0.0.1:3001/api/status')
     .then(r => r.json())
     .catch(() => {
       if (!whatsappChildProcess) {
@@ -1632,9 +1632,9 @@ const ensureWhatsAppDaemonRunning = () => {
 // WhatsApp Engine Status and Log Monitor APIs
 app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
   try {
-    // 1. First check local WhatsApp automation IPC engine (http://localhost:3001/api/status)
+    // 1. First check local WhatsApp automation IPC engine (http://127.0.0.1:3001/api/status)
     try {
-      const localRes = await fetch('http://localhost:3001/api/status');
+      const localRes = await fetch('http://127.0.0.1:3001/api/status');
       if (localRes.ok) {
         const localStatus = await localRes.json();
         db.updateWhatsAppStatus(localStatus);
@@ -1693,7 +1693,7 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
 
 app.post('/api/admin/whatsapp/reconnect', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
   try {
-    const localRes = await fetch('http://localhost:3001/api/reset', { method: 'POST' });
+    const localRes = await fetch('http://127.0.0.1:3001/api/reset', { method: 'POST' });
     if (localRes.ok) {
       const data = await localRes.json();
       return res.json(data);
