@@ -312,6 +312,12 @@ export class Database {
    * If the cloud database is brand new and empty, it executes seeding on the cloud automatically.
    */
   async initFirestore() {
+    // 5-minute cache throttle: Avoid consuming bulk reads on rapid restarts
+    if (this.lastSyncTime && (Date.now() - this.lastSyncTime < 300000) && this.data?.gatepasses?.length > 0) {
+      console.log('[Firestore] Using active database cache (Synced', Math.round((Date.now() - this.lastSyncTime)/1000), 's ago).');
+      return;
+    }
+
     console.log('[Firestore] Checking for Google Cloud credentials...');
     const hasCreds = this.hasExplicitCredential || await this.hasADC();
 
@@ -358,6 +364,7 @@ export class Database {
       this.data.lateComeEntries = lateComeSnap.docs.map(doc => doc.data());
 
       console.log('[Firestore] Synchronization completed! Total gate passes loaded:', this.data.gatepasses.length);
+      this.lastSyncTime = Date.now();
 
       // Save locally to keep backup robust
       this.saveLocal();
