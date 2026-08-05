@@ -126,39 +126,16 @@ export class Database {
 
     // Try to load service account credentials
     let credential = undefined;
-    let serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-    // Auto-detect common local service account filenames if environment variable not set
-    if (!serviceAccountPath) {
-      const possiblePaths = [
-        path.join(process.cwd(), 'firebase-service-account.json'),
-        path.join(process.cwd(), 'service-account.json')
-      ];
-      for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-          serviceAccountPath = p;
-          break;
-        }
-      }
-    }
-
-    if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
-      try {
-        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
-        credential = cert(serviceAccount);
-        this.hasExplicitCredential = true;
-        if (serviceAccount.project_id && !process.env.FIREBASE_PROJECT_ID) {
-          projectId = serviceAccount.project_id;
-        }
-        console.log(`[Firestore] Loaded service account credentials from file: ${serviceAccountPath}`);
-      } catch (err) {
-        console.error('[Firestore] Error loading service account credential file:', err);
-      }
-    } else if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    // 1. PRIORITY 1: Check environment variable FIREBASE_SERVICE_ACCOUNT_JSON (Primary for Cloud / Render deployments)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON && process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim()) {
       try {
         let rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim();
+        if ((rawJson.startsWith("'") && rawJson.endsWith("'")) || (rawJson.startsWith('"') && rawJson.endsWith('"') && !rawJson.includes('\n') && !rawJson.includes(':'))) {
+          rawJson = rawJson.slice(1, -1).trim();
+        }
         // Handle base64 encoded JSON if user encoded it
-        if (!rawJson.startsWith('{') && !rawJson.startsWith('"')) {
+        if (!rawJson.startsWith('{')) {
           rawJson = Buffer.from(rawJson, 'base64').toString('utf-8');
         }
         const serviceAccount = JSON.parse(rawJson);
@@ -170,9 +147,40 @@ export class Database {
         if (serviceAccount.project_id && !process.env.FIREBASE_PROJECT_ID) {
           projectId = serviceAccount.project_id;
         }
-        console.log('[Firestore] Loaded service account credentials from environment variable FIREBASE_SERVICE_ACCOUNT_JSON');
+        console.log('[Firestore] Successfully loaded service account credentials from environment variable FIREBASE_SERVICE_ACCOUNT_JSON');
       } catch (err) {
-        console.error('[Firestore] Error parsing FIREBASE_SERVICE_ACCOUNT_JSON:', err);
+        console.error('[Firestore] Error parsing FIREBASE_SERVICE_ACCOUNT_JSON:', err.message || err);
+      }
+    }
+
+    // 2. PRIORITY 2: Check local service account credentials file (For local development)
+    if (!credential) {
+      let serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      if (!serviceAccountPath) {
+        const possiblePaths = [
+          path.join(process.cwd(), 'firebase-service-account.json'),
+          path.join(process.cwd(), 'service-account.json')
+        ];
+        for (const p of possiblePaths) {
+          if (fs.existsSync(p)) {
+            serviceAccountPath = p;
+            break;
+          }
+        }
+      }
+
+      if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
+        try {
+          const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
+          credential = cert(serviceAccount);
+          this.hasExplicitCredential = true;
+          if (serviceAccount.project_id && !process.env.FIREBASE_PROJECT_ID) {
+            projectId = serviceAccount.project_id;
+          }
+          console.log(`[Firestore] Loaded service account credentials from file: ${serviceAccountPath}`);
+        } catch (err) {
+          console.error('[Firestore] Error loading service account credential file:', err.message || err);
+        }
       }
     }
 

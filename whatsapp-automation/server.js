@@ -46,26 +46,14 @@ let db = null;
 let credential = null;
 let projectId = process.env.FIREBASE_PROJECT_ID || 'college-digital-gatepass';
 
-let credentialsPath = path.resolve(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS || './firebase-service-account.json');
-if (!fs.existsSync(credentialsPath)) {
-  const parentCredentialsPath = path.resolve(__dirname, '..', process.env.GOOGLE_APPLICATION_CREDENTIALS || './firebase-service-account.json');
-  if (fs.existsSync(parentCredentialsPath)) {
-    credentialsPath = parentCredentialsPath;
-  }
-}
-
-if (fs.existsSync(credentialsPath)) {
-  try {
-    const serviceAccount = require(credentialsPath);
-    credential = cert(serviceAccount);
-    if (serviceAccount.project_id) projectId = serviceAccount.project_id;
-  } catch (err) {
-    console.warn('[Firebase Admin Warning] Could not load service account file:', err.message);
-  }
-} else if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+// 1. PRIORITY 1: Check environment variable FIREBASE_SERVICE_ACCOUNT_JSON
+if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON && process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim()) {
   try {
     let rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim();
-    if (!rawJson.startsWith('{') && !rawJson.startsWith('"')) {
+    if ((rawJson.startsWith("'") && rawJson.endsWith("'")) || (rawJson.startsWith('"') && rawJson.endsWith('"') && !rawJson.includes('\n') && !rawJson.includes(':'))) {
+      rawJson = rawJson.slice(1, -1).trim();
+    }
+    if (!rawJson.startsWith('{')) {
       rawJson = Buffer.from(rawJson, 'base64').toString('utf-8');
     }
     const serviceAccount = JSON.parse(rawJson);
@@ -74,9 +62,31 @@ if (fs.existsSync(credentialsPath)) {
     }
     credential = cert(serviceAccount);
     if (serviceAccount.project_id) projectId = serviceAccount.project_id;
-    console.log('[Firebase Admin] Loaded service account credentials from FIREBASE_SERVICE_ACCOUNT_JSON');
+    console.log('[Firebase Admin] Loaded service account credentials from FIREBASE_SERVICE_ACCOUNT_JSON environment variable');
   } catch (err) {
-    console.warn('[Firebase Admin Warning] Could not parse FIREBASE_SERVICE_ACCOUNT_JSON:', err.message);
+    console.warn('[Firebase Admin Warning] Could not parse FIREBASE_SERVICE_ACCOUNT_JSON:', err.message || err);
+  }
+}
+
+// 2. PRIORITY 2: Check local service account credentials file
+if (!credential) {
+  let credentialsPath = path.resolve(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS || './firebase-service-account.json');
+  if (!fs.existsSync(credentialsPath)) {
+    const parentCredentialsPath = path.resolve(__dirname, '..', process.env.GOOGLE_APPLICATION_CREDENTIALS || './firebase-service-account.json');
+    if (fs.existsSync(parentCredentialsPath)) {
+      credentialsPath = parentCredentialsPath;
+    }
+  }
+
+  if (fs.existsSync(credentialsPath)) {
+    try {
+      const serviceAccount = require(credentialsPath);
+      credential = cert(serviceAccount);
+      if (serviceAccount.project_id) projectId = serviceAccount.project_id;
+      console.log(`[Firebase Admin] Loaded service account credentials from file: ${credentialsPath}`);
+    } catch (err) {
+      console.warn('[Firebase Admin Warning] Could not load service account file:', err.message || err);
+    }
   }
 }
 
@@ -101,9 +111,10 @@ let clientState = {
   updated_at: new Date().toISOString()
 };
 
-// Detect Chrome / Edge executable path on Windows for maximum stability
+// Detect Chrome / Edge executable path across Windows and Linux environments
 const getChromeExecutablePath = () => {
   const candidates = [
+    process.env.PUPPETEER_EXECUTABLE_PATH,
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
@@ -111,10 +122,11 @@ const getChromeExecutablePath = () => {
     '/usr/bin/google-chrome',
     '/usr/bin/google-chrome-stable',
     '/usr/bin/chromium',
-    '/usr/bin/chromium-browser'
+    '/usr/bin/chromium-browser',
+    '/opt/google/chrome/chrome'
   ];
   for (const p of candidates) {
-    if (fs.existsSync(p)) return p;
+    if (p && fs.existsSync(p)) return p;
   }
   return undefined;
 };
@@ -132,6 +144,7 @@ const puppeteerConfig = {
     '--no-first-run',
     '--no-zygote',
     '--disable-gpu',
+    '--single-process',
     '--disable-blink-features=AutomationControlled'
   ]
 };
