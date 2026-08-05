@@ -1632,7 +1632,23 @@ const ensureWhatsAppDaemonRunning = () => {
 // WhatsApp Engine Status and Log Monitor APIs
 app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
   try {
-    // 1. First check local WhatsApp automation IPC engine (http://127.0.0.1:3001/api/status)
+    // 1. Check Cloud Firestore status document first (synced from authenticated WhatsApp engine)
+    if (db.firestore) {
+      try {
+        const doc = await db.firestore.collection('settings').doc('whatsappStatus').get();
+        if (doc.exists) {
+          const cloudStatus = doc.data();
+          if (cloudStatus.status === 'CONNECTED') {
+            db.updateWhatsAppStatus(cloudStatus);
+            return res.json(cloudStatus);
+          }
+        }
+      } catch (fsErr) {
+        // Continue to local check
+      }
+    }
+
+    // 2. Check local WhatsApp automation IPC engine (http://127.0.0.1:3001/api/status)
     try {
       const localRes = await fetch('http://127.0.0.1:3001/api/status');
       if (localRes.ok) {

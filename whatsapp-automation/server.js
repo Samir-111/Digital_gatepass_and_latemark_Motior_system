@@ -133,20 +133,25 @@ const getChromeExecutablePath = () => {
 
 const chromePath = getChromeExecutablePath();
 
+const puppeteerArgs = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-accelerated-2d-canvas',
+  '--no-first-run',
+  '--no-zygote',
+  '--disable-gpu',
+  '--disable-blink-features=AutomationControlled'
+];
+
+if (process.platform === 'linux') {
+  puppeteerArgs.push('--single-process');
+}
+
 const puppeteerConfig = {
   headless: true,
   bypassCSP: true,
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-accelerated-2d-canvas',
-    '--no-first-run',
-    '--no-zygote',
-    '--disable-gpu',
-    '--single-process',
-    '--disable-blink-features=AutomationControlled'
-  ]
+  args: puppeteerArgs
 };
 
 if (chromePath) {
@@ -264,7 +269,12 @@ httpServer.listen(3001, '0.0.0.0', () => {
 
 // QR code generated: update state & DataURL for Admin Web Dashboard
 client.on('qr', async (qr) => {
-  console.log('[WhatsApp Engine] QR code generated! View and scan QR in Admin Control Panel.');
+  console.log('\n[WhatsApp Engine] Scan the QR code below using WhatsApp on your phone:');
+  try {
+    qrcode.generate(qr, { small: true });
+  } catch (e) {
+    // Ignore terminal qrcode render error if non-TTY
+  }
 
   let qrDataUrl = null;
   try {
@@ -283,6 +293,14 @@ client.on('qr', async (qr) => {
   if (db) {
     db.collection('settings').doc('whatsappStatus').set({ status: 'QR_READY', updated_at: clientState.updated_at }).catch(err => console.error('[Firestore Error] Failed to update QR status:', err));
   }
+});
+
+client.on('authenticated', () => {
+  console.log('\n[WhatsApp] QR Code successfully scanned! Authenticating WhatsApp session...');
+});
+
+client.on('loading_screen', (percent, message) => {
+  console.log(`[WhatsApp] Loading WhatsApp Web: ${percent}% - ${message}`);
 });
 
 client.on('ready', () => {
@@ -318,6 +336,8 @@ client.on('auth_failure', (msg) => {
   }
 });
 
+let isReinitializing = false;
+
 client.on('disconnected', (reason) => {
   console.warn('[WhatsApp] Client was disconnected:', reason);
 
@@ -332,15 +352,21 @@ client.on('disconnected', (reason) => {
     db.collection('settings').doc('whatsappStatus').set({ status: 'DISCONNECTED', updated_at: clientState.updated_at }).catch(err => console.error('[Firestore Error] Failed to update disconnected status:', err));
   }
 
-  // Attempt auto re-initialize after 5s to generate a fresh QR code
-  setTimeout(() => {
-    try {
-      console.log('[WhatsApp] Auto re-initializing client to generate new QR scan code...');
-      client.initialize();
-    } catch (err) {
-      console.warn('[WhatsApp] Re-initialization error:', err.message);
-    }
-  }, 5000);
+  // Safely attempt single re-initialization if not already running
+  if (!isReinitializing) {
+    isReinitializing = true;
+    setTimeout(async () => {
+      try {
+        console.log('[WhatsApp] Auto re-initializing client to generate new QR scan code...');
+        await client.destroy().catch(() => {});
+        client.initialize();
+      } catch (err) {
+        console.warn('[WhatsApp] Re-initialization error:', err.message);
+      } finally {
+        isReinitializing = false;
+      }
+    }, 5000);
+  }
 });
 
 // Initialize the WhatsApp Web automation client (launches Puppeteer browser)
