@@ -141,6 +141,9 @@ const sendOTPEmail = async (email, otp) => {
         port,
         secure: port === 465,
         auth: { user, pass },
+        connectionTimeout: 5000, // Abort connection if Gmail SMTP takes > 5s
+        greetingTimeout: 5000,   // Abort if SMTP greeting takes > 5s
+        socketTimeout: 8000,     // Abort socket if data takes > 8s
         tls: {
           rejectUnauthorized: false
         }
@@ -157,7 +160,7 @@ const sendOTPEmail = async (email, otp) => {
       console.log(`[OTP Email] Real email successfully sent to ${email}`);
       return true;
     } catch (error) {
-      console.error(`[OTP Email] Failed to send real email to ${email}:`, error);
+      console.error(`[OTP Email] Failed to send real email to ${email}:`, error?.message || error);
       // Fallback to console print on error
     }
   }
