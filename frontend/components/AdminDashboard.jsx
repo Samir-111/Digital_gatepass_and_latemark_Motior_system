@@ -1512,7 +1512,7 @@ export default function AdminDashboard({ user, onLogout }) {
                         WhatsApp is successfully linked with the college's business account. Real-time alerts will trigger instantly on student checkout.
                       </p>
                     </div>
-                  ) : (whatsappStatus.status === 'QR_READY' || whatsappStatus.qr_image || whatsappStatus.qr) ? (
+                  ) : (whatsappStatus.status === 'QR_READY' && (whatsappStatus.qr_image || whatsappStatus.qr)) ? (
                     <div className="text-center space-y-3 w-full">
                       <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 mb-2">
                         ACTION REQUIRED: SCAN QR

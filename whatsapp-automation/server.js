@@ -316,7 +316,12 @@ client.on('ready', () => {
   };
 
   if (db) {
-    db.collection('settings').doc('whatsappStatus').set({ status: 'CONNECTED', updated_at: clientState.updated_at }).catch(err => console.error('[Firestore Error] Failed to update ready status:', err));
+    db.collection('settings').doc('whatsappStatus').set({ 
+      status: 'CONNECTED', 
+      qr: null, 
+      qr_image: null, 
+      updated_at: clientState.updated_at 
+    }).catch(err => console.error('[Firestore Error] Failed to update ready status:', err));
     startFirestoreListener();
   }
 });

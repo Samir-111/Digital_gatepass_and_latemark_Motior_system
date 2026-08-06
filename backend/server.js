@@ -1638,7 +1638,7 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
         const doc = await db.firestore.collection('settings').doc('whatsappStatus').get();
         if (doc.exists) {
           const cloudStatus = doc.data();
-          if (cloudStatus.status === 'CONNECTED') {
+          if (cloudStatus && cloudStatus.status) {
             db.updateWhatsAppStatus(cloudStatus);
             return res.json(cloudStatus);
           }
