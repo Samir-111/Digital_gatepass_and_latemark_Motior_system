@@ -594,7 +594,7 @@ export default function Login({ onLoginSuccess }) {
             </div>
           </div>
         ) : requires2FA ? (
-          /* STEP 2-FACTOR: WHATSAPP OTP VERIFICATION VIEW */
+          /* STEP 2-FACTOR: EMAIL OTP VERIFICATION VIEW */
           <div className="space-y-6">
             <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
               <button
@@ -620,20 +620,20 @@ export default function Login({ onLoginSuccess }) {
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                2-Step WhatsApp Verification
+                2-Step Email Verification
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                A 6-digit verification code has been sent to your registered WhatsApp mobile number:
+                A 6-digit verification code has been sent to your registered institutional email address:
               </p>
               <div className="mt-2.5 inline-block px-3.5 py-1.5 bg-white dark:bg-slate-900 rounded-xl text-xs font-black text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 shadow-sm tracking-wider">
-                📱 {maskedPhone || "+91 **********"}
+                ✉️ {maskedPhone || "registered email"}
               </div>
             </div>
 
             <form className="space-y-4" onSubmit={handleVerify2FA}>
               <div>
                 <label htmlFor="twoFactorOtp" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
-                  Enter 6-Digit WhatsApp Verification Code
+                  Enter 6-Digit Email Verification Code
                 </label>
                 <div className="mt-2 relative">
                   <input

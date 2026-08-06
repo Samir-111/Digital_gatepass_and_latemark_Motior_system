@@ -112,11 +112,12 @@ const sendSMS = async (phoneNumber, message) => {
 
 // Helper to send OTP email (using nodemailer with SMTP or fallback to terminal logging)
 const sendOTPEmail = async (email, otp) => {
-  const host = process.env.SMTP_HOST;
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587');
   const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || 'no-reply@college.edu.in';
+  const rawPass = process.env.SMTP_PASS || '';
+  const pass = rawPass.replace(/\s+/g, ''); // Strip spaces from Gmail App Passwords
+  const from = process.env.SMTP_FROM || user || 'sbjitnagpur@gmail.com';
 
   const isConfigured = !!(host && user && pass);
 
@@ -124,7 +125,7 @@ const sendOTPEmail = async (email, otp) => {
   const textContent = `Your One-Time Password (OTP) for resetting your campus access portal password is: ${otp}. It is valid for 10 minutes.`;
   const htmlContent = `
     <div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-      <h2 style="color: #10b981; font-size: 20px; border-b: 1px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">Campus Access Portal Password Reset</h2>
+      <h2 style="color: #10b981; font-size: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">Campus Access Portal Password Reset</h2>
       <p style="font-size: 14px; line-height: 1.5; color: #334155;">You requested to reset your password. Use the following One-Time Password (OTP) to proceed:</p>
       <div style="font-size: 32px; font-weight: 800; background: #f8fafc; color: #0f172a; padding: 18px; text-align: center; border-radius: 10px; letter-spacing: 4px; margin: 24px 0; border: 1px dashed #cbd5e1;">
         ${otp}
@@ -335,38 +336,31 @@ app.post('/api/login', async (req, res) => {
   const challengeId = '2fa-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
   const expiresAt = Date.now() + (5 * 60 * 1000); // Expires in 5 minutes
 
+  const userEmail = authResult.user.email || '';
+
   twoFactorChallenges.set(challengeId, {
     challengeId,
     otp,
     expiresAt,
     user: authResult.user,
     role: authResult.role,
+    email: userEmail,
     phone: userPhone
   });
 
-  const cleanDigits = userPhone.replace(/[^0-9]/g, '');
-  const maskedPhone = cleanDigits.length >= 10
-    ? `+91 ******${cleanDigits.slice(-4)}`
-    : `+91 ${userPhone}`;
+  const emailSent = await sendOTPEmail(userEmail, otp);
 
-  const otpMessage = `🔐 *COLLEGE DIGITAL GATEPASS 2-STEP VERIFICATION*\n\nDear *${authResult.user.name}*,\n\nYour 6-digit login verification OTP is:\n\n👉 *${otp}* 👈\n\nThis code is valid for 5 minutes. Do NOT share this code with anyone.\n\n- S. B. Jain Institute of Technology, Management and Research`;
-
-  try {
-    await sendWhatsAppMessage({
-      parentPhone: userPhone,
-      studentName: authResult.user.name,
-      rollNo: authResult.user.roll_no || '2FA-LOGIN',
-      customMessage: otpMessage
-    });
-  } catch (err) {
-    console.warn('[2FA WhatsApp Alert Error]:', err.message);
-  }
+  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
 
   res.json({
     requires2FA: true,
     challengeId,
-    maskedPhone,
-    message: `A 6-digit verification code has been sent to your WhatsApp number (${maskedPhone}).`
+    maskedEmail,
+    userEmail,
+    message: emailSent
+      ? `A 6-digit 2-step verification code has been sent to your registered email address (${maskedEmail}).`
+      : `A 6-digit 2-step verification code has been generated.`,
+    ...(!emailSent ? { dev_otp: otp } : {})
   });
 });
 
@@ -432,27 +426,17 @@ app.post('/api/login/resend-2fa', async (req, res) => {
   challenge.expiresAt = Date.now() + (5 * 60 * 1000);
   twoFactorChallenges.set(challengeId, challenge);
 
-  const otpMessage = `🔐 *COLLEGE DIGITAL GATEPASS 2-STEP VERIFICATION*\n\nDear *${challenge.user.name}*,\n\nYour new 6-digit login verification OTP is:\n\n👉 *${newOtp}* 👈\n\nThis code is valid for 5 minutes. Do NOT share this code with anyone.\n\n- S. B. Jain Institute of Technology, Management and Research`;
+  const userEmail = challenge.email || challenge.user.email || '';
+  const emailSent = await sendOTPEmail(userEmail, newOtp);
 
-  try {
-    await sendWhatsAppMessage({
-      parentPhone: challenge.phone,
-      studentName: challenge.user.name,
-      rollNo: challenge.user.roll_no || '2FA-LOGIN',
-      customMessage: otpMessage
-    });
-  } catch (err) {
-    console.warn('[2FA WhatsApp Resend Error]:', err.message);
-  }
-
-  const cleanDigits = challenge.phone.replace(/[^0-9]/g, '');
-  const maskedPhone = cleanDigits.length >= 10
-    ? `+91 ******${cleanDigits.slice(-4)}`
-    : `+91 ${challenge.phone}`;
+  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
 
   res.json({
     success: true,
-    message: `A new 6-digit verification code has been sent to your WhatsApp number (${maskedPhone}).`
+    message: emailSent
+      ? `A new 6-digit verification code has been sent to your registered email (${maskedEmail}).`
+      : `New verification code generated.`,
+    ...(!emailSent ? { dev_otp: newOtp } : {})
   });
 });
 
