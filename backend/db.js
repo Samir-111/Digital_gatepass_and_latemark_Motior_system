@@ -244,7 +244,11 @@ export class Database {
     console.log('[MongoDB Atlas] Connecting to MongoDB Atlas cluster...');
     try {
       if (!this.mongoClient) {
-        this.mongoClient = new MongoClient(mongoUri);
+        this.mongoClient = new MongoClient(mongoUri, {
+          connectTimeoutMS: 15000,
+          serverSelectionTimeoutMS: 15000,
+          socketTimeoutMS: 45000,
+        });
         await this.mongoClient.connect();
       }
       this.mongoDb = this.mongoClient.db();
@@ -275,6 +279,8 @@ export class Database {
       this.lastSyncTime = Date.now();
       this.saveLocal();
     } catch (err) {
+      this.mongoDb = null;
+      this.mongoClient = null;
       console.error('[MongoDB Atlas] Connection or sync error:', err.message || err);
       console.log('[MongoDB Atlas] Falling back to local database cache.');
       this.initLocalOnlySeed();
@@ -375,7 +381,13 @@ export class Database {
 
     this.mongoDb.collection(collectionName).replaceOne({ id: filterId }, cleaned, { upsert: true })
       .catch(err => {
-        console.error(`[MongoDB Atlas] Failed to save ${filterId} in ${collectionName}:`, err.message || err);
+        const errMsg = err?.message || String(err || '');
+        if (errMsg.includes('Topology is closed') || errMsg.includes('pool destroyed')) {
+          this.mongoDb = null;
+          this.mongoClient = null;
+        } else {
+          console.error(`[MongoDB Atlas] Failed to save ${filterId} in ${collectionName}:`, errMsg);
+        }
       });
   }
 
@@ -386,7 +398,13 @@ export class Database {
     if (!this.mongoDb) return;
     this.mongoDb.collection(collectionName).deleteOne({ id })
       .catch(err => {
-        console.error(`[MongoDB Atlas] Failed to delete ${id} in ${collectionName}:`, err.message || err);
+        const errMsg = err?.message || String(err || '');
+        if (errMsg.includes('Topology is closed') || errMsg.includes('pool destroyed')) {
+          this.mongoDb = null;
+          this.mongoClient = null;
+        } else {
+          console.error(`[MongoDB Atlas] Failed to delete ${id} in ${collectionName}:`, errMsg);
+        }
       });
   }
 
