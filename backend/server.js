@@ -593,12 +593,35 @@ app.post('/api/forgot-password/request-otp', async (req, res) => {
     // Send the OTP email
     const emailSent = await sendOTPEmail(email, otp);
 
+    // Dispatch OTP to registered WhatsApp if mobile number exists
+    const userPhone = user.phone || user.parent_phone || user.mobile || '';
+    let waSent = false;
+    if (userPhone && userPhone.trim()) {
+      try {
+        const waRes = await sendWhatsAppMessage({
+          parentPhone: userPhone,
+          studentName: user.name || 'User',
+          rollNo: user.roll_no || 'N/A',
+          customMessage: `🔐 *PASSWORD RESET VERIFICATION*\n\nYour 6-digit OTP code for password reset is: *${otp}*\n\nThis code is valid for 10 minutes. Please enter it on the reset screen.`
+        });
+        waSent = waRes?.status === 'success';
+      } catch (e) {
+        console.error('[Forgot Password WA Dispatch Error]:', e);
+      }
+    }
+
+    const dispatched = [];
+    if (emailSent) dispatched.push('registered Email');
+    if (waSent) dispatched.push('registered WhatsApp');
+
+    const msg = dispatched.length > 0
+      ? `A 6-digit verification OTP has been sent to your ${dispatched.join(' and ')}. Please check your inbox and spam folder.`
+      : `A 6-digit verification OTP has been generated.`;
+
     res.json({
       success: true,
-      message: emailSent
-        ? 'One-Time Password (OTP) has been sent to your email.'
-        : 'One-Time Password (OTP) has been sent (Developer Mode: printed in server console).',
-      ...(!emailSent ? { dev_otp: otp } : {})
+      message: msg,
+      ...(!emailSent && !waSent ? { dev_otp: otp } : {})
     });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to generate and send OTP.' });
