@@ -198,8 +198,12 @@ export class Database {
   async initMongoDB() {
     const mongoUri = process.env.MONGODB_URI;
 
-    if (!mongoUri || mongoUri.includes('YOUR_USER') || mongoUri.includes('password@cluster')) {
-      console.warn('[MongoDB Atlas] No valid MONGODB_URI configured in environment. Running in local database fallback mode.');
+    if (!mongoUri || mongoUri.includes('YOUR_USER') || mongoUri.includes('password@cluster') || mongoUri.includes('<db_password>')) {
+      if (mongoUri && mongoUri.includes('<db_password>')) {
+        console.warn('[MongoDB Atlas Warning] Please replace <db_password> in your .env file (and Render environment variables) with your actual database password!');
+      } else {
+        console.warn('[MongoDB Atlas] No valid MONGODB_URI configured in environment. Running in local database fallback mode.');
+      }
       this.initLocalOnlySeed();
       return;
     }
