@@ -195,6 +195,7 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
   let status = 'failed';
   let errorMsg = null;
 
+<<<<<<< HEAD
   // 1. Try Green-API first if configured (Cloud-native instant dispatch)
   const instanceId = process.env.GREEN_API_INSTANCE_ID;
   const apiToken = process.env.GREEN_API_TOKEN;
@@ -203,6 +204,16 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
     try {
       const subHost = instanceId.substring(0, 4);
       const url = `https://${subHost}.api.green-api.com/waInstance${instanceId}/sendMessage/${apiToken}`;
+=======
+  // Green-API exclusive WhatsApp dispatch
+  const instanceId = process.env.GREEN_API_INSTANCE_ID;
+  const apiToken = process.env.GREEN_API_TOKEN;
+  const apiUrl = (process.env.GREEN_API_URL || (instanceId ? `https://${instanceId.substring(0, 4)}.api.greenapi.com` : '')).replace(/\/$/, '');
+
+  if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
+    try {
+      const url = `${apiUrl}/waInstance${instanceId}/sendMessage/${apiToken}`;
+>>>>>>> 7d273dc (22 full work wh)
 
       const response = await fetch(url, {
         method: 'POST',
@@ -215,6 +226,7 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
 
       if (response.ok) {
         const resData = await response.json();
+<<<<<<< HEAD
         console.log(`[WhatsApp Gateway] Green-API message successfully dispatched to ${cleanNumber}:`, resData);
         status = 'success';
         errorMsg = null;
@@ -254,7 +266,24 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
       }
     } catch (ipcErr) {
       // Local daemon on 3001 is offline
+=======
+        console.log(`[WhatsApp Gateway (Green-API)] Message successfully dispatched to ${cleanNumber}:`, resData);
+        status = 'success';
+        errorMsg = null;
+        db.updateWhatsAppStatus({ status: 'CONNECTED', provider: 'Green-API', idInstance: instanceId, qr: null, updated_at: new Date().toISOString() });
+      } else {
+        const errorText = await response.text();
+        console.error(`[WhatsApp Gateway (Green-API)] Returned status ${response.status}:`, errorText);
+        errorMsg = `Green-API HTTP ${response.status}: ${errorText || 'Failed to dispatch'}`;
+      }
+    } catch (err) {
+      console.error(`[WhatsApp Gateway (Green-API)] Network error connecting to Green-API:`, err);
+      errorMsg = err.message || 'Network error connecting to Green-API';
+>>>>>>> 7d273dc (22 full work wh)
     }
+  } else {
+    errorMsg = 'GREEN_API_INSTANCE_ID or GREEN_API_TOKEN is not configured in .env';
+    console.warn(`[WhatsApp Gateway Warning] ${errorMsg}`);
   }
 
   if (status !== 'success') {
@@ -1591,6 +1620,7 @@ app.get('/api/admin/logs', authenticateJWT, authorizeRoles('admin'), (req, res) 
   res.json(db.getLogs());
 });
 
+<<<<<<< HEAD
 let whatsappChildProcess = null;
 
 const ensureWhatsAppDaemonRunning = () => {
@@ -1649,19 +1679,26 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
     }
 
     // 2. Check Green-API if configured
+=======
+// WhatsApp Engine Status and Log Monitor APIs (Green-API Exclusive)
+app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
+  try {
+>>>>>>> 7d273dc (22 full work wh)
     const instanceId = process.env.GREEN_API_INSTANCE_ID;
     const apiToken = process.env.GREEN_API_TOKEN;
+    const apiUrl = (process.env.GREEN_API_URL || (instanceId ? `https://${instanceId.substring(0, 4)}.api.greenapi.com` : '')).replace(/\/$/, '');
 
     if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
       try {
-        const subHost = instanceId.substring(0, 4);
-        const stateUrl = `https://${subHost}.api.green-api.com/waInstance${instanceId}/getStateInstance/${apiToken}`;
+        const stateUrl = `${apiUrl}/waInstance${instanceId}/getStateInstance/${apiToken}`;
         const response = await fetch(stateUrl);
         if (response.ok) {
           const data = await response.json();
           const isAuth = data.stateInstance === 'authorized';
           const statusObj = {
             status: isAuth ? 'CONNECTED' : 'DISCONNECTED',
+            provider: 'Green-API',
+            idInstance: instanceId,
             qr: null,
             stateInstance: data.stateInstance,
             updated_at: new Date().toISOString()
@@ -1674,6 +1711,7 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
       }
     }
 
+<<<<<<< HEAD
     // 3. Fallback to Firestore settings if doc exists
     if (db.firestore) {
       const doc = await db.firestore.collection('settings').doc('whatsappStatus').get();
@@ -1689,12 +1727,23 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
       updated_at: new Date().toISOString()
     };
     res.json(currentStatus);
+=======
+    const unconfiguredStatus = {
+      status: 'DISCONNECTED',
+      provider: 'Green-API',
+      error: 'GREEN_API_INSTANCE_ID or GREEN_API_TOKEN missing in .env',
+      updated_at: new Date().toISOString()
+    };
+    db.updateWhatsAppStatus(unconfiguredStatus);
+    res.json(unconfiguredStatus);
+>>>>>>> 7d273dc (22 full work wh)
   } catch (error) {
-    res.status(500).json({ error: 'Failed to retrieve WhatsApp status: ' + error.message });
+    res.status(500).json({ error: 'Failed to retrieve Green API status: ' + error.message });
   }
 });
 
 app.post('/api/admin/whatsapp/reconnect', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
+<<<<<<< HEAD
   try {
     const localRes = await fetch('http://127.0.0.1:3001/api/reset', { method: 'POST' });
     if (localRes.ok) {
@@ -1705,6 +1754,9 @@ app.post('/api/admin/whatsapp/reconnect', authenticateJWT, authorizeRoles('admin
     ensureWhatsAppDaemonRunning();
   }
   res.json({ success: true, message: 'Re-initialization triggered.' });
+=======
+  res.json({ success: true, message: 'Green API status refreshed.' });
+>>>>>>> 7d273dc (22 full work wh)
 });
 
 app.get('/api/admin/whatsapp/logs', authenticateJWT, authorizeRoles('admin'), async (req, res) => {

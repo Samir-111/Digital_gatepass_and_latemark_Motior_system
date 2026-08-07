@@ -1506,9 +1506,10 @@ export default function AdminDashboard({ user, onLogout }) {
                         <MessageSquare className="h-8 w-8 text-emerald-600" />
                       </div>
                       <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        CONNECTED
+                        GREEN-API CONNECTED
                       </div>
                       <p className="text-xs text-slate-500 font-medium px-4">
+<<<<<<< HEAD
                         WhatsApp is successfully linked with the college's business account. Real-time alerts will trigger instantly on student checkout.
                       </p>
                     </div>
@@ -1526,21 +1527,25 @@ export default function AdminDashboard({ user, onLogout }) {
                       </div>
                       <p className="text-[11px] text-slate-500 font-semibold px-4">
                         Scan this QR code with your WhatsApp Business mobile app to link the account. It expires within 20 seconds.
+=======
+                        Green API Cloud Gateway (Instance {whatsappStatus.idInstance || '710722683037'}) is active & authorized. Real-time alerts will trigger instantly on student checkout.
+>>>>>>> 7d273dc (22 full work wh)
                       </p>
                     </div>
                   ) : (
                     <div className="text-center space-y-3">
-                      <div className="mx-auto h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
-                        <MessageSquare className="h-8 w-8 text-slate-400" />
+                      <div className="mx-auto h-16 w-16 bg-rose-50 rounded-full flex items-center justify-center border border-rose-100">
+                        <MessageSquare className="h-8 w-8 text-rose-500" />
                       </div>
-                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                        DISCONNECTED
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                        GREEN-API DISCONNECTED
                       </div>
                       <p className="text-xs text-slate-500 font-medium px-4">
-                        The WhatsApp automation service is currently disconnected. Click below to re-initialize and generate a fresh QR code.
+                        {whatsappStatus.error || "Green API instance is unconfigured or unreachable. Verify GREEN_API_INSTANCE_ID and GREEN_API_TOKEN in your .env file."}
                       </p>
                       <button
                         disabled={whatsappLoading}
+<<<<<<< HEAD
                         onClick={async () => {
                           setWhatsappLoading(true);
                           try {
@@ -1568,9 +1573,13 @@ export default function AdminDashboard({ user, onLogout }) {
                           }
                         }}
                         className="mt-2 inline-flex items-center px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer disabled:opacity-50"
+=======
+                        onClick={fetchWhatsappInfo}
+                        className="mt-2 inline-flex items-center px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer disabled:opacity-50"
+>>>>>>> 7d273dc (22 full work wh)
                       >
                         <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${whatsappLoading ? "animate-spin" : ""}`} />
-                        {whatsappLoading ? "Launching Chrome & Generating QR..." : "Generate QR Code / Re-link"}
+                        {whatsappLoading ? "Checking Status..." : "Re-check Green API Status"}
                       </button>
                     </div>
                   )}
