@@ -1887,10 +1887,10 @@ async function startServer() {
     console.log(`[GatePass Server] Running securely on http://localhost:${PORT}`);
   });
 
-  // Background async DB init (does not block HTTP listener)
-  db.initFirestore()
+  // Background async MongoDB Atlas init (does not block HTTP listener)
+  db.initMongoDB()
     .catch((err) => {
-      console.warn('[Firestore] Async initialization note:', err.message);
+      console.warn('[MongoDB Atlas] Async initialization note:', err.message);
     });
 }
 

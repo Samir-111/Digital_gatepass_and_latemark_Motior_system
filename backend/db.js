@@ -6,27 +6,27 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
-import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { MongoClient } from 'mongodb';
 
 // Setup file paths for persistent JSON storage on server disk (local fallback/cache backup)
 const DB_DIR = path.join(process.cwd(), 'database');
 const DB_FILE = path.join(DB_DIR, 'gatepass.json');
 
 /**
- * GatePass Database Controller - Firebase Firestore Integrated
+ * GatePass Database Controller - MongoDB Atlas Integrated
  * 
  * DESIGN PATTERN (Hybrid Cache-Through):
  * This class loads and caches all collection documents in-memory at boot time
- * from Google Cloud Firestore. This keeps reads 100% synchronous and instantaneous
+ * from MongoDB Atlas. This keeps reads 100% synchronous and instantaneous
  * for high performance (handles 1000+ students & teachers), while synchronously
- * flushing all writes and updates to Firebase Firestore asynchronously in the background.
+ * flushing all writes and updates to MongoDB Atlas asynchronously in the background.
  * It also maintains a local disk JSON file fallback in case of connection dropouts.
  */
 export class Database {
   static instance;
-  firestore;
-  hasExplicitCredential = false;
+  mongoDb;
+  mongoClient;
+  lastSyncTime = 0;
   otps = new Map();
 
   // Local active memory state
@@ -50,7 +50,6 @@ export class Database {
   // Private constructor restricts instantiation from external modules
   constructor() {
     this.initLocalFallback();
-    this.initFirebaseSDK();
   }
 
   /**
@@ -99,123 +98,6 @@ export class Database {
       } catch (err) {
         console.error('Error reading gatepass.json', err);
       }
-    }
-  }
-
-  /**
-   * Initializes Firebase Admin SDK using environment variables, local credentials file, or applet metadata
-   */
-  initFirebaseSDK() {
-    let projectId = process.env.FIREBASE_PROJECT_ID || 'primordial-lambda-qk91c';
-    let databaseId = process.env.FIRESTORE_DATABASE_ID || '';
-
-    try {
-      const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
-      if (fs.existsSync(configPath)) {
-        const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-        if (process.env.FIREBASE_PROJECT_ID === undefined && config.projectId) {
-          projectId = config.projectId;
-        }
-        if (process.env.FIRESTORE_DATABASE_ID === undefined && config.firestoreDatabaseId && projectId === config.projectId) {
-          databaseId = config.firestoreDatabaseId;
-        }
-      }
-    } catch (e) {
-      console.error('Error reading firebase-applet-config.json:', e);
-    }
-
-    // Try to load service account credentials
-    let credential = undefined;
-
-    // 1. PRIORITY 1: Check environment variable FIREBASE_SERVICE_ACCOUNT_JSON (Primary for Cloud / Render deployments)
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON && process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim()) {
-      try {
-        let rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON.trim();
-        if ((rawJson.startsWith("'") && rawJson.endsWith("'")) || (rawJson.startsWith('"') && rawJson.endsWith('"') && !rawJson.includes('\n') && !rawJson.includes(':'))) {
-          rawJson = rawJson.slice(1, -1).trim();
-        }
-        // Handle base64 encoded JSON if user encoded it
-        if (!rawJson.startsWith('{')) {
-          rawJson = Buffer.from(rawJson, 'base64').toString('utf-8');
-        }
-        const serviceAccount = JSON.parse(rawJson);
-        if (serviceAccount.private_key) {
-          serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-        }
-        credential = cert(serviceAccount);
-        this.hasExplicitCredential = true;
-        if (serviceAccount.project_id && !process.env.FIREBASE_PROJECT_ID) {
-          projectId = serviceAccount.project_id;
-        }
-        console.log('[Firestore] Successfully loaded service account credentials from environment variable FIREBASE_SERVICE_ACCOUNT_JSON');
-      } catch (err) {
-        console.error('[Firestore] Error parsing FIREBASE_SERVICE_ACCOUNT_JSON:', err.message || err);
-      }
-    }
-
-    // 2. PRIORITY 2: Check local service account credentials file (For local development)
-    if (!credential) {
-      let serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      if (!serviceAccountPath) {
-        const possiblePaths = [
-          path.join(process.cwd(), 'firebase-service-account.json'),
-          path.join(process.cwd(), 'service-account.json')
-        ];
-        for (const p of possiblePaths) {
-          if (fs.existsSync(p)) {
-            serviceAccountPath = p;
-            break;
-          }
-        }
-      }
-
-      if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
-        try {
-          const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
-          credential = cert(serviceAccount);
-          this.hasExplicitCredential = true;
-          if (serviceAccount.project_id && !process.env.FIREBASE_PROJECT_ID) {
-            projectId = serviceAccount.project_id;
-          }
-          console.log(`[Firestore] Loaded service account credentials from file: ${serviceAccountPath}`);
-        } catch (err) {
-          console.error('[Firestore] Error loading service account credential file:', err.message || err);
-        }
-      }
-    }
-
-    const appOptions = { projectId };
-    if (credential) {
-      appOptions.credential = credential;
-    }
-
-    const app = getApps().length === 0 ? initializeApp(appOptions) : getApp();
-
-    try {
-      if (databaseId) {
-        this.firestore = getFirestore(app, databaseId);
-        console.log(`[Firestore] Initialized custom named database: ${databaseId}`);
-      } else {
-        this.firestore = getFirestore(app);
-        console.log('[Firestore] Initialized default database');
-      }
-    } catch (e) {
-      console.error('[Firestore] Custom database ID initialization failed, falling back to default:', e);
-      this.firestore = getFirestore(app);
-    }
-  }
-
-  /**
-   * Asynchronously verifies if Google Cloud Application Default Credentials (ADC) are available.
-   */
-  async hasADC() {
-    try {
-      const { GoogleAuth } = await import('google-auth-library');
-      const auth = new GoogleAuth();
-      await auth.getApplicationDefault();
-      return true;
-    } catch (e) {
-      return false;
     }
   }
 
@@ -271,7 +153,7 @@ export class Database {
   }
 
   /**
-   * Seeds database cache locally when Firestore is bypassed or fails.
+   * Seeds database cache locally when MongoDB Atlas is bypassed or fails.
    */
   seedLocal() {
     const { depts, teachers, students, hods, guards, admins, principals, gatepasses, logs } = this.getSeedData();
@@ -289,6 +171,8 @@ export class Database {
       notifications: [],
       officialParentContacts: [],
       lateComeEntries: [],
+      whatsappStatus: { status: 'DISCONNECTED', qr: null },
+      whatsappLogs: [],
     };
 
     this.saveLocal();
@@ -308,95 +192,97 @@ export class Database {
   }
 
   /**
-   * Loads all collections from Google Cloud Firestore and caches them in memory.
-   * If the cloud database is brand new and empty, it executes seeding on the cloud automatically.
+   * Loads all collections from MongoDB Atlas and caches them in memory.
+   * If the cloud database is brand new and empty, it executes seeding on MongoDB Atlas automatically.
    */
-  async initFirestore() {
-    // 5-minute cache throttle: Avoid consuming bulk reads on rapid restarts
-    if (this.lastSyncTime && (Date.now() - this.lastSyncTime < 300000) && this.data?.gatepasses?.length > 0) {
-      console.log('[Firestore] Using active database cache (Synced', Math.round((Date.now() - this.lastSyncTime)/1000), 's ago).');
-      return;
-    }
+  async initMongoDB() {
+    const mongoUri = process.env.MONGODB_URI;
 
-    console.log('[Firestore] Checking for Google Cloud credentials...');
-    const hasCreds = this.hasExplicitCredential || await this.hasADC();
-
-    if (!hasCreds) {
-      console.warn('[Firestore] No Google Cloud credentials detected. Skipping Firestore synchronization.');
-      console.log('[Firestore] Running in local-only fallback mode.');
-      this.firestore = undefined;
+    if (!mongoUri || mongoUri.includes('YOUR_USER') || mongoUri.includes('password@cluster')) {
+      console.warn('[MongoDB Atlas] No valid MONGODB_URI configured in environment. Running in local database fallback mode.');
       this.initLocalOnlySeed();
       return;
     }
 
-    console.log('[Firestore] Synchronizing cloud database cache...');
+    // 5-minute cache throttle: Avoid unnecessary reads on rapid restarts
+    if (this.lastSyncTime && (Date.now() - this.lastSyncTime < 300000) && this.data?.gatepasses?.length > 0) {
+      console.log('[MongoDB Atlas] Using active database cache (Synced', Math.round((Date.now() - this.lastSyncTime)/1000), 's ago).');
+      return;
+    }
+
+    console.log('[MongoDB Atlas] Connecting to MongoDB Atlas cluster...');
     try {
-      const deptsSnap = await this.firestore.collection('departments').get();
-      const studentsSnap = await this.firestore.collection('students').get();
-      const teachersSnap = await this.firestore.collection('teachers').get();
-      const hodsSnap = await this.firestore.collection('hods').get();
-      const guardsSnap = await this.firestore.collection('guards').get();
-      const adminsSnap = await this.firestore.collection('admins').get();
-      const gatepassesSnap = await this.firestore.collection('gatepasses').get();
-      const logsSnap = await this.firestore.collection('logs').get();
-      const notificationsSnap = await this.firestore.collection('notifications').get();
-      const parentContactsSnap = await this.firestore.collection('officialParentContacts').get();
-      const lateComeSnap = await this.firestore.collection('lateComeEntries').get();
+      if (!this.mongoClient) {
+        this.mongoClient = new MongoClient(mongoUri);
+        await this.mongoClient.connect();
+      }
+      this.mongoDb = this.mongoClient.db();
+      console.log('[MongoDB Atlas] Connected successfully to cloud database!');
+
+      const collections = [
+        'departments', 'students', 'teachers', 'hods', 'guards',
+        'admins', 'principals', 'gatepasses', 'logs', 'notifications',
+        'officialParentContacts', 'lateComeEntries', 'whatsappLogs'
+      ];
+
+      const loadedData = {};
+      for (const col of collections) {
+        const docs = await this.mongoDb.collection(col).find({}).toArray();
+        // Remove MongoDB internal _id before caching
+        loadedData[col] = docs.map(({ _id, ...rest }) => rest);
+      }
 
       // If database is empty, seed it
-      if (adminsSnap.empty) {
-        console.log('[Firestore] Empty database detected. Running live cloud seed...');
-        await this.seedCloud();
+      if (!loadedData.admins || loadedData.admins.length === 0) {
+        console.log('[MongoDB Atlas] Empty cloud database detected. Running live cloud seed...');
+        await this.seedCloudMongoDB();
         return;
       }
 
-      // Sync local memory data structures
-      this.data.departments = deptsSnap.docs.map(doc => doc.data());
-      this.data.students = studentsSnap.docs.map(doc => doc.data());
-      this.data.teachers = teachersSnap.docs.map(doc => doc.data());
-      this.data.hods = hodsSnap.docs.map(doc => doc.data());
-      this.data.guards = guardsSnap.docs.map(doc => doc.data());
-      this.data.admins = adminsSnap.docs.map(doc => doc.data());
-      this.data.gatepasses = gatepassesSnap.docs.map(doc => doc.data());
-      this.data.logs = logsSnap.docs.map(doc => doc.data());
-      this.data.notifications = notificationsSnap.docs.map(doc => doc.data());
-      this.data.officialParentContacts = parentContactsSnap.docs.map(doc => doc.data());
-      this.data.lateComeEntries = lateComeSnap.docs.map(doc => doc.data());
-
-      console.log('[Firestore] Synchronization completed! Total gate passes loaded:', this.data.gatepasses.length);
+      this.data = { ...this.data, ...loadedData };
+      console.log('[MongoDB Atlas] Synchronization completed! Total gate passes loaded:', this.data.gatepasses.length);
       this.lastSyncTime = Date.now();
-
-      // Save locally to keep backup robust
       this.saveLocal();
     } catch (err) {
-      const errorMsg = err?.message || String(err || '');
-      if (err?.code === 8 || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('Quota exceeded')) {
-        console.warn('[Firestore] Quota limit exceeded for bulk reads (RESOURCE_EXHAUSTED). Keeping Firebase active for real-time writes & running on database cache.');
-      } else {
-        console.warn('[Firestore] Cloud read note. Keeping Firebase active & running on database cache:', errorMsg);
-      }
+      console.error('[MongoDB Atlas] Connection or sync error:', err.message || err);
+      console.log('[MongoDB Atlas] Falling back to local database cache.');
       this.initLocalOnlySeed();
     }
   }
 
   /**
-   * Seeds cloud collections with initial demo profiles
+   * Alias for backward compatibility
    */
-  async seedCloud() {
-    const { depts, teachers, students, hods, guards, admins, gatepasses, logs } = this.getSeedData();
+  async initFirestore() {
+    return this.initMongoDB();
+  }
+
+  /**
+   * Seeds MongoDB Atlas collections with initial demo profiles
+   */
+  async seedCloudMongoDB() {
+    const { depts, teachers, students, hods, guards, admins, principals, gatepasses, logs } = this.getSeedData();
 
     try {
-      const batch = this.firestore.batch();
-      depts.forEach(d => batch.set(this.firestore.collection('departments').doc(d.id), d));
-      teachers.forEach(t => batch.set(this.firestore.collection('teachers').doc(t.id), t));
-      students.forEach(s => batch.set(this.firestore.collection('students').doc(s.id), s));
-      hods.forEach(h => batch.set(this.firestore.collection('hods').doc(h.id), h));
-      guards.forEach(g => batch.set(this.firestore.collection('guards').doc(g.id), g));
-      admins.forEach(a => batch.set(this.firestore.collection('admins').doc(a.id), a));
-      gatepasses.forEach(p => batch.set(this.firestore.collection('gatepasses').doc(p.id), p));
-      logs.forEach(l => batch.set(this.firestore.collection('logs').doc(l.id), l));
+      const seedMap = {
+        departments: depts,
+        teachers,
+        students,
+        hods,
+        guards,
+        admins,
+        principals,
+        gatepasses,
+        logs
+      };
 
-      await batch.commit();
+      for (const [colName, docs] of Object.entries(seedMap)) {
+        if (docs.length > 0) {
+          for (const doc of docs) {
+            await this.mongoDb.collection(colName).replaceOne({ id: doc.id }, doc, { upsert: true });
+          }
+        }
+      }
 
       this.data = {
         departments: depts,
@@ -405,17 +291,20 @@ export class Database {
         hods,
         guards,
         admins,
+        principals,
         gatepasses,
         logs,
         notifications: [],
         officialParentContacts: [],
         lateComeEntries: [],
+        whatsappStatus: { status: 'DISCONNECTED', qr: null },
+        whatsappLogs: [],
       };
 
       this.saveLocal();
-      console.log('[Firestore] Successfully seeded live college database!');
+      console.log('[MongoDB Atlas] Successfully seeded cloud database!');
     } catch (err) {
-      console.error('[Firestore] Seeding cloud error:', err);
+      console.error('[MongoDB Atlas] Seeding cloud error:', err);
     }
   }
 
@@ -431,17 +320,14 @@ export class Database {
   }
 
   /**
-   * Helper to write a single document to Firestore asynchronously
+   * Helper to write a single document to MongoDB Atlas asynchronously
    */
   saveDoc(collectionName, id, docData) {
-    if (!this.firestore) return;
+    if (!this.mongoDb) return;
 
-    // Clean up undefined properties so Firestore doesn't reject the write
     const cleanObject = (obj) => {
       if (obj === null || typeof obj !== 'object') return obj;
-
       if (Array.isArray(obj)) return obj.map(cleanObject);
-
       const cleaned = {};
       for (const key of Object.keys(obj)) {
         if (obj[key] !== undefined) {
@@ -452,20 +338,25 @@ export class Database {
     };
 
     const cleaned = cleanObject(docData);
+    const filterId = id || cleaned.id;
 
-    this.firestore.collection(collectionName).doc(id).set(cleaned).catch(err => {
-      console.error(`[Firestore] Failed to save ${id} in ${collectionName}:`, err);
-    });
+    if (!filterId) return;
+
+    this.mongoDb.collection(collectionName).replaceOne({ id: filterId }, cleaned, { upsert: true })
+      .catch(err => {
+        console.error(`[MongoDB Atlas] Failed to save ${filterId} in ${collectionName}:`, err.message || err);
+      });
   }
 
   /**
-   * Helper to delete a single document from Firestore asynchronously
+   * Helper to delete a single document from MongoDB Atlas asynchronously
    */
   deleteDoc(collectionName, id) {
-    if (!this.firestore) return;
-    this.firestore.collection(collectionName).doc(id).delete().catch(err => {
-      console.error(`[Firestore] Failed to delete ${id} in ${collectionName}:`, err);
-    });
+    if (!this.mongoDb) return;
+    this.mongoDb.collection(collectionName).deleteOne({ id })
+      .catch(err => {
+        console.error(`[MongoDB Atlas] Failed to delete ${id} in ${collectionName}:`, err.message || err);
+      });
   }
 
   // ==========================================
