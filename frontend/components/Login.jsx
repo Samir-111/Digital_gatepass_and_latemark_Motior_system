@@ -104,8 +104,8 @@ export default function Login({ onLoginSuccess }) {
       if (data.requires2FA) {
         setRequires2FA(true);
         setChallengeId(data.challengeId);
-        setMaskedPhone(data.maskedPhone || "");
-        setSuccessMsg(data.message || "A 6-digit verification code has been sent to your registered WhatsApp number.");
+        setMaskedPhone(data.maskedEmail || data.maskedPhone || data.userEmail || email || "");
+        setSuccessMsg(data.message || "A 6-digit verification code has been sent to your registered email address.");
         setResendCountdown(60);
         return;
       }
@@ -676,9 +676,9 @@ export default function Login({ onLoginSuccess }) {
                   className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-50 transition cursor-pointer"
                 >
                   {resendCountdown > 0 ? (
-                    `Resend OTP via WhatsApp in ${resendCountdown}s`
+                    `Resend OTP via Email in ${resendCountdown}s`
                   ) : (
-                    `Didn't receive code? Resend via WhatsApp`
+                    `Didn't receive code? Resend via Email`
                   )}
                 </button>
               </div>

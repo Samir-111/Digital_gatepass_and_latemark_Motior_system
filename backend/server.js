@@ -195,65 +195,65 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
   let status = 'failed';
   let errorMsg = null;
 
-  // 1. Try local WhatsApp IPC daemon (http://127.0.0.1:3001/api/send)
-  try {
-    const localRes = await fetch('http://127.0.0.1:3001/api/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ parentPhone: cleanNumber, studentName, rollNo, message: messageBody })
-    });
+  // 1. Try Green-API first if configured (Cloud-native instant dispatch)
+  const instanceId = process.env.GREEN_API_INSTANCE_ID;
+  const apiToken = process.env.GREEN_API_TOKEN;
 
-    if (localRes.ok) {
-      const localData = await localRes.json();
-      if (localData.success) {
+  if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
+    try {
+      const subHost = instanceId.substring(0, 4);
+      const url = `https://${subHost}.api.green-api.com/waInstance${instanceId}/sendMessage/${apiToken}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatId: `${cleanNumber}@c.us`,
+          message: messageBody
+        })
+      });
+
+      if (response.ok) {
+        const resData = await response.json();
+        console.log(`[WhatsApp Gateway] Green-API message successfully dispatched to ${cleanNumber}:`, resData);
         status = 'success';
-        console.log(`[WhatsApp Gateway] Successfully delivered via local WhatsApp Web IPC to ${cleanNumber}`);
+        errorMsg = null;
         db.updateWhatsAppStatus({ status: 'CONNECTED', qr: null, updated_at: new Date().toISOString() });
       } else {
-        errorMsg = localData.error || 'Local WhatsApp client failed to dispatch';
+        const errorText = await response.text();
+        console.error(`[WhatsApp Gateway] Green-API returned status ${response.status}:`, errorText);
+        errorMsg = `Green-API HTTP ${response.status}: ${errorText || 'Failed to dispatch'}`;
       }
-    } else {
-      const errRes = await localRes.json().catch(() => ({}));
-      errorMsg = errRes.error || `WhatsApp client error (${localRes.status})`;
+    } catch (err) {
+      console.error(`[WhatsApp Gateway] Error connecting to Green-API:`, err);
+      errorMsg = err.message || 'Network error connecting to Green-API';
     }
-  } catch (ipcErr) {
-    // Local daemon on 3001 is offline
   }
 
-  // 2. If local daemon was not active/successful, try Green-API if configured
+  // 2. Fallback to local WhatsApp IPC daemon (http://127.0.0.1:3001/api/send) if Green-API not active or failed
   if (status !== 'success') {
-    const instanceId = process.env.GREEN_API_INSTANCE_ID;
-    const apiToken = process.env.GREEN_API_TOKEN;
+    try {
+      const localRes = await fetch('http://127.0.0.1:3001/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentPhone: cleanNumber, studentName, rollNo, message: messageBody })
+      });
 
-    if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
-      try {
-        const subHost = instanceId.substring(0, 4);
-        const url = `https://${subHost}.api.green-api.com/waInstance${instanceId}/sendMessage/${apiToken}`;
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chatId: `${cleanNumber}@c.us`,
-            message: messageBody
-          })
-        });
-
-        if (response.ok) {
-          const resData = await response.json();
-          console.log(`[WhatsApp Gateway] Green-API message dispatched to ${cleanNumber}:`, resData);
+      if (localRes.ok) {
+        const localData = await localRes.json();
+        if (localData.success) {
           status = 'success';
-          errorMsg = null;
+          console.log(`[WhatsApp Gateway] Successfully delivered via local WhatsApp Web IPC to ${cleanNumber}`);
           db.updateWhatsAppStatus({ status: 'CONNECTED', qr: null, updated_at: new Date().toISOString() });
         } else {
-          const errorText = await response.text();
-          console.error(`[WhatsApp Gateway] Green-API returned status ${response.status}:`, errorText);
-          if (!errorMsg) errorMsg = `Green-API HTTP ${response.status}: ${errorText || 'Failed to dispatch'}`;
+          errorMsg = localData.error || 'Local WhatsApp client failed to dispatch';
         }
-      } catch (err) {
-        console.error(`[WhatsApp Gateway] Error connecting to Green-API:`, err);
-        if (!errorMsg) errorMsg = err.message || 'Network error connecting to Green-API';
+      } else {
+        const errRes = await localRes.json().catch(() => ({}));
+        errorMsg = errRes.error || `WhatsApp client error (${localRes.status})`;
       }
+    } catch (ipcErr) {
+      // Local daemon on 3001 is offline
     }
   }
 
@@ -339,7 +339,7 @@ app.post('/api/login', async (req, res) => {
   const challengeId = '2fa-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
   const expiresAt = Date.now() + (5 * 60 * 1000); // Expires in 5 minutes
 
-  const userEmail = authResult.user.email || '';
+  const userEmail = authResult.user.email || authResult.user.institutional_email || email || '';
 
   twoFactorChallenges.set(challengeId, {
     challengeId,
