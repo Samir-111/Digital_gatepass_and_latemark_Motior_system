@@ -332,40 +332,17 @@ app.post('/api/login', async (req, res) => {
 
   const emailSent = await sendOTPEmail(userEmail, otp);
 
-  let waSent = false;
-  if (userPhone && userPhone.trim()) {
-    try {
-      const waRes = await sendWhatsAppMessage({
-        parentPhone: userPhone,
-        studentName: authResult.user.name || 'User',
-        rollNo: authResult.user.roll_no || 'N/A',
-        customMessage: `🔐 *S. B. JAIN CAMPUS PORTAL*\n\nYour 2-Step Authentication verification code is: *${otp}*\n\nThis code expires in 5 minutes. Please enter this code on the login screen.`
-      });
-      waSent = waRes?.status === 'success';
-    } catch (waErr) {
-      console.error('[2FA WhatsApp Dispatch Error]:', waErr);
-    }
-  }
-
-  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : '';
-  const maskedPhone = userPhone ? userPhone.replace(/(\d{2})(\d+)(\d{2})/, '$1****$3') : '';
-
-  const dispatchedChannels = [];
-  if (waSent) dispatchedChannels.push(`WhatsApp (${maskedPhone})`);
-  if (emailSent) dispatchedChannels.push(`Email (${maskedEmail})`);
-
-  const channelText = dispatchedChannels.length > 0
-    ? `A 6-digit 2-step verification code has been sent to your registered ${dispatchedChannels.join(' and ')}.`
-    : `A 6-digit 2-step verification code has been generated.`;
+  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
 
   res.json({
     requires2FA: true,
     challengeId,
     maskedEmail,
-    maskedPhone,
     userEmail,
-    message: channelText,
-    ...(!emailSent && !waSent ? { dev_otp: otp } : {})
+    message: emailSent
+      ? `A 6-digit 2-step verification code has been sent to your registered Gmail address (${maskedEmail}). Please check your inbox and spam folder.`
+      : `A 6-digit 2-step verification code has been generated.`,
+    ...(!emailSent ? { dev_otp: otp } : {})
   });
 });
 
@@ -388,7 +365,7 @@ app.post('/api/login/verify-2fa', (req, res) => {
   }
 
   if (challenge.otp.trim() !== otp.toString().trim()) {
-    return res.status(400).json({ error: 'Incorrect 6-digit verification code. Please check your WhatsApp.' });
+    return res.status(400).json({ error: 'Incorrect 6-digit verification code. Please check your Gmail inbox and spam folder.' });
   }
 
   // OTP verified successfully! Clear challenge and issue JWT token
@@ -404,7 +381,7 @@ app.post('/api/login/verify-2fa', (req, res) => {
 
   const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '12h' });
 
-  db.addLog(challenge.user.id, challenge.user.name, challenge.role, `Logged in successfully via 2-Step WhatsApp Verification`);
+  db.addLog(challenge.user.id, challenge.user.name, challenge.role, `Logged in successfully via 2-Step Gmail Verification`);
 
   res.json({
     token,
@@ -413,7 +390,7 @@ app.post('/api/login/verify-2fa', (req, res) => {
   });
 });
 
-// Step 3: Resend 2FA WhatsApp OTP Endpoint
+// Step 3: Resend 2FA Gmail OTP Endpoint
 app.post('/api/login/resend-2fa', async (req, res) => {
   const { challengeId } = req.body;
 
@@ -432,32 +409,16 @@ app.post('/api/login/resend-2fa', async (req, res) => {
   twoFactorChallenges.set(challengeId, challenge);
 
   const userEmail = challenge.email || challenge.user.email || '';
-  const userPhone = challenge.phone || challenge.user.phone || challenge.user.parent_phone || '';
-
   const emailSent = await sendOTPEmail(userEmail, newOtp);
 
-  let waSent = false;
-  if (userPhone && userPhone.trim()) {
-    try {
-      const waRes = await sendWhatsAppMessage({
-        parentPhone: userPhone,
-        studentName: challenge.user.name || 'User',
-        rollNo: challenge.user.roll_no || 'N/A',
-        customMessage: `🔐 *S. B. JAIN CAMPUS PORTAL*\n\nYour new 2-Step Authentication code is: *${newOtp}*\n\nValid for 5 minutes. Do not share this code.`
-      });
-      waSent = waRes?.status === 'success';
-    } catch (e) {}
-  }
-
-  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : '';
-  const maskedPhone = userPhone ? userPhone.replace(/(\d{2})(\d+)(\d{2})/, '$1****$3') : '';
+  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
 
   res.json({
     success: true,
-    message: (emailSent || waSent)
-      ? `A new 6-digit 2-step verification code has been dispatched.`
+    message: emailSent
+      ? `A new 6-digit verification code has been sent to your registered Gmail address (${maskedEmail}).`
       : `New verification code generated.`,
-    ...(!emailSent && !waSent ? { dev_otp: newOtp } : {})
+    ...(!emailSent ? { dev_otp: newOtp } : {})
   });
 });
 
@@ -590,38 +551,17 @@ app.post('/api/forgot-password/request-otp', async (req, res) => {
     // Store OTP in database/memory
     db.storeOTP(email, otp);
 
-    // Send the OTP email
+    // Send the OTP email exclusively via Gmail
     const emailSent = await sendOTPEmail(email, otp);
 
-    // Dispatch OTP to registered WhatsApp if mobile number exists
-    const userPhone = user.phone || user.parent_phone || user.mobile || '';
-    let waSent = false;
-    if (userPhone && userPhone.trim()) {
-      try {
-        const waRes = await sendWhatsAppMessage({
-          parentPhone: userPhone,
-          studentName: user.name || 'User',
-          rollNo: user.roll_no || 'N/A',
-          customMessage: `🔐 *PASSWORD RESET VERIFICATION*\n\nYour 6-digit OTP code for password reset is: *${otp}*\n\nThis code is valid for 10 minutes. Please enter it on the reset screen.`
-        });
-        waSent = waRes?.status === 'success';
-      } catch (e) {
-        console.error('[Forgot Password WA Dispatch Error]:', e);
-      }
-    }
-
-    const dispatched = [];
-    if (emailSent) dispatched.push('registered Email');
-    if (waSent) dispatched.push('registered WhatsApp');
-
-    const msg = dispatched.length > 0
-      ? `A 6-digit verification OTP has been sent to your ${dispatched.join(' and ')}. Please check your inbox and spam folder.`
-      : `A 6-digit verification OTP has been generated.`;
+    const maskedEmail = email ? email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
 
     res.json({
       success: true,
-      message: msg,
-      ...(!emailSent && !waSent ? { dev_otp: otp } : {})
+      message: emailSent
+        ? `A 6-digit password reset OTP code has been sent to your registered Gmail address (${maskedEmail}). Please check your inbox and spam folder.`
+        : `A 6-digit password reset OTP code has been generated.`,
+      ...(!emailSent ? { dev_otp: otp } : {})
     });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to generate and send OTP.' });
