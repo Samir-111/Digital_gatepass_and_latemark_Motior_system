@@ -1887,14 +1887,10 @@ async function startServer() {
     console.log(`[GatePass Server] Running securely on http://localhost:${PORT}`);
   });
 
-  // Background async DB & daemon init (does not block HTTP listener)
+  // Background async DB init (does not block HTTP listener)
   db.initFirestore()
-    .then(() => {
-      ensureWhatsAppDaemonRunning();
-    })
     .catch((err) => {
       console.warn('[Firestore] Async initialization note:', err.message);
-      ensureWhatsAppDaemonRunning();
     });
 }
 
