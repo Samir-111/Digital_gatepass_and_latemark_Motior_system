@@ -196,7 +196,7 @@ export class Database {
    * If the cloud database is brand new and empty, it executes seeding on MongoDB Atlas automatically.
    */
   async initMongoDB() {
-    const mongoUri = process.env.MONGODB_URI;
+    let mongoUri = process.env.MONGODB_URI;
 
     if (!mongoUri || mongoUri.includes('YOUR_USER') || mongoUri.includes('password@cluster') || mongoUri.includes('<db_password>')) {
       if (mongoUri && mongoUri.includes('<db_password>')) {
@@ -206,6 +206,29 @@ export class Database {
       }
       this.initLocalOnlySeed();
       return;
+    }
+
+    // Auto-fix unencoded @ in password field if present
+    if (mongoUri.includes('mongodb+srv://')) {
+      const match = mongoUri.match(/^mongodb\+srv:\/\/([^:]+):([^@]+)@(.+)$/);
+      if (!match) {
+        // Handle password containing @ symbol
+        const schemeSplit = mongoUri.split('mongodb+srv://');
+        if (schemeSplit.length > 1) {
+          const rest = schemeSplit[1];
+          const lastAt = rest.lastIndexOf('@');
+          if (lastAt > 0) {
+            const userPass = rest.substring(0, lastAt);
+            const hostAndOpts = rest.substring(lastAt + 1);
+            const colonPos = userPass.indexOf(':');
+            if (colonPos > 0) {
+              const user = userPass.substring(0, colonPos);
+              const pass = userPass.substring(colonPos + 1);
+              mongoUri = `mongodb+srv://${user}:${encodeURIComponent(decodeURIComponent(pass))}@${hostAndOpts}`;
+            }
+          }
+        }
+      }
     }
 
     // 5-minute cache throttle: Avoid unnecessary reads on rapid restarts
