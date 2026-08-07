@@ -135,33 +135,35 @@ const sendOTPEmail = async (email, otp) => {
   `;
 
   if (isConfigured) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure: port === 465,
-        auth: { user, pass },
-        connectionTimeout: 5000, // Abort connection if Gmail SMTP takes > 5s
-        greetingTimeout: 5000,   // Abort if SMTP greeting takes > 5s
-        socketTimeout: 8000,     // Abort socket if data takes > 8s
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
+    const portsToTry = [port, port === 465 ? 587 : 465];
+    for (const p of portsToTry) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host,
+          port: p,
+          secure: p === 465,
+          auth: { user, pass },
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 10000,
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
 
-      await transporter.sendMail({
-        from: `Campus Portal <${from}>`,
-        to: email,
-        subject,
-        text: textContent,
-        html: htmlContent
-      });
+        await transporter.sendMail({
+          from: `Campus Portal <${from}>`,
+          to: email,
+          subject,
+          text: textContent,
+          html: htmlContent
+        });
 
-      console.log(`[OTP Email] Real email successfully sent to ${email}`);
-      return true;
-    } catch (error) {
-      console.error(`[OTP Email] Failed to send real email to ${email}:`, error?.message || error);
-      // Fallback to console print on error
+        console.log(`[OTP Email] Real email successfully sent to ${email} via port ${p}`);
+        return true;
+      } catch (error) {
+        console.warn(`[OTP Email] Failed to send email via port ${p}:`, error?.message || error);
+      }
     }
   }
 
@@ -195,10 +197,11 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
   let status = 'failed';
   let errorMsg = null;
 
-  // Green-API exclusive WhatsApp dispatch
-  const instanceId = process.env.GREEN_API_INSTANCE_ID;
-  const apiToken = process.env.GREEN_API_TOKEN;
-  const apiUrl = (process.env.GREEN_API_URL || (instanceId ? `https://${instanceId.substring(0, 4)}.api.greenapi.com` : '')).replace(/\/$/, '');
+  // Green-API exclusive WhatsApp dispatch with fallback credentials for cloud deployment
+  const instanceId = (process.env.GREEN_API_INSTANCE_ID || '710722683037').trim().replace(/['"]/g, '');
+  const apiToken = (process.env.GREEN_API_TOKEN || '37e35fefa1de4a6b8bea6b9d083d8e06c5a2402d03704bb0a0').trim().replace(/['"]/g, '');
+  const rawUrl = process.env.GREEN_API_URL || (instanceId ? `https://${instanceId.substring(0, 4)}.api.greenapi.com` : 'https://7107.api.greenapi.com');
+  const apiUrl = rawUrl.trim().replace(/['"]/g, '').replace(/\/$/, '');
 
   if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
     try {
@@ -229,7 +232,7 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
       errorMsg = err.message || 'Network error connecting to Green-API';
     }
   } else {
-    errorMsg = 'GREEN_API_INSTANCE_ID or GREEN_API_TOKEN is not configured in .env';
+    errorMsg = 'GREEN_API_INSTANCE_ID or GREEN_API_TOKEN is not configured';
     console.warn(`[WhatsApp Gateway Warning] ${errorMsg}`);
   }
 
