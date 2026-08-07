@@ -114,7 +114,7 @@ const sendSMS = async (phoneNumber, message) => {
 const sendOTPEmail = async (email, otp) => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587');
-  const user = process.env.SMTP_USER;
+  const user = process.env.SMTP_USER || process.env.SMTP_FROM || 'sbjitnagpur@gmail.com';
   const rawPass = process.env.SMTP_PASS || '';
   const pass = rawPass.replace(/\s+/g, ''); // Strip spaces from Gmail App Passwords
   const from = process.env.SMTP_FROM || user || 'sbjitnagpur@gmail.com';
@@ -329,17 +329,40 @@ app.post('/api/login', async (req, res) => {
 
   const emailSent = await sendOTPEmail(userEmail, otp);
 
-  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
+  let waSent = false;
+  if (userPhone && userPhone.trim()) {
+    try {
+      const waRes = await sendWhatsAppMessage({
+        parentPhone: userPhone,
+        studentName: authResult.user.name || 'User',
+        rollNo: authResult.user.roll_no || 'N/A',
+        customMessage: `🔐 *S. B. JAIN CAMPUS PORTAL*\n\nYour 2-Step Authentication verification code is: *${otp}*\n\nThis code expires in 5 minutes. Please enter this code on the login screen.`
+      });
+      waSent = waRes?.status === 'success';
+    } catch (waErr) {
+      console.error('[2FA WhatsApp Dispatch Error]:', waErr);
+    }
+  }
+
+  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : '';
+  const maskedPhone = userPhone ? userPhone.replace(/(\d{2})(\d+)(\d{2})/, '$1****$3') : '';
+
+  const dispatchedChannels = [];
+  if (waSent) dispatchedChannels.push(`WhatsApp (${maskedPhone})`);
+  if (emailSent) dispatchedChannels.push(`Email (${maskedEmail})`);
+
+  const channelText = dispatchedChannels.length > 0
+    ? `A 6-digit 2-step verification code has been sent to your registered ${dispatchedChannels.join(' and ')}.`
+    : `A 6-digit 2-step verification code has been generated.`;
 
   res.json({
     requires2FA: true,
     challengeId,
     maskedEmail,
+    maskedPhone,
     userEmail,
-    message: emailSent
-      ? `A 6-digit 2-step verification code has been sent to your registered email address (${maskedEmail}).`
-      : `A 6-digit 2-step verification code has been generated.`,
-    ...(!emailSent ? { dev_otp: otp } : {})
+    message: channelText,
+    ...(!emailSent && !waSent ? { dev_otp: otp } : {})
   });
 });
 
@@ -406,16 +429,32 @@ app.post('/api/login/resend-2fa', async (req, res) => {
   twoFactorChallenges.set(challengeId, challenge);
 
   const userEmail = challenge.email || challenge.user.email || '';
+  const userPhone = challenge.phone || challenge.user.phone || challenge.user.parent_phone || '';
+
   const emailSent = await sendOTPEmail(userEmail, newOtp);
 
-  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
+  let waSent = false;
+  if (userPhone && userPhone.trim()) {
+    try {
+      const waRes = await sendWhatsAppMessage({
+        parentPhone: userPhone,
+        studentName: challenge.user.name || 'User',
+        rollNo: challenge.user.roll_no || 'N/A',
+        customMessage: `🔐 *S. B. JAIN CAMPUS PORTAL*\n\nYour new 2-Step Authentication code is: *${newOtp}*\n\nValid for 5 minutes. Do not share this code.`
+      });
+      waSent = waRes?.status === 'success';
+    } catch (e) {}
+  }
+
+  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : '';
+  const maskedPhone = userPhone ? userPhone.replace(/(\d{2})(\d+)(\d{2})/, '$1****$3') : '';
 
   res.json({
     success: true,
-    message: emailSent
-      ? `A new 6-digit verification code has been sent to your registered email (${maskedEmail}).`
+    message: (emailSent || waSent)
+      ? `A new 6-digit 2-step verification code has been dispatched.`
       : `New verification code generated.`,
-    ...(!emailSent ? { dev_otp: newOtp } : {})
+    ...(!emailSent && !waSent ? { dev_otp: newOtp } : {})
   });
 });
 
