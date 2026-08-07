@@ -1509,27 +1509,7 @@ export default function AdminDashboard({ user, onLogout }) {
                         GREEN-API CONNECTED
                       </div>
                       <p className="text-xs text-slate-500 font-medium px-4">
-<<<<<<< HEAD
-                        WhatsApp is successfully linked with the college's business account. Real-time alerts will trigger instantly on student checkout.
-                      </p>
-                    </div>
-                  ) : (whatsappStatus.status === 'QR_READY' && (whatsappStatus.qr_image || whatsappStatus.qr)) ? (
-                    <div className="text-center space-y-3 w-full">
-                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 mb-2">
-                        ACTION REQUIRED: SCAN QR
-                      </div>
-                      <div className="mx-auto p-3 bg-white border border-slate-200 rounded-2xl shadow-sm inline-block">
-                        <img 
-                          src={whatsappStatus.qr_image || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(whatsappStatus.qr || '')}`} 
-                          alt="WhatsApp Linking QR Code" 
-                          className="h-[200px] w-[200px]"
-                        />
-                      </div>
-                      <p className="text-[11px] text-slate-500 font-semibold px-4">
-                        Scan this QR code with your WhatsApp Business mobile app to link the account. It expires within 20 seconds.
-=======
                         Green API Cloud Gateway (Instance {whatsappStatus.idInstance || '710722683037'}) is active & authorized. Real-time alerts will trigger instantly on student checkout.
->>>>>>> 7d273dc (22 full work wh)
                       </p>
                     </div>
                   ) : (
@@ -1545,38 +1525,8 @@ export default function AdminDashboard({ user, onLogout }) {
                       </p>
                       <button
                         disabled={whatsappLoading}
-<<<<<<< HEAD
-                        onClick={async () => {
-                          setWhatsappLoading(true);
-                          try {
-                            await apiFetch("/api/admin/whatsapp/reconnect", { method: "POST" });
-                            showToast("Launching Chrome & generating WhatsApp QR... Please wait 10-20 seconds.");
-                            let attempts = 0;
-                            const interval = setInterval(async () => {
-                              attempts++;
-                              try {
-                                const statusData = await gatepassService.getWhatsappStatus();
-                                setWhatsappStatus(statusData);
-                                if (statusData.status === 'QR_READY' || statusData.qr_image || statusData.qr || statusData.status === 'CONNECTED' || attempts >= 25) {
-                                  clearInterval(interval);
-                                  setWhatsappLoading(false);
-                                }
-                              } catch (err) {
-                                if (attempts >= 25) {
-                                  clearInterval(interval);
-                                  setWhatsappLoading(false);
-                                }
-                              }
-                            }, 2000);
-                          } catch (e) {
-                            setWhatsappLoading(false);
-                          }
-                        }}
-                        className="mt-2 inline-flex items-center px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer disabled:opacity-50"
-=======
                         onClick={fetchWhatsappInfo}
                         className="mt-2 inline-flex items-center px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer disabled:opacity-50"
->>>>>>> 7d273dc (22 full work wh)
                       >
                         <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${whatsappLoading ? "animate-spin" : ""}`} />
                         {whatsappLoading ? "Checking Status..." : "Re-check Green API Status"}
