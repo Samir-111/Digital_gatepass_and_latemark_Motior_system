@@ -115,7 +115,7 @@ const sendOTPEmail = async (email, otp) => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587');
   const user = process.env.SMTP_USER || process.env.SMTP_FROM || 'sbjitnagpur@gmail.com';
-  const rawPass = process.env.SMTP_PASS || '';
+  const rawPass = process.env.SMTP_PASS || 'zuja jokj lhri hosy';
   const pass = rawPass.replace(/\s+/g, ''); // Strip spaces from Gmail App Passwords
   const from = process.env.SMTP_FROM || user || 'sbjitnagpur@gmail.com';
 
