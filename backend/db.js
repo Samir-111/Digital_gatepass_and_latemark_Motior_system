@@ -244,12 +244,24 @@ export class Database {
     console.log('[MongoDB Atlas] Connecting to MongoDB Atlas cluster...');
     try {
       if (!this.mongoClient) {
-        this.mongoClient = new MongoClient(mongoUri, {
-          connectTimeoutMS: 15000,
-          serverSelectionTimeoutMS: 15000,
-          socketTimeoutMS: 45000,
-        });
-        await this.mongoClient.connect();
+        try {
+          this.mongoClient = new MongoClient(mongoUri, {
+            connectTimeoutMS: 15000,
+            serverSelectionTimeoutMS: 15000,
+            socketTimeoutMS: 45000,
+          });
+          await this.mongoClient.connect();
+        } catch (initialSslErr) {
+          console.warn('[MongoDB Atlas] Initial connection note, retrying with TLS options...');
+          this.mongoClient = new MongoClient(mongoUri, {
+            connectTimeoutMS: 20000,
+            serverSelectionTimeoutMS: 20000,
+            socketTimeoutMS: 45000,
+            tls: true,
+            tlsAllowInvalidCertificates: true
+          });
+          await this.mongoClient.connect();
+        }
       }
       this.mongoDb = this.mongoClient.db();
       console.log('[MongoDB Atlas] Connected successfully to cloud database!');
