@@ -6,7 +6,10 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 import { MongoClient } from 'mongodb';
+
+dotenv.config();
 
 // Setup file paths for persistent JSON storage on server disk (local fallback/cache backup)
 const DB_DIR = path.join(process.cwd(), 'database');
@@ -196,6 +199,7 @@ export class Database {
    * If the cloud database is brand new and empty, it executes seeding on MongoDB Atlas automatically.
    */
   async initMongoDB() {
+    try { dotenv.config(); } catch (e) {}
     let mongoUri = process.env.MONGODB_URI;
 
     if (!mongoUri || mongoUri.includes('YOUR_USER') || mongoUri.includes('password@cluster') || mongoUri.includes('<db_password>')) {
