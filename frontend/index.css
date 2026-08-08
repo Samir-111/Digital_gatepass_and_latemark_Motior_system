@@ -3,6 +3,235 @@
 /* Configure Tailwind v4 to use class-based dark mode selector strategy */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* 
+ * ==========================================
+ * MASTER TYPOGRAPHY & DESIGN SYSTEM
+ * ==========================================
+ */
+
+:root {
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Fira Code', monospace;
+}
+
+body {
+  font-family: var(--font-body);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* 
+ * ==========================================
+ * ADVANCED KEYFRAME ANIMATIONS
+ * ==========================================
+ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 30px rgba(16, 185, 129, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.7), 0 0 50px rgba(16, 185, 129, 0.3);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shimmerBtn {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Utility Animation Classes */
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.animate-gradient-bg {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* 
+ * ==========================================
+ * GLASSMORPHISM & RICH UI EFFECTS
+ * ==========================================
+ */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .glass-card {
+  background: rgba(21, 31, 56, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(36, 50, 86, 0.8);
+}
+
+.glow-emerald {
+  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.35);
+}
+
+.glow-indigo {
+  box-shadow: 0 4px 20px -2px rgba(99, 102, 241, 0.35);
+}
+
+.glow-amber {
+  box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.35);
+}
+
+/* Smooth button hover effects */
+.btn-interactive {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-interactive:hover {
+  transform: translateY(-2px);
+}
+
+.btn-interactive:active {
+  transform: translateY(0);
+}
+
+/* Shimmer overlay for primary action buttons */
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+}
+
+.btn-shimmer:hover::after {
+  animation: shimmerBtn 1.2s ease-in-out infinite;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
 /* Autofill override for input fields in dark mode */
 .dark input:-webkit-autofill,
 .dark input:-webkit-autofill:hover,
@@ -12,12 +241,11 @@
   -webkit-text-fill-color: #f8fafc !important;
   transition: background-color 5000s ease-in-out 0s;
   box-shadow: inset 0 0 0 50px #0f172a !important;
-  /* matches input bg */
 }
 
 /* 
  * ==========================================
- * Global Dark Mode Override System for Dashboards
+ * Global Dark Mode System
  * ==========================================
  */
 
@@ -27,19 +255,15 @@
 .dark .bg-slate-100,
 .dark .bg-gray-50,
 .dark .bg-gray-100 {
-  background-color: #0f172a !important;
-  /* slate-900 */
+  background-color: #0b1329 !important;
   color: #f1f5f9 !important;
-  /* slate-100 */
 }
 
 /* Header & Card Containers */
 .dark .bg-white {
-  background-color: #1e293b !important;
-  /* slate-800 */
+  background-color: #151f38 !important;
   color: #f1f5f9 !important;
-  border-color: #334155 !important;
-  /* slate-700 */
+  border-color: #243256 !important;
 }
 
 /* Borders and Dividers */
@@ -55,9 +279,8 @@
 .dark .divide-slate-100,
 .dark .divide-slate-200,
 .dark .divide-gray-100,
-.dark .divide-y> :not([hidden])~ :not([hidden]) {
-  border-color: #334155 !important;
-  /* slate-700 */
+.dark .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: #243256 !important;
 }
 
 /* Headings and Primary Text */
@@ -66,27 +289,24 @@
 .dark .text-gray-900,
 .dark .text-gray-800 {
   color: #f8fafc !important;
-  /* slate-50 */
 }
 
-/* Secondary / Subtitle Text */
+/* Secondary Text */
 .dark .text-slate-700,
 .dark .text-slate-650,
 .dark .text-slate-600,
 .dark .text-gray-700,
 .dark .text-gray-600 {
   color: #cbd5e1 !important;
-  /* slate-300 */
 }
 
-/* Muted / Tertiary Text */
+/* Muted Text */
 .dark .text-slate-500,
 .dark .text-slate-450,
 .dark .text-slate-400,
 .dark .text-gray-500,
 .dark .text-gray-400 {
   color: #94a3b8 !important;
-  /* slate-400 */
 }
 
 /* Hover States */
@@ -94,49 +314,43 @@
 .dark .hover\:bg-slate-100:hover,
 .dark .hover\:bg-gray-50:hover,
 .dark .hover\:bg-gray-100:hover {
-  background-color: #334155 !important;
-  /* slate-700 */
+  background-color: #1e2d4a !important;
 }
 
 /* Inputs, Textareas, and Selects */
 .dark input,
 .dark select,
 .dark textarea {
-  background-color: #0f172a !important;
-  /* slate-900 */
+  background-color: #0b1329 !important;
   color: #f8fafc !important;
-  border-color: #475569 !important;
-  /* slate-600 */
+  border-color: #334155 !important;
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
   color: #64748b !important;
-  /* slate-500 */
 }
 
 .dark input:focus,
 .dark select:focus,
 .dark textarea:focus {
-  background-color: #0f172a !important;
+  background-color: #0b1329 !important;
   border-color: #10b981 !important;
-  /* emerald-500 */
   outline: none;
 }
 
-/* Dynamic Demo Dropdowns and lists */
+/* Dynamic Dropdowns */
 .dark select option {
-  background-color: #1e293b !important;
+  background-color: #151f38 !important;
   color: #f8fafc !important;
 }
 
 /* Badges and Alert Overrides */
-/* 1. Emerald / Successful / Approved Badge */
 .dark .bg-emerald-50,
 .dark .bg-emerald-50\/80 {
-  background-color: rgba(6, 95, 70, 0.25) !important;
+  background-color: rgba(16, 185, 129, 0.15) !important;
   color: #34d399 !important;
-  border-color: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
 }
 
 .dark .text-emerald-700,
@@ -144,12 +358,11 @@
   color: #34d399 !important;
 }
 
-/* 2. Amber / Pending / Warning Badge */
 .dark .bg-amber-50,
 .dark .bg-amber-50\/80 {
-  background-color: rgba(146, 64, 14, 0.25) !important;
+  background-color: rgba(245, 158, 11, 0.15) !important;
   color: #fbbf24 !important;
-  border-color: rgba(245, 158, 11, 0.2) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
 }
 
 .dark .text-amber-700,
@@ -157,12 +370,11 @@
   color: #fbbf24 !important;
 }
 
-/* 3. Red / Rejected / Error Alert */
 .dark .bg-red-50,
 .dark .bg-red-50\/80 {
-  background-color: rgba(153, 27, 27, 0.25) !important;
+  background-color: rgba(239, 68, 68, 0.15) !important;
   color: #f87171 !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
 .dark .text-red-700,
@@ -170,12 +382,11 @@
   color: #f87171 !important;
 }
 
-/* 4. Blue / Info Badge */
 .dark .bg-blue-50,
 .dark .bg-blue-50\/80 {
-  background-color: rgba(30, 58, 138, 0.25) !important;
+  background-color: rgba(59, 130, 246, 0.15) !important;
   color: #60a5fa !important;
-  border-color: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
 .dark .text-blue-700,
@@ -186,31 +397,15 @@
 /* Tables, headers, lists */
 .dark th,
 .dark .bg-slate-100 {
-  background-color: #334155 !important;
-  /* slate-700 */
+  background-color: #1e2d4a !important;
   color: #cbd5e1 !important;
 }
 
-/* Primary/Dark Buttons/Badges */
-.dark .bg-slate-900,
-.dark .bg-slate-800,
-.dark button.bg-slate-900 {
-  background-color: #10b981 !important;
-  /* Make buttons pop in emerald */
-  color: #ffffff !important;
-}
-
-.dark .hover\:bg-slate-800:hover,
-.dark .hover\:bg-slate-900:hover,
-.dark button.bg-slate-900:hover {
-  background-color: #059669 !important;
-}
-
-/* Miscellaneous Card Shadows */
+/* Card Shadows in Dark Mode */
 .dark .shadow-sm,
 .dark .shadow,
 .dark .shadow-md,
 .dark .shadow-lg,
 .dark .shadow-xl {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
 }
