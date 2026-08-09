@@ -160,8 +160,84 @@ function MainPortal() {
     }
   }
 
+function CustomCursor() {
+  const [position, setPosition] = useState({ x: -100, y: -100 });
+  const [isHovered, setIsHovered] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      if (!isVisible) setIsVisible(true);
+      setPosition({ x: e.clientX, y: e.clientY });
+
+      const target = e.target;
+      if (
+        target &&
+        (target.tagName === 'BUTTON' ||
+          target.tagName === 'A' ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'SELECT' ||
+          target.closest('button') ||
+          target.closest('a') ||
+          (target.classList && target.classList.contains('cursor-pointer')))
+      ) {
+        setIsHovered(true);
+      } else {
+        setIsHovered(false);
+      }
+    };
+
+    const onMouseDown = () => setIsClicked(true);
+    const onMouseUp = () => setIsClicked(false);
+    const onMouseLeave = () => setIsVisible(false);
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('mouseleave', onMouseLeave);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('mouseleave', onMouseLeave);
+    };
+  }, [isVisible]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="hidden sm:block">
+      {/* Outer glowing ring */}
+      <div
+        className={`fixed top-0 left-0 pointer-events-none z-[99999] rounded-full transition-transform duration-100 ease-out border border-emerald-500/50 ${
+          isHovered
+            ? 'w-10 h-10 -ml-5 -mt-5 bg-emerald-500/15 backdrop-blur-[1px] scale-125 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+            : 'w-7 h-7 -ml-3.5 -mt-3.5 bg-emerald-500/5'
+        } ${isClicked ? 'scale-75' : ''}`}
+        style={{
+          transform: `translate3d(${position.x}px, ${position.y}px, 0)`
+        }}
+      />
+      {/* Inner precision dot */}
+      <div
+        className={`fixed top-0 left-0 pointer-events-none z-[99999] w-2.5 h-2.5 -ml-1.25 -mt-1.25 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981] transition-transform duration-75 ${
+          isHovered ? 'scale-150 bg-cyan-400 shadow-[0_0_12px_#06b6d4]' : ''
+        }`}
+        style={{
+          transform: `translate3d(${position.x}px, ${position.y}px, 0)`
+        }}
+      />
+    </div>
+  );
+}
+
   return (
     <div className="relative">
+      {/* Custom Animated Interactive Cursor */}
+      <CustomCursor />
+
       {/* Global Theme Toggle Button */}
       <button
         type="button"

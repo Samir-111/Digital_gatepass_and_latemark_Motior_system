@@ -225,7 +225,16 @@ export default function StudentDashboard({ user, onLogout }) {
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-3">
               <img src={sbjainLogo} alt="SB Jain Logo" className="h-10 w-10 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-100" />
-              <span className="font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm md:text-base leading-tight max-w-[150px] sm:max-w-none line-clamp-2">S. B. Jain Institute of Technology, Management and Research</span>
+              <span className="font-black font-heading text-slate-950 dark:text-white tracking-tight text-xs sm:text-sm md:text-base leading-tight max-w-[150px] sm:max-w-none line-clamp-2 select-none flex flex-wrap">
+                {"S. B. Jain Institute of Technology, Management and Research".split("").map((char, i) => (
+                  <span
+                    key={i}
+                    className="inline-block transition-all duration-200 cubic-bezier(0.175, 0.885, 0.32, 1.275) hover:scale-135 hover:-translate-y-1 hover:text-emerald-600 dark:hover:text-cyan-400 hover:drop-shadow-[0_0_12px_rgba(16,185,129,0.9)] cursor-pointer"
+                  >
+                    {char === " " ? "\u00A0" : char}
+                  </span>
+                ))}
+              </span>
               <span className="hidden lg:inline bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-emerald-200 shrink-0">Student</span>
             </div>
             <div className="flex items-center space-x-4">
@@ -256,33 +265,34 @@ export default function StudentDashboard({ user, onLogout }) {
         {
     /* Student Mini Profile Header */
   }
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 animate-fade-in-up glass-card relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
           <div className="flex items-center space-x-4">
-            {photo ? <img src={photo} alt={user.name} className="h-16 w-16 rounded-2xl border border-slate-200 object-cover shadow-sm" /> : <div className="h-16 w-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center shadow-inner">
-                <User className="h-8 w-8 text-slate-400" />
+            {photo ? <img src={photo} alt={user.name} className="h-16 w-16 rounded-2xl border-2 border-emerald-500/30 object-cover shadow-md" /> : <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner">
+                <User className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
               </div>}
             <div>
-              <h1 className="text-xl font-bold text-slate-900">{user.name}</h1>
-              <p className="text-sm text-slate-500 font-medium">{user.department} • Roll No: <span className="font-semibold text-slate-700">{user.roll_no}</span></p>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 font-heading">{user.name}</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{user.department} • Roll No: <span className="font-semibold text-slate-700 dark:text-slate-200 font-mono">{user.roll_no}</span></p>
             </div>
           </div>
           <div className="flex gap-2 shrink-0 overflow-x-auto pb-1 md:pb-0">
             <button
     onClick={() => setActiveTab("status")}
-    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${activeTab === "status" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"}`}
+    className={`px-4 py-2 rounded-xl text-xs font-bold transition btn-interactive cursor-pointer ${activeTab === "status" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md glow-emerald" : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700"}`}
   >
               GatePass Status
             </button>
             <button
     onClick={() => setActiveTab("apply")}
-    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1 ${activeTab === "apply" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"}`}
+    className={`px-4 py-2 rounded-xl text-xs font-bold transition btn-interactive cursor-pointer flex items-center space-x-1 ${activeTab === "apply" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md glow-emerald" : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700"}`}
   >
               <Plus className="h-3.5 w-3.5" />
               <span>Apply New</span>
             </button>
             <button
     onClick={() => setActiveTab("history")}
-    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${activeTab === "history" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"}`}
+    className={`px-4 py-2 rounded-xl text-xs font-bold transition btn-interactive cursor-pointer ${activeTab === "history" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md glow-emerald" : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700"}`}
   >
               My History ({passes.length})
             </button>

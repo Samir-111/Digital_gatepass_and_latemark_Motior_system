@@ -253,36 +253,8 @@ export default function Login({ onLoginSuccess }) {
     setSuccessMsg(null);
     setShowHODDropdown(false);
 
-    let demoEmail = "";
-    switch (roleKey) {
-      case "student":
-        demoEmail = specificEmail || (studentsList && studentsList.length > 0 ? studentsList[0].email : "student@sbjit.edu.in");
-        break;
-      case "teacher":
-        demoEmail = specificEmail || (teachers && teachers.length > 0 ? teachers[0].email : "teacher1@college.edu");
-        break;
-      case "faculty":
-        const facObj = (teachers || []).find(t => t.user_type === "faculty") || (teachers || [])[0];
-        demoEmail = specificEmail || (facObj ? facObj.email : "teacher1@college.edu");
-        break;
-      case "hod":
-        demoEmail = specificEmail || (hods && hods.length > 0 ? hods[0].email : "hod@college.edu");
-        break;
-      case "principal":
-        demoEmail = "principal@sbjit.edu.in";
-        break;
-      case "guard":
-        demoEmail = "guard@college.edu";
-        break;
-      case "admin":
-        demoEmail = "admin@college.edu";
-        break;
-      default:
-        demoEmail = specificEmail || "";
-    }
-
-    setEmail(demoEmail);
-    setPassword("password");
+    setEmail(specificEmail || "");
+    setPassword("");
   };
 
   const getPortalTitle = (portalKey) => {
@@ -370,6 +342,11 @@ export default function Login({ onLoginSuccess }) {
   };
   return <div className="relative min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8 font-sans overflow-hidden transition-colors duration-300">
 
+    {/* 3D Glowing Ambient Background Orbs */}
+    <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-transparent blur-[90px] pointer-events-none animate-orb-1" />
+    <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-cyan-500/20 via-indigo-500/10 to-transparent blur-[100px] pointer-events-none animate-orb-2" />
+    <div className="absolute top-[40%] right-[15%] w-[350px] h-[350px] rounded-full bg-emerald-400/10 blur-[80px] pointer-events-none animate-pulse-glow" />
+
     {/* Background Campus Image Layer (Low transparency / high visibility) */}
     <div
       className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80 dark:opacity-40"
@@ -388,11 +365,32 @@ export default function Login({ onLoginSuccess }) {
           className="h-16 sm:h-24 md:h-28 w-auto object-contain shrink-0 transition-transform duration-300 hover:scale-105"
         />
 
-        {/* Center Title: College Name & Subtitle */}
+        {/* Center Title: College Name (2-Line Solid Black Color with Letter Zoom) & Subtitle */}
         <div className="flex-1 min-w-0 px-1">
-          <h1 className="text-base sm:text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans leading-tight">
-            S. B. Jain Institute of Technology, Management &amp; Research, Nagpur
-          </h1>
+          <div className="text-base sm:text-xl md:text-2xl font-black text-slate-950 dark:text-white tracking-tight font-heading leading-tight select-none flex flex-col items-center">
+            {/* Line 1: S. B. Jain Institute of Technology, */}
+            <div className="flex flex-wrap justify-center">
+              {"S. B. Jain Institute of Technology,".split("").map((char, i) => (
+                <span
+                  key={i}
+                  className="inline-block transition-all duration-200 cubic-bezier(0.175, 0.885, 0.32, 1.275) hover:scale-145 hover:-translate-y-2 hover:text-emerald-600 dark:hover:text-cyan-400 hover:drop-shadow-[0_0_18px_rgba(16,185,129,0.95)] cursor-pointer"
+                >
+                  {char === " " ? "\u00A0" : char}
+                </span>
+              ))}
+            </div>
+            {/* Line 2: Management & Research, Nagpur */}
+            <div className="flex flex-wrap justify-center mt-0.5">
+              {"Management & Research, Nagpur".split("").map((char, i) => (
+                <span
+                  key={`l2-${i}`}
+                  className="inline-block transition-all duration-200 cubic-bezier(0.175, 0.885, 0.32, 1.275) hover:scale-145 hover:-translate-y-2 hover:text-emerald-600 dark:hover:text-cyan-400 hover:drop-shadow-[0_0_18px_rgba(16,185,129,0.95)] cursor-pointer"
+                >
+                  {char === " " ? "\u00A0" : char}
+                </span>
+              ))}
+            </div>
+          </div>
           <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs text-amber-700 dark:text-amber-400 font-extrabold tracking-wider uppercase">
             An Autonomous Institute • NAAC Grade &quot;A&quot; Accredited
           </p>
@@ -411,7 +409,9 @@ export default function Login({ onLoginSuccess }) {
     </div>
 
     <div className="relative z-10 mt-4 sm:mx-auto w-full sm:max-w-md px-4 pb-6">
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl py-8 px-6 shadow-2xl rounded-3xl border border-white/50 dark:border-slate-800/80 sm:px-10">
+      <div className="bg-white/90 dark:bg-slate-950/85 backdrop-blur-3xl py-8 px-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-3xl border border-white/80 dark:border-slate-800/90 sm:px-10 animate-fade-in-up glass-card relative overflow-hidden">
+        {/* Animated Gradient Accent Border Line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 animate-gradient-bg" />
 
         {
           /* Status Alert Panels */
@@ -432,59 +432,56 @@ export default function Login({ onLoginSuccess }) {
         {/* STEP 1: PORTAL SELECTION VIEW (Shown first!) */}
         {selectedPortal === null && !isRegistering && !isForgotPassword ? (
           <div className="space-y-5">
+            <div className="text-center mb-2">
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 glow-emerald">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                <span>SELECT YOUR PORTAL</span>
+              </span>
+            </div>
             <div className="flex flex-col space-y-2.5">
               {/* Row 1: Student Portal */}
               <button
                 type="button"
                 onClick={() => handleSelectPortal("student")}
-                className="w-full flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left"
+                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0">
+                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0 icon-3d">
                     <User className="h-4 w-4" />
                   </div>
-                  <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">Student Portal</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Register / Sign In</span>
-                  </div>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Student Portal</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-transform group-hover:translate-x-1 shrink-0" />
               </button>
 
               {/* Row 2: Class Incharge Portal */}
               <button
                 type="button"
                 onClick={() => handleSelectPortal("teacher")}
-                className="w-full flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left"
+                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-blue-500/40 dark:hover:border-blue-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors shrink-0">
+                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors shrink-0 icon-3d">
                     <School className="h-4 w-4" />
                   </div>
-                  <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">Class Incharge Portal</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Approve Student GatePasses &amp; Monitor Late Arrivals</span>
-                  </div>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Class Incharge Portal</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-transform group-hover:translate-x-1 shrink-0" />
               </button>
 
               {/* Row 3: Teacher Staff Portal */}
               <button
                 type="button"
                 onClick={() => handleSelectPortal("faculty")}
-                className="w-full flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left"
+                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-orange-500/40 dark:hover:border-orange-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-colors shrink-0">
+                  <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-colors shrink-0 icon-3d">
                     <ClipboardList className="h-4 w-4" />
                   </div>
-                  <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">Teacher Staff Portal</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Apply Outing Gate Pass &amp; Submit Late Mark</span>
-                  </div>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Teacher Staff Portal</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-transform group-hover:translate-x-1 shrink-0" />
               </button>
 
               {/* Row 4: HOD Portal */}
@@ -497,18 +494,15 @@ export default function Login({ onLoginSuccess }) {
                     handleSelectPortal("hod");
                   }
                 }}
-                className="w-full flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left"
+                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-teal-500/40 dark:hover:border-teal-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors shrink-0">
+                  <div className="p-2 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors shrink-0 icon-3d">
                     <Building2 className="h-4 w-4" />
                   </div>
-                  <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">HOD Portal</span>
-                    <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Department Head Approvals ▾</span>
-                  </div>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">HOD Portal</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-transform group-hover:translate-x-1 shrink-0" />
               </button>
 
               {/* HOD Dynamic Dropdown Logic */}
@@ -543,54 +537,45 @@ export default function Login({ onLoginSuccess }) {
               <button
                 type="button"
                 onClick={() => handleSelectPortal("principal")}
-                className="w-full flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left"
+                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-amber-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0">
+                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0 icon-3d">
                     <ShieldCheck className="h-4 w-4" />
                   </div>
-                  <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white">Principal Portal</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Executive Authorization & Faculty Passes</span>
-                  </div>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Principal Portal</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-transform group-hover:translate-x-1 shrink-0" />
               </button>
 
               {/* Row 6: Guard Station */}
               <button
                 type="button"
                 onClick={() => handleSelectPortal("guard")}
-                className="w-full flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left"
+                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-sky-500/40 dark:hover:border-sky-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-colors shrink-0">
+                  <div className="p-2 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-colors shrink-0 icon-3d">
                     <ShieldCheck className="h-4 w-4" />
                   </div>
-                  <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-955 dark:group-hover:text-white">Guard Station</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">Gate Checkpoint</span>
-                  </div>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">Guard Station</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-transform group-hover:translate-x-1 shrink-0" />
               </button>
 
               {/* Row 7: Administrator */}
               <button
                 type="button"
                 onClick={() => handleSelectPortal("admin")}
-                className="w-full flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left"
+                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-purple-500/40 dark:hover:border-purple-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0">
+                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0 icon-3d">
                     <Lock className="h-4 w-4" />
                   </div>
-                  <div>
-                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-slate-955 dark:group-hover:text-white">Administrator</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">System Admin Portal</span>
-                  </div>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Administrator</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-transform group-hover:translate-x-1 shrink-0" />
               </button>
             </div>
           </div>
@@ -739,7 +724,7 @@ export default function Login({ onLoginSuccess }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold"
-                    placeholder="name@sbjit.edu.in"
+                    placeholder="email.aiml23@sbjit.edu.in"
                   />
                 </div>
               </div>
@@ -1176,6 +1161,28 @@ export default function Login({ onLoginSuccess }) {
           <span>Secure SSL Encryption Enabled</span>
         </div>
 
+      </div>
+    </div>
+
+    {/* Infinite Running Marquee Footer Ticker */}
+    <div className="relative z-20 mt-6 w-full overflow-hidden bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-xl border-t border-b border-emerald-500/20 py-2.5 shadow-2xl">
+      <div className="flex whitespace-nowrap animate-marquee">
+        <span className="mx-6 text-xs font-extrabold tracking-wider text-slate-200 dark:text-slate-200 flex items-center space-x-3 shrink-0">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm glow-emerald">DESIGNED &amp; DEVELOPED BY TEAM S.A.R.A</span>
+          <span className="text-emerald-400">⚡</span>
+          <span className="text-slate-300 dark:text-slate-300">Smart Digital GatePass &amp; LateMark Monitoring System</span>
+          <span className="text-emerald-400">•</span>
+          <span className="text-teal-400 font-bold">S. B. Jain Institute of Technology, Management &amp; Research</span>
+          <span className="text-emerald-400">•</span>
+        </span>
+        <span className="mx-6 text-xs font-extrabold tracking-wider text-slate-200 dark:text-slate-200 flex items-center space-x-3 shrink-0">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm glow-emerald">DESIGNED &amp; DEVELOPED BY TEAM S.A.R.A</span>
+          <span className="text-emerald-400">⚡</span>
+          <span className="text-slate-300 dark:text-slate-300">Smart Digital GatePass &amp; LateMark Monitoring System</span>
+          <span className="text-emerald-400">•</span>
+          <span className="text-teal-400 font-bold">S. B. Jain Institute of Technology, Management &amp; Research</span>
+          <span className="text-emerald-400">•</span>
+        </span>
       </div>
     </div>
   </div>;
