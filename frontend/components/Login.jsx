@@ -73,12 +73,19 @@ export default function Login({ onLoginSuccess }) {
     const fetchMetadata = async () => {
       try {
         const data = await apiFetch("/api/public/info");
-        setDepartments(data.departments || []);
-        setHods(data.hods || []);
+        const loadedDepts = data.departments || [];
+        const loadedHods = data.hods || [];
+        setDepartments(loadedDepts);
+        setHods(loadedHods);
         setTeachers(data.teachers || []);
         setStudentsList(data.students || []);
-        if (data.departments && data.departments.length > 0) {
-          setRegDept(data.departments[0].department_name);
+        if (loadedDepts.length > 0) {
+          const defaultDept = loadedDepts[0].department_name;
+          setRegDept(defaultDept);
+          const defaultHod = loadedHods.find((h) => h.department === defaultDept);
+          if (defaultHod) {
+            setRegHODId(defaultHod.id);
+          }
         }
       } catch (err) {
         console.error("Failed to load login meta indicators:", err);
@@ -86,6 +93,16 @@ export default function Login({ onLoginSuccess }) {
     };
     fetchMetadata();
   }, []);
+
+  const handleDepartmentChange = (deptName) => {
+    setRegDept(deptName);
+    const matchingHod = hods.find((h) => h.department === deptName);
+    if (matchingHod) {
+      setRegHODId(matchingHod.id);
+    } else {
+      setRegHODId("");
+    }
+  };
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -190,8 +207,8 @@ export default function Login({ onLoginSuccess }) {
         });
         setSuccessMsg("Faculty account registered successfully! You can now log in.");
         setIsRegistering(false);
-        setEmail(regEmail);
-        setPassword(regPassword);
+        setEmail("");
+        setPassword("");
         setRegName("");
         setRegEmail("");
         setRegPassword("");
@@ -229,8 +246,8 @@ export default function Login({ onLoginSuccess }) {
       });
       setSuccessMsg("Registration successful! You can now log in with your credentials.");
       setIsRegistering(false);
-      setEmail(regEmail);
-      setPassword(regPassword);
+      setEmail("");
+      setPassword("");
       setRegName("");
       setRegEmail("");
       setRegPassword("");
@@ -245,7 +262,7 @@ export default function Login({ onLoginSuccess }) {
       setLoading(false);
     }
   };
-  const handleSelectPortal = (roleKey, specificEmail) => {
+  const handleSelectPortal = (roleKey, specificEmail = null) => {
     setSelectedPortal(roleKey);
     setIsRegistering(false);
     setIsForgotPassword(false);
@@ -253,7 +270,7 @@ export default function Login({ onLoginSuccess }) {
     setSuccessMsg(null);
     setShowHODDropdown(false);
 
-    setEmail(specificEmail || "");
+    setEmail("");
     setPassword("");
   };
 
@@ -708,7 +725,7 @@ export default function Login({ onLoginSuccess }) {
               </span>
             </div>
 
-            <form className="space-y-4" onSubmit={handleLoginSubmit}>
+            <form className="space-y-4" onSubmit={handleLoginSubmit} autoComplete="off">
               <div>
                 <label htmlFor="email" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Institutional Email Address
@@ -721,10 +738,11 @@ export default function Login({ onLoginSuccess }) {
                     id="email"
                     type="email"
                     required
+                    autoComplete="off"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold"
-                    placeholder="email.aiml23@sbjit.edu.in"
+                    placeholder="Enter your institutional email"
                   />
                 </div>
               </div>
@@ -755,10 +773,11 @@ export default function Login({ onLoginSuccess }) {
                     id="password"
                     type="password"
                     required
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold"
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                   />
                 </div>
               </div>
@@ -985,7 +1004,7 @@ export default function Login({ onLoginSuccess }) {
               </span>
             </div>
 
-            <form className="space-y-3.5" onSubmit={handleRegisterSubmit}>
+            <form className="space-y-3.5" onSubmit={handleRegisterSubmit} autoComplete="off">
               <div>
                 <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
                   {regRole === "faculty" ? "Full Faculty Name" : "Full Student Name"}
@@ -997,7 +1016,8 @@ export default function Login({ onLoginSuccess }) {
                   <input
                     required
                     type="text"
-                    placeholder={regRole === "faculty" ? "Prof. / Dr. Full Name" : "First Name Middle Name Last Name"}
+                    autoComplete="off"
+                    placeholder={regRole === "faculty" ? "Enter faculty full name" : "Enter student full name"}
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
@@ -1015,7 +1035,8 @@ export default function Login({ onLoginSuccess }) {
                     <input
                       required
                       type="text"
-                      placeholder="e.g. CMxxxxx"
+                      autoComplete="off"
+                      placeholder="Enter your roll number"
                       value={regRollNo}
                       onChange={(e) => setRegRollNo(e.target.value)}
                       className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
@@ -1032,7 +1053,7 @@ export default function Login({ onLoginSuccess }) {
                   </div>
                   <select
                     value={regDept}
-                    onChange={(e) => setRegDept(e.target.value)}
+                    onChange={(e) => handleDepartmentChange(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
                   >
                     {departments.map((dept) => (
@@ -1071,7 +1092,14 @@ export default function Login({ onLoginSuccess }) {
               )}
 
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Select Department HOD</label>
+                <div className="flex justify-between items-center">
+                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Select Department HOD</label>
+                  {regHODId && (
+                    <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 animate-pulse">
+                      ✓ Auto-selected for {regDept}
+                    </span>
+                  )}
+                </div>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <User className="h-4 w-4 text-slate-400" />
@@ -1101,7 +1129,8 @@ export default function Login({ onLoginSuccess }) {
                   <input
                     required
                     type="email"
-                    placeholder="email@sbjit.edu.in"
+                    autoComplete="off"
+                    placeholder="Enter your institutional email address"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
@@ -1118,7 +1147,8 @@ export default function Login({ onLoginSuccess }) {
                   <input
                     required
                     type="tel"
-                    placeholder="+91 xxxxx xxxxx"
+                    autoComplete="off"
+                    placeholder="Enter your mobile number"
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
@@ -1135,7 +1165,8 @@ export default function Login({ onLoginSuccess }) {
                   <input
                     required
                     type="password"
-                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    placeholder="Enter your password"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
