@@ -598,41 +598,30 @@ app.post('/api/forgot-password/verify-otp', (req, res) => {
 // 1.8 Class Teacher (Class Incharge) Routes
 app.get('/api/teacher/students', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
   const teacherId = req.user.id;
-  const students = db.getStudents().filter(s => s.class_teacher_id === teacherId);
-  res.json(students);
-});
+  const teacherObj = db.getTeachers().find(t => t.id === teacherId);
+  const teacherDept = req.user.department || teacherObj?.department;
 
-app.post('/api/sms/send-warning', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
-  const { entryId, parentPhone, studentName, arrivalTime, teacherName, className } = req.body;
-
-  if (!parentPhone || !studentName) {
-    return res.status(400).json({ error: 'Parent phone number and student name are required.' });
-  }
-
-  const message = `Dear Parent, your ward ${studentName} was late to college today (Arrival Time: ${arrivalTime}). Entered class through Class Incharge ${teacherName}. Please ensure timely attendance.`;
-
-  // Real integration log / SMS dispatch
-  console.log('====================================================');
-  console.log(`[GATEPASS WARNING SMS DISPATCHED]`);
-  console.log(`To: ${parentPhone} (Parent of ${studentName})`);
-  console.log(`Message: "${message}"`);
-  console.log('====================================================');
-
-  db.addLog(
-    req.user.id,
-    req.user.name,
-    'teacher',
-    `Triggered warning SMS to parent number (${parentPhone}) for late arrival of ${studentName}`
-  );
-
-  res.json({ success: true, message: 'SMS warning successfully dispatched to parent.' });
+  const students = db.getStudents();
+  const filtered = students.filter(s => {
+    if (s.class_teacher_id === teacherId) return true;
+    if (teacherDept && s.department && s.department.toLowerCase() === teacherDept.toLowerCase()) return true;
+    return false;
+  });
+  res.json(filtered.length > 0 ? filtered : students);
 });
 
 app.get('/api/teacher/gatepasses', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
   const teacherId = req.user.id;
+  const teacherObj = db.getTeachers().find(t => t.id === teacherId);
+  const teacherDept = req.user.department || teacherObj?.department;
+
   const allPasses = db.getGatePasses();
-  const teacherPasses = allPasses.filter(p => p.class_teacher_id === teacherId);
-  res.json(teacherPasses);
+  const filtered = allPasses.filter(p => {
+    if (p.class_teacher_id && p.class_teacher_id === teacherId) return true;
+    if (teacherDept && p.student_department && p.student_department.toLowerCase() === teacherDept.toLowerCase()) return true;
+    return false;
+  });
+  res.json(filtered.length > 0 ? filtered : allPasses);
 });
 
 app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
@@ -973,78 +962,7 @@ app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req, res) =
   res.json(updated);
 });
 
-// 3b. Teacher Routes
-app.get('/api/teacher/gatepasses', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
-  const teacherId = req.user.id;
-  const teacherObj = db.getTeachers().find(t => t.id === teacherId);
-  const teacherDept = req.user.department || teacherObj?.department;
 
-  const passes = db.getGatePasses();
-  const filtered = passes.filter(p => {
-    if (p.class_teacher_id && p.class_teacher_id === teacherId) return true;
-    if (teacherDept && p.student_department && p.student_department.toLowerCase() === teacherDept.toLowerCase()) return true;
-    return true;
-  });
-  res.json(filtered);
-});
-
-app.get('/api/teacher/students', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
-  const teacherId = req.user.id;
-  const teacherObj = db.getTeachers().find(t => t.id === teacherId);
-  const teacherDept = req.user.department || teacherObj?.department;
-
-  const students = db.getStudents();
-  const filtered = students.filter(s => {
-    if (s.class_teacher_id === teacherId) return true;
-    if (teacherDept && s.department && s.department.toLowerCase() === teacherDept.toLowerCase()) return true;
-    return true;
-  });
-  res.json(filtered);
-});
-
-app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
-  const { id, remarks } = req.body;
-  if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
-
-  const pass = db.getGatePassById(id);
-  if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
-
-  const updated = db.updateGatePassStatus(id, 'pending_hod', req.user.name, remarks || 'Approved by Class Teacher');
-  db.addLog(req.user.id, req.user.name, 'teacher', `Class Teacher approved gate pass ${id} for student ${pass.student_name}. Forwarded to HOD.`);
-
-  db.addNotification(
-    pass.student_id,
-    'student',
-    'GatePass Update',
-    `Your gate pass request has been verified & approved by Class Teacher ${req.user.name}. Forwarded for HOD final sign-off.`,
-    'status_changed',
-    id
-  );
-
-  res.json(updated);
-});
-
-app.post('/api/teacher/reject', authenticateJWT, authorizeRoles('teacher'), (req, res) => {
-  const { id, remarks } = req.body;
-  if (!id) return res.status(400).json({ error: 'Gate pass ID is required.' });
-
-  const pass = db.getGatePassById(id);
-  if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
-
-  const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks || 'Rejected by Class Teacher');
-  db.addLog(req.user.id, req.user.name, 'teacher', `Class Teacher rejected gate pass ${id} for student ${pass.student_name}`);
-
-  db.addNotification(
-    pass.student_id,
-    'student',
-    'GatePass Rejected ❌',
-    `Your gate pass request for "${pass.reason}" was rejected by Class Teacher ${req.user.name}. Remarks: ${remarks || 'None'}`,
-    'status_changed',
-    id
-  );
-
-  res.json(updated);
-});
 
 // Warning SMS & Parent Disciplinary Alert Handler
 const handleSendWarningSMS = async (req, res) => {
@@ -1463,17 +1381,6 @@ app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req, re
   res.json({ message: 'Student return logged successfully. Pass closed.', pass: updated });
 });
 
-app.get('/api/guard/entries', authenticateJWT, authorizeRoles('guard'), (req, res) => {
-  const passes = db.getGatePasses();
-  const today = new Date().toDateString();
-  const activeToday = passes.filter(p => {
-    const isExitToday = p.exit_marked_at && new Date(p.exit_marked_at).toDateString() === today;
-    const isRetToday = p.return_marked_at && new Date(p.return_marked_at).toDateString() === today;
-    return isExitToday || isRetToday || p.status === 'exited';
-  });
-
-  res.json(activeToday);
-});
 
 // 4.5 Centralized Notification API Routes
 app.get('/api/notifications', authenticateJWT, (req, res) => {
