@@ -135,36 +135,27 @@ const sendOTPEmail = async (email, otp) => {
   `;
 
   if (isConfigured) {
-    const portsToTry = [465, 587, 2525];
-    for (const p of portsToTry) {
-      try {
-        const transporter = nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: p,
-          secure: p === 465,
-          auth: { user, pass },
-          connectionTimeout: 15000,
-          greetingTimeout: 15000,
-          socketTimeout: 20000,
-          tls: {
-            rejectUnauthorized: false,
-            ciphers: 'SSLv3'
-          }
-        });
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 8000,
+      });
 
-        await transporter.sendMail({
-          from: `Campus GatePass Portal <${from}>`,
-          to: email,
-          subject,
-          text: textContent,
-          html: htmlContent
-        });
+      await transporter.sendMail({
+        from: `Campus GatePass Portal <${from}>`,
+        to: email,
+        subject,
+        text: textContent,
+        html: htmlContent
+      });
 
-        console.log(`[OTP Email] Real Gmail OTP successfully sent to ${email} via port ${p}`);
-        return true;
-      } catch (error) {
-        console.warn(`[OTP Email] Failed to send email via port ${p}:`, error?.message || error);
-      }
+      console.log(`[OTP Email] Real Gmail OTP successfully dispatched to ${email}`);
+      return true;
+    } catch (error) {
+      console.warn(`[OTP Email] Gmail Service dispatch note:`, error?.message || error);
     }
   }
 
@@ -331,9 +322,9 @@ app.post('/api/login', async (req, res) => {
     phone: userPhone
   });
 
-  const emailSent = await sendOTPEmail(userEmail, otp);
+  // Trigger both Gmail & WhatsApp OTP dispatches in parallel background promises (instant <50ms response)
+  sendOTPEmail(userEmail, otp).catch(err => console.warn('[Gmail OTP Dispatch Note]:', err?.message));
 
-  // Dispatch OTP via WhatsApp (Green API REST Gateway - port 443, never blocked by cloud firewalls)
   if (userPhone) {
     sendWhatsAppMessage({
       parentPhone: userPhone,
@@ -343,21 +334,6 @@ app.post('/api/login', async (req, res) => {
       exitTime: new Date().toLocaleTimeString(),
       customMessage: `*Campus Portal 2-Step Login Verification Code:* *${otp}*\n\nValid for 5 minutes.`
     }).catch(err => console.warn('[WhatsApp 2FA Dispatch Note]:', err?.message));
-  }
-
-  // If Cloud SMTP Email failed (Google blocked cloud server IP on port 587), fallback to direct login to prevent user lockouts
-  if (!emailSent && process.env.ENABLE_2FA !== 'true') {
-    console.warn(`[2FA Cloud Note] SMTP Email delivery to ${userEmail} failed on cloud server. Bypassing 2FA requirement so user is not locked out.`);
-    const tokenPayload = {
-      id: authResult.user.id,
-      name: authResult.user.name,
-      email: authResult.user.email,
-      role: authResult.role,
-      department: authResult.user.department || undefined,
-    };
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '12h' });
-    db.addLog(authResult.user.id, authResult.user.name, authResult.role, `Logged in successfully (Cloud SMTP fallback)`);
-    return res.json({ token, user: authResult.user, role: authResult.role });
   }
 
   const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
@@ -434,16 +410,26 @@ app.post('/api/login/resend-2fa', async (req, res) => {
   twoFactorChallenges.set(challengeId, challenge);
 
   const userEmail = challenge.email || challenge.user.email || '';
-  const emailSent = await sendOTPEmail(userEmail, newOtp);
+  
+  // Non-blocking async dispatches
+  sendOTPEmail(userEmail, newOtp).catch(err => console.warn('[Resend Gmail OTP Error]:', err?.message));
+
+  if (challenge.phone) {
+    sendWhatsAppMessage({
+      parentPhone: challenge.phone,
+      studentName: challenge.user.name,
+      rollNo: challenge.user.roll_no || '2FA-OTP',
+      reason: `Your 2-Step Login OTP Code is: ${newOtp}`,
+      exitTime: new Date().toLocaleTimeString(),
+      customMessage: `*Campus Portal 2-Step Login Verification Code:* *${newOtp}*\n\nValid for 5 minutes.`
+    }).catch(err => console.warn('[WhatsApp 2FA Resend Note]:', err?.message));
+  }
 
   const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
 
   res.json({
     success: true,
-    message: emailSent
-      ? `A new 6-digit verification code has been sent to your registered Gmail address (${maskedEmail}).`
-      : `New verification code generated.`,
-    ...(!emailSent ? { dev_otp: newOtp } : {})
+    message: `A new 6-digit verification code has been sent to your registered Gmail address (${maskedEmail}).`
   });
 });
 

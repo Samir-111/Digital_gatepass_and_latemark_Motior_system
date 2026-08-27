@@ -141,7 +141,7 @@ export default function Login({ onLoginSuccess }) {
   const handleVerify2FA = async (e) => {
     e.preventDefault();
     if (!twoFactorOtp || twoFactorOtp.length < 6) {
-      setError("Please enter the complete 6-digit WhatsApp verification code.");
+      setError("Please enter the complete 6-digit verification code.");
       return;
     }
     setLoading(true);
@@ -156,7 +156,7 @@ export default function Login({ onLoginSuccess }) {
       localStorage.setItem("gatepass_role", data.role);
       onLoginSuccess(data.user, data.role);
     } catch (err) {
-      setError(err.message || "Invalid verification code. Please check your WhatsApp.");
+      setError(err.message || "Invalid verification code. Please check your Gmail inbox and WhatsApp.");
     } finally {
       setLoading(false);
     }
@@ -171,7 +171,7 @@ export default function Login({ onLoginSuccess }) {
         method: "POST",
         body: JSON.stringify({ challengeId })
       });
-      setSuccessMsg(data.message || "A new 6-digit verification code has been dispatched to your WhatsApp.");
+      setSuccessMsg(data.message || "A new 6-digit verification code has been dispatched to your Gmail & WhatsApp.");
       setResendCountdown(60);
     } catch (err) {
       setError(err.message || "Failed to resend verification code. Please try again.");
