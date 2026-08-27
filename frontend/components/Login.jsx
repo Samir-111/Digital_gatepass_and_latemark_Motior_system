@@ -122,8 +122,7 @@ export default function Login({ onLoginSuccess }) {
         setRequires2FA(true);
         setChallengeId(data.challengeId);
         setMaskedPhone(data.maskedEmail || data.maskedPhone || data.userEmail || email || "");
-        const otpNotice = data.dev_otp ? ` (Code: ${data.dev_otp})` : '';
-        setSuccessMsg((data.message || "A 6-digit verification code has been sent to your registered contact.") + otpNotice);
+        setSuccessMsg(data.message || "A 6-digit verification code has been sent to your registered institutional email address.");
         setResendCountdown(60);
         return;
       }
