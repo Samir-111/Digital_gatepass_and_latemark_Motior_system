@@ -1539,11 +1539,6 @@ app.post('/api/admin/whatsapp/reconnect', authenticateJWT, authorizeRoles('admin
 
 app.get('/api/admin/whatsapp/logs', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
   try {
-    if (db.firestore) {
-      const snapshot = await db.firestore.collection('whatsappLogs').orderBy('sent_at', 'desc').limit(50).get();
-      const logs = snapshot.docs.map(d => d.data());
-      return res.json(logs);
-    }
     res.json(db.getWhatsAppLogs());
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve WhatsApp logs: ' + error.message });
@@ -1782,10 +1777,10 @@ let dbInitialized = false;
 app.use(async (req, res, next) => {
   if (!dbInitialized) {
     try {
-      await db.initFirestore();
+      await db.initMongoDB();
       dbInitialized = true;
     } catch (err) {
-      console.error('Failed to initialize Firestore in Vercel:', err);
+      console.error('Failed to initialize MongoDB in Vercel:', err);
     }
   }
   next();
