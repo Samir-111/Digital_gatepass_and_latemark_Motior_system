@@ -229,6 +229,87 @@ code, pre, .font-mono {
   animation: gradientShift 8s ease infinite;
 }
 
+/* ==========================================
+ * LANDING PAGE ENTRANCE & MOTION EFFECTS
+ * ========================================== */
+@keyframes heroEntryLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes heroEntryRight {
+  from {
+    opacity: 0;
+    transform: translateY(35px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes gentleCampusMotion {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.025);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pillPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes itemStagger {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-left {
+  animation: heroEntryLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-hero-right {
+  animation: heroEntryRight 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+.animate-campus-motion {
+  animation: gentleCampusMotion 22s ease-in-out infinite;
+}
+
+.animate-pill-pulse {
+  animation: pillPulse 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-stagger-1 { animation: itemStagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
+.animate-stagger-2 { animation: itemStagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+.animate-stagger-3 { animation: itemStagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both; }
+.animate-stagger-4 { animation: itemStagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both; }
+.animate-stagger-5 { animation: itemStagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.44s both; }
+.animate-stagger-6 { animation: itemStagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
+.animate-stagger-7 { animation: itemStagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.56s both; }
+
 /* 
  * ==========================================
  * 3D CARD TILT & INTERACTIVE SYSTEM

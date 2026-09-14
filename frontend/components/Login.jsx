@@ -16,14 +16,26 @@ import {
   User,
   Phone,
   Building2,
-  ClipboardList
+  ClipboardList,
+  LayoutGrid,
+  GraduationCap,
+  Clock,
+  Bell,
+  Code,
+  Shield,
+  UserCheck,
+  Key,
+  CheckCircle2,
+  LogIn,
+  Moon,
+  Sun,
+  Users
 } from "lucide-react";
 import { apiFetch, setAuthToken } from "../lib/api.js";
 import { gatepassService } from "../services/gatepassService.js";
 import campusImg from "../assets/campus.png";
 import sbjainLogo from "../assets/sbjain-logo.png";
-import naacLogo from "../assets/naac-logo.png";
-export default function Login({ onLoginSuccess }) {
+export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -356,864 +368,989 @@ export default function Login({ onLoginSuccess }) {
       setLoading(false);
     }
   };
-  return <div className="relative min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8 font-sans overflow-hidden transition-colors duration-300">
-
-    {/* 3D Glowing Ambient Background Orbs */}
-    <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-transparent blur-[90px] pointer-events-none animate-orb-1" />
-    <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-cyan-500/20 via-indigo-500/10 to-transparent blur-[100px] pointer-events-none animate-orb-2" />
-    <div className="absolute top-[40%] right-[15%] w-[350px] h-[350px] rounded-full bg-emerald-400/10 blur-[80px] pointer-events-none animate-pulse-glow" />
-
-    {/* Background Campus Image Layer (Low transparency / high visibility) */}
-    <div
-      className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80 dark:opacity-40"
-      style={{ backgroundImage: `url(${campusImg})` }}
-    />
-    {/* Overlay gradient to ensure text readability */}
-    <div className="absolute inset-0 bg-gradient-to-b from-slate-100/10 via-slate-100/20 to-slate-100/30 dark:from-slate-950/40 dark:via-slate-950/70 dark:to-slate-950/90 pointer-events-none" />
-
-    {/* Top Header: Left Logo (SB Jain) + Center Title + Right Logo (NAAC) */}
-    <div className="relative z-10 sm:mx-auto w-full max-w-5xl text-center px-4 mb-3">
-      <div className="flex flex-row items-center justify-between gap-3 sm:gap-6 p-4">
-        {/* Starting Logo: S.B. Jain Institute Circular Logo */}
-        <img
-          src={sbjainLogo}
-          alt="S.B. Jain Institute Logo"
-          className="h-16 sm:h-24 md:h-28 w-auto object-contain shrink-0 transition-transform duration-300 hover:scale-105"
-        />
-
-        {/* Center Title: College Name (2-Line Solid Black Color with Letter Zoom) & Subtitle */}
-        <div className="flex-1 min-w-0 px-1">
-          <div className="text-base sm:text-xl md:text-2xl font-black text-slate-950 dark:text-white tracking-tight font-heading leading-tight select-none flex flex-col items-center">
-            {/* Line 1: S. B. Jain Institute of Technology, */}
-            <div className="flex flex-wrap justify-center">
-              {"S. B. Jain Institute of Technology,".split("").map((char, i) => (
-                <span
-                  key={i}
-                  className="inline-block transition-all duration-200 cubic-bezier(0.175, 0.885, 0.32, 1.275) hover:scale-145 hover:-translate-y-2 hover:text-emerald-600 dark:hover:text-cyan-400 hover:drop-shadow-[0_0_18px_rgba(16,185,129,0.95)] cursor-pointer"
-                >
-                  {char === " " ? "\u00A0" : char}
-                </span>
-              ))}
+  return (
+    <div className="min-h-screen bg-[#f0f5fa] text-slate-800 font-sans antialiased flex flex-col justify-between select-none relative overflow-x-hidden">
+      {/* 1. TOP HEADER (INSTITUTIONAL NAVY #0a1e33) */}
+      <header className="bg-[#0a1e33] border-b border-[#061424] sticky top-0 z-40 shadow-md w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* College Identity */}
+            <div className="flex items-center space-x-3.5 min-w-0">
+              <div className="h-10 w-10 bg-white rounded-lg p-1 border border-white/20 shadow-xs flex items-center justify-center shrink-0">
+                <img
+                  src={sbjainLogo}
+                  alt="SBJITMR Logo"
+                  className="h-8 w-8 object-contain"
+                />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xs sm:text-sm font-bold text-white leading-tight truncate">
+                  S. B. Jain Institute of Technology, Management & Research
+                </h1>
+                <p className="text-[11px] text-slate-300 font-medium">Nagpur</p>
+              </div>
             </div>
-            {/* Line 2: Management & Research, Nagpur */}
-            <div className="flex flex-wrap justify-center mt-0.5">
-              {"Management & Research, Nagpur".split("").map((char, i) => (
-                <span
-                  key={`l2-${i}`}
-                  className="inline-block transition-all duration-200 cubic-bezier(0.175, 0.885, 0.32, 1.275) hover:scale-145 hover:-translate-y-2 hover:text-emerald-600 dark:hover:text-cyan-400 hover:drop-shadow-[0_0_18px_rgba(16,185,129,0.95)] cursor-pointer"
-                >
-                  {char === " " ? "\u00A0" : char}
-                </span>
-              ))}
+
+            {/* Header Badge: Gate Pass Administration */}
+            <div className="hidden md:flex items-center space-x-3 pl-4 sm:pl-8 pr-4">
+              <div className="p-1.5 bg-blue-500/10 border border-blue-400/20 rounded-lg text-sky-400">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs sm:text-sm font-bold text-white tracking-wide">
+                    Gate Pass Administration
+                  </span>
+                  <span className="bg-[#1a73e8] text-white text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider">
+                    PORTAL
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Secure • Smart • Student Friendly
+                </p>
+              </div>
+            </div>
+
+            {/* Right Action: Theme Toggle */}
+            <div className="flex items-center space-x-3 shrink-0">
+              <button
+                type="button"
+                onClick={onToggleTheme || (() => {
+                  const isDark = document.documentElement.classList.toggle("dark");
+                  localStorage.setItem("theme", isDark ? "dark" : "light");
+                })}
+                className="p-1.5 sm:p-2 rounded-lg border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4 text-slate-200" />}
+              </button>
             </div>
           </div>
-          <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs text-amber-700 dark:text-amber-400 font-extrabold tracking-wider uppercase">
-            An Autonomous Institute • NAAC Grade &quot;A&quot; Accredited
-          </p>
-          <p className="mt-0.5 text-[9px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase">
-            Smart Digital GatePass &amp; LateMark Monitoring System
-          </p>
         </div>
+      </header>
 
-        {/* Ending Logo: NAAC Grade A Accreditation Badge */}
-        <img
-          src={naacLogo}
-          alt="NAAC Grade A Accreditation Badge"
-          className="h-16 sm:h-24 md:h-28 w-auto object-contain shrink-0 transition-transform duration-300 hover:scale-105"
+      {/* 2. SPLIT HERO MAIN SECTION WITH VISIBLE CAMPUS BACKGROUND */}
+      <main className="flex-1 w-full relative min-h-[calc(100vh-64px-44px)] flex items-center overflow-hidden">
+        {/* Full Visible Campus Background Photo */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none animate-campus-motion scale-100"
+          style={{ backgroundImage: `url(${campusImg})` }}
         />
-      </div>
-    </div>
+        {/* Subtle Dark-Blue Transparent Gradient on Left — Ensures high text contrast while keeping college backdrop vibrant */}
+        <div className="absolute inset-y-0 left-0 w-full lg:w-[62%] bg-gradient-to-r from-[#07192d]/85 via-[#0a233f]/60 to-transparent pointer-events-none" />
 
-    <div className="relative z-10 mt-4 sm:mx-auto w-full sm:max-w-md px-4 pb-6">
-      <div className="bg-white/90 dark:bg-slate-950/85 backdrop-blur-3xl py-8 px-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-3xl border border-white/80 dark:border-slate-800/90 sm:px-10 animate-fade-in-up glass-card relative overflow-hidden">
-        {/* Animated Gradient Accent Border Line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 animate-gradient-bg" />
+        {/* Content Container */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          
+          {/* LEFT HERO COLUMN (SMOOTH ENTRY) */}
+          <div className="lg:col-span-7 space-y-5 animate-hero-left">
+            
+            {/* White College Identity Card (Unchanged, Premium & Clean) */}
+            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-4.5 border border-white/90 shadow-[0_8px_30px_rgb(0,0,0,0.15)] hover:shadow-[0_12px_35px_rgb(0,0,0,0.2)] transition-all duration-300 flex items-center space-x-4 max-w-xl">
+              <div className="p-1.5 bg-white rounded-xl border border-slate-100/90 shadow-xs shrink-0 flex items-center justify-center">
+                <img
+                  src={sbjainLogo}
+                  alt="SBJITMR Logo"
+                  className="h-13 sm:h-15 w-auto object-contain"
+                />
+              </div>
+              <div className="h-12 w-px bg-slate-200/90 hidden sm:block shrink-0" />
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-base font-extrabold text-[#0a2342] tracking-tight leading-snug">
+                  S. B. Jain Institute of Technology, Management & Research
+                </h2>
+                <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
+                  AN AUTONOMOUS INSTITUTE • NAAC GRADE &apos;A&apos; ACCREDITED
+                </p>
+                <p className="text-[11px] sm:text-xs font-semibold text-slate-600 mt-0.5">
+                  Smart Digital Gatepass & Latemark Monitoring System
+                </p>
+              </div>
+            </div>
 
-        {
-          /* Status Alert Panels */
-        }
-        {error && <div className="mb-5 bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 p-4 rounded-r-xl flex items-start space-x-3 shadow-sm">
-          <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-          <div className="text-xs text-red-700 dark:text-red-400 font-bold leading-relaxed">{error}</div>
-        </div>}
-
-        {successMsg && <div className="mb-5 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 p-4 rounded-r-xl flex items-start space-x-3 shadow-sm">
-          <ShieldCheck className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-          <div className="text-xs text-emerald-700 dark:text-emerald-400 font-bold leading-relaxed">{successMsg}</div>
-        </div>}
-
-        {
-          /* VIEW 1: SIGN IN VIEW */
-        }
-        {/* STEP 1: PORTAL SELECTION VIEW (Shown first!) */}
-        {selectedPortal === null && !isRegistering && !isForgotPassword ? (
-          <div className="space-y-5">
-            <div className="text-center mb-2">
-              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 glow-emerald">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                <span>SELECT YOUR PORTAL</span>
+            {/* Welcome Pill */}
+            <div className="pt-1">
+              <span className="inline-block bg-blue-500/20 backdrop-blur-xs text-sky-300 text-xs font-bold px-3.5 py-1 rounded-full border border-blue-400/30 shadow-xs">
+                Welcome to
               </span>
             </div>
-            <div className="flex flex-col space-y-2.5">
-              {/* Row 1: Student Portal */}
-              <button
-                type="button"
-                onClick={() => handleSelectPortal("student")}
-                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0 icon-3d">
-                    <User className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Student Portal</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-transform group-hover:translate-x-1 shrink-0" />
-              </button>
 
-              {/* Row 2: Class Incharge Portal */}
-              <button
-                type="button"
-                onClick={() => handleSelectPortal("teacher")}
-                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-blue-500/40 dark:hover:border-blue-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors shrink-0 icon-3d">
-                    <School className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Class Incharge Portal</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-transform group-hover:translate-x-1 shrink-0" />
-              </button>
+            {/* Main Heading (White & Highly Visible) */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.12] drop-shadow-sm">
+              Gate Pass<br />Administration Portal
+            </h1>
 
-              {/* Row 3: Teacher Staff Portal */}
-              <button
-                type="button"
-                onClick={() => handleSelectPortal("faculty")}
-                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-orange-500/40 dark:hover:border-orange-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-colors shrink-0 icon-3d">
-                    <ClipboardList className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Teacher Staff Portal</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-transform group-hover:translate-x-1 shrink-0" />
-              </button>
+            {/* Subtitle (Clean Light Slate) */}
+            <p className="text-sm sm:text-base text-slate-200 font-medium max-w-lg leading-relaxed">
+              Manage student gate-pass activity, approvals, and campus security – all in one place.
+            </p>
 
-              {/* Row 4: HOD Portal */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (hods.length > 0) {
-                    setShowHODDropdown(!showHODDropdown);
-                  } else {
-                    handleSelectPortal("hod");
-                  }
-                }}
-                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-teal-500/40 dark:hover:border-teal-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors shrink-0 icon-3d">
-                    <Building2 className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">HOD Portal</span>
+            {/* 4 Feature Points with Translucent Glass Backing */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 max-w-xl pt-2">
+              <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-1.5 p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 shadow-xs hover:bg-white/20 hover:-translate-y-0.5 transition-all duration-300">
+                <div className="p-2 bg-blue-500/20 text-sky-300 rounded-lg shrink-0 border border-blue-400/20">
+                  <ShieldCheck className="h-4.5 w-4.5 text-sky-300" />
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-transform group-hover:translate-x-1 shrink-0" />
-              </button>
+                <span className="text-xs font-bold text-white leading-tight">Secure<br className="hidden sm:inline" /> Campus</span>
+              </div>
+              <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-1.5 p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 shadow-xs hover:bg-white/20 hover:-translate-y-0.5 transition-all duration-300">
+                <div className="p-2 bg-blue-500/20 text-sky-300 rounded-lg shrink-0 border border-blue-400/20">
+                  <GraduationCap className="h-4.5 w-4.5 text-sky-300" />
+                </div>
+                <span className="text-xs font-bold text-white leading-tight">Student<br className="hidden sm:inline" /> Safety</span>
+              </div>
+              <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-1.5 p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 shadow-xs hover:bg-white/20 hover:-translate-y-0.5 transition-all duration-300">
+                <div className="p-2 bg-blue-500/20 text-sky-300 rounded-lg shrink-0 border border-blue-400/20">
+                  <Clock className="h-4.5 w-4.5 text-sky-300" />
+                </div>
+                <span className="text-xs font-bold text-white leading-tight">Real-time<br className="hidden sm:inline" /> Monitoring</span>
+              </div>
+              <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-1.5 p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 shadow-xs hover:bg-white/20 hover:-translate-y-0.5 transition-all duration-300">
+                <div className="p-2 bg-blue-500/20 text-sky-300 rounded-lg shrink-0 border border-blue-400/20">
+                  <Bell className="h-4.5 w-4.5 text-sky-300" />
+                </div>
+                <span className="text-xs font-bold text-white leading-tight">Instant<br className="hidden sm:inline" /> Notifications</span>
+              </div>
+            </div>
 
-              {/* HOD Dynamic Dropdown Logic */}
-              {showHODDropdown && (
-                <div className="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl space-y-2 animation-fade-in">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Select Department HOD</span>
-                    <button onClick={() => setShowHODDropdown(false)} className="text-[10px] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-350 font-bold">Cancel</button>
-                  </div>
-                  <select
-                    value={selectedDemoHOD}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedDemoHOD(val);
-                      if (val) {
-                        handleSelectPortal("hod", val);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200"
-                  >
-                    <option value="" className="dark:bg-slate-900">-- Choose Department HOD --</option>
-                    {hods.map((h) => (
-                      <option key={h.id} value={h.email} className="dark:bg-slate-900">
-                        {h.name} ({h.department})
-                      </option>
-                    ))}
-                  </select>
+            {/* Slogan */}
+            <div className="pt-3 text-sm sm:text-base font-semibold text-sky-300 italic tracking-wide flex items-center flex-wrap gap-2">
+              <span>Safe Campus</span>
+              <span className="text-slate-400 font-normal">|</span>
+              <span className="relative pb-1">
+                Responsible Students
+                <svg className="absolute left-0 bottom-0 w-full h-1 text-sky-400" viewBox="0 0 100 4" preserveAspectRatio="none">
+                  <path d="M0 2 Q 50 4, 100 2" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="text-slate-400 font-normal">|</span>
+              <span>Better Tomorrow</span>
+            </div>
+          </div>
+
+          {/* RIGHT FLOATING PORTAL CARD COLUMN (SMOOTH FLOAT-IN) */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end animate-hero-right">
+            <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl hover:shadow-[0_25px_60px_-15px_rgba(10,30,51,0.2)] border border-white/80 max-w-md w-full relative z-10 transition-all duration-500">
+              
+              {/* Error and Success Alerts */}
+              {error && (
+                <div className="mb-4 bg-rose-50 border border-rose-200 p-3.5 rounded-xl flex items-start space-x-2.5 text-xs text-rose-800 font-semibold shadow-xs animate-shake">
+                  <AlertCircle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+                  <span>{error}</span>
                 </div>
               )}
 
-              {/* Row 5: Principal Portal */}
-              <button
-                type="button"
-                onClick={() => handleSelectPortal("principal")}
-                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-amber-500/40 dark:hover:border-amber-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0 icon-3d">
-                    <ShieldCheck className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Principal Portal</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-transform group-hover:translate-x-1 shrink-0" />
-              </button>
-
-              {/* Row 6: Guard Station */}
-              <button
-                type="button"
-                onClick={() => handleSelectPortal("guard")}
-                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-sky-500/40 dark:hover:border-sky-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-colors shrink-0 icon-3d">
-                    <ShieldCheck className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">Guard Station</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-transform group-hover:translate-x-1 shrink-0" />
-              </button>
-
-              {/* Row 7: Administrator */}
-              <button
-                type="button"
-                onClick={() => handleSelectPortal("admin")}
-                className="w-full flex items-center justify-between p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-purple-500/40 dark:hover:border-purple-500/40 transition-all cursor-pointer group shadow-sm hover:shadow-md text-left card-3d"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors shrink-0 icon-3d">
-                    <Lock className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Administrator</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-transform group-hover:translate-x-1 shrink-0" />
-              </button>
-            </div>
-          </div>
-        ) : requires2FA ? (
-          /* STEP 2-FACTOR: EMAIL OTP VERIFICATION VIEW */
-          <div className="space-y-6">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => {
-                  setRequires2FA(false);
-                  setTwoFactorOtp("");
-                  setError(null);
-                  setSuccessMsg(null);
-                }}
-                className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center space-x-1 transition cursor-pointer"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Back to Login</span>
-              </button>
-              <span className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20">
-                Step 2 of 2
-              </span>
-            </div>
-
-            <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/80 text-center shadow-sm">
-              <div className="h-12 w-12 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-2 border border-emerald-500/30">
-                <ShieldCheck className="h-6 w-6" />
-              </div>
-              <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                2-Step Email Verification
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                A 6-digit verification code has been sent to your registered institutional email address:
-              </p>
-              <div className="mt-2.5 inline-block px-3.5 py-1.5 bg-white dark:bg-slate-900 rounded-xl text-xs font-black text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 shadow-sm tracking-wider">
-                ✉️ {maskedPhone || "registered email"}
-              </div>
-            </div>
-
-            <form className="space-y-4" onSubmit={handleVerify2FA}>
-              <div>
-                <label htmlFor="twoFactorOtp" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
-                  Enter 6-Digit Email Verification Code
-                </label>
-                <div className="mt-2 relative">
-                  <input
-                    id="twoFactorOtp"
-                    type="text"
-                    maxLength={6}
-                    required
-                    value={twoFactorOtp}
-                    onChange={(e) => setTwoFactorOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                    className="block w-full text-center tracking-[0.5em] text-lg font-black py-3 px-4 border border-slate-300 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-300 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner"
-                    placeholder="••••••"
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || twoFactorOtp.length < 6}
-                className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-all cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
-                    Verifying 2FA Code...
-                  </>
-                ) : (
-                  <>
-                    <span>Verify &amp; Log In</span>
-                    <ChevronRight className="ml-1.5 h-4 w-4 text-emerald-200" />
-                  </>
-                )}
-              </button>
-
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={handleResend2FA}
-                  disabled={resendCountdown > 0 || loading}
-                  className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-50 transition cursor-pointer"
-                >
-                  {resendCountdown > 0 ? (
-                    `Resend OTP via Email in ${resendCountdown}s`
-                  ) : (
-                    `Didn't receive code? Resend via Email`
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : !isRegistering && !isForgotPassword ? (
-          /* STEP 2: SIGN IN VIEW FOR SELECTED PORTAL */
-          <div className="space-y-6">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setSelectedPortal(null)}
-                className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center space-x-1 transition cursor-pointer"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Select Different Portal</span>
-              </button>
-              {(selectedPortal === "student" || selectedPortal === "faculty") && (
-                <button
-                  onClick={() => {
-                    setIsRegistering(true);
-                    setIsForgotPassword(false);
-                    setError(null);
-                    setSuccessMsg(null);
-                  }}
-                  className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-350 flex items-center space-x-1 transition cursor-pointer"
-                >
-                  <UserPlus className="h-3.5 w-3.5" />
-                  <span>Register Account</span>
-                </button>
-              )}
-            </div>
-
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Selected Portal</div>
-                <div className="text-sm font-black text-slate-900 dark:text-slate-100">{getPortalTitle(selectedPortal)}</div>
-              </div>
-              <span className="px-2.5 py-1 text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20">
-                Sign In Page
-              </span>
-            </div>
-
-            <form className="space-y-4" onSubmit={handleLoginSubmit} autoComplete="off">
-              <div>
-                <label htmlFor="email" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Institutional Email Address
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    autoComplete="off"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold"
-                    placeholder="Enter your institutional email"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center">
-                  <label htmlFor="password" className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsForgotPassword(true);
-                      setIsRegistering(false);
-                      setError(null);
-                      setSuccessMsg(null);
-                    }}
-                    className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-350 transition cursor-pointer"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input
-                    id="password"
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold"
-                    placeholder="Enter your password"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-md text-xs font-bold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 dark:focus:ring-emerald-500 disabled:opacity-50 transition-all cursor-pointer"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
-                      Verifying Credentials...
-                    </>
-                  ) : (
-                    <>
-                      <span>Sign In to {getPortalTitle(selectedPortal)}</span>
-                      <ChevronRight className="ml-1.5 h-4 w-4 text-emerald-400" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : isForgotPassword ? (
-          /* VIEW 3: FORGOT PASSWORD VIEW */
-          <div className="space-y-5">
-            <div className="flex items-center space-x-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => {
-                  setIsForgotPassword(false);
-                  setOtpSent(false);
-                  setError(null);
-                  setSuccessMsg(null);
-                }}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                {otpSent ? "Enter Verification Code" : "Reset Your Password"}
-              </h3>
-            </div>
-
-            <div className="bg-emerald-50 dark:bg-emerald-955/30 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3 flex items-start space-x-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-              <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold leading-relaxed">
-                {otpSent ? "Enter the 6-digit OTP code sent to your email, then set and confirm your new account password." : "Provide your registered institutional email to receive a secure 6-digit verification code."}
-              </span>
-            </div>
-
-            {!otpSent ? (
-              /* STEP 1: REQUEST OTP FORM */
-              <form className="space-y-3.5" onSubmit={handleRequestOTP}>
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Institutional Email ID</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      required
-                      type="email"
-                      placeholder="email@sbjit.edu.in"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 text-xs font-semibold focus:bg-white dark:focus:bg-slate-800"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex justify-center items-center py-2.5 px-4 rounded-xl shadow-md text-xs font-bold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 disabled:opacity-50 cursor-pointer transition-all"
-                  >
-                    {loading ? <>
-                      <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
-                      Sending Verification Code...
-                    </> : "Request Verification OTP"}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              /* STEP 2: VERIFY OTP AND RESET FORM */
-              <form className="space-y-3.5" onSubmit={handleForgotPasswordSubmit}>
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Institutional Email ID</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      disabled
-                      type="email"
-                      value={forgotEmail}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-105 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Enter 6-Digit OTP</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <ShieldCheck className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      required
-                      type="text"
-                      maxLength={6}
-                      placeholder="e.g. 123456"
-                      value={forgotOtp}
-                      onChange={(e) => setForgotOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 text-xs font-semibold focus:bg-white dark:focus:bg-slate-800"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">New Password</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      required
-                      type="password"
-                      placeholder="••••••••"
-                      value={forgotNewPassword}
-                      onChange={(e) => setForgotNewPassword(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 text-xs font-semibold focus:bg-white dark:focus:bg-slate-800"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Confirm New Password</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      required
-                      type="password"
-                      placeholder="••••••••"
-                      value={forgotConfirmPassword}
-                      onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-emerald-500 text-xs font-semibold focus:bg-white dark:focus:bg-slate-800"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2 flex flex-col space-y-2">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex justify-center items-center py-2.5 px-4 rounded-xl shadow-md text-xs font-bold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 disabled:opacity-50 cursor-pointer transition-all"
-                  >
-                    {loading ? <Loader2 className="animate-spin h-4 w-4 text-white" /> : "Verify and Reset Password"}
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={handleRequestOTP}
-                    className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-350 text-center transition cursor-pointer"
-                  >
-                    Resend Verification OTP Code
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        ) : (
-          /* VIEW 2: NEW STUDENT / FACULTY SELF-REGISTRATION FORM */
-          <div className="space-y-5">
-            <div className="flex items-center space-x-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegistering(false);
-                  setError(null);
-                }}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                Register {regRole === "faculty" ? "Faculty Member Account" : "Student Account"}
-              </h3>
-            </div>
-
-            {/* Role Switcher */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl space-x-1">
-              <button
-                type="button"
-                onClick={() => setRegRole("student")}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${regRole === "student"
-                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
-                  : "text-slate-500"
-                  }`}
-              >
-                Student Account
-              </button>
-              <button
-                type="button"
-                onClick={() => setRegRole("faculty")}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${regRole === "faculty"
-                  ? "bg-amber-500 text-slate-950 shadow-sm font-black"
-                  : "text-slate-500"
-                  }`}
-              >
-                Faculty Account
-              </button>
-            </div>
-
-            <div className="bg-amber-50 dark:bg-amber-955/30 border border-amber-200 dark:border-amber-900 rounded-xl p-3 flex items-start space-x-2">
-              <ShieldCheck className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-              <span className="text-[10px] text-amber-800 dark:text-amber-300 font-bold leading-relaxed">
-                Security Lock: Registration is restricted to authorized institutional email extensions ending in <strong>@sbjit.edu.in</strong>.
-              </span>
-            </div>
-
-            <form className="space-y-3.5" onSubmit={handleRegisterSubmit} autoComplete="off">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
-                  {regRole === "faculty" ? "Full Faculty Name" : "Full Student Name"}
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input
-                    required
-                    type="text"
-                    autoComplete="off"
-                    placeholder={regRole === "faculty" ? "Enter faculty full name" : "Enter student full name"}
-                    value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {regRole === "student" && (
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Roll Number</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <ClipboardList className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      required
-                      type="text"
-                      autoComplete="off"
-                      placeholder="Enter your roll number"
-                      value={regRollNo}
-                      onChange={(e) => setRegRollNo(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
-                    />
-                  </div>
+              {successMsg && (
+                <div className="mb-4 bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl flex items-start space-x-2.5 text-xs text-emerald-800 font-semibold shadow-xs animate-fade-in">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{successMsg}</span>
                 </div>
               )}
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Academic Department</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Building2 className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <select
-                    value={regDept}
-                    onChange={(e) => handleDepartmentChange(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
-                  >
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.department_name} className="dark:bg-slate-900">
-                        {dept.department_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {regRole === "student" && (
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Select Class Teacher (Incharge)</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <select
-                      required
-                      value={regClassTeacherId}
-                      onChange={(e) => setRegClassTeacherId(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
-                    >
-                      <option value="" className="dark:bg-slate-900">-- Choose Your Class Teacher --</option>
-                      {teachers
-                        .filter((t) => t.user_type !== "faculty" && t.class_name !== "Faculty Member")
-                        .map((t) => (
-                          <option key={t.id} value={t.id} className="dark:bg-slate-900">
-                            {t.name} (Class: {t.class_name} - {t.department})
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <div className="flex justify-between items-center">
-                  <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Select Department HOD</label>
-                  {regHODId && (
-                    <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 animate-pulse">
-                      ✓ Auto-selected for {regDept}
+              {/* VIEW 1: SELECT YOUR PORTAL (MAIN DEFAULT VIEW) */}
+              {selectedPortal === null && !isRegistering && !isForgotPassword && !requires2FA ? (
+                <div className="space-y-4">
+                  {/* Top Centered Pill: SELECT YOUR PORTAL */}
+                  <div className="flex justify-center pb-1">
+                    <span className="px-4 py-1 rounded-full text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/80 tracking-wider uppercase animate-pill-pulse">
+                      SELECT YOUR PORTAL
                     </span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {/* Row 1: Student Portal */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPortal("student")}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-pointer group text-left animate-stagger-1"
+                    >
+                      <div className="flex items-center space-x-3.5 min-w-0">
+                        <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shrink-0">
+                          <User className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 block truncate group-hover:text-blue-900 transition-colors">
+                            Student Portal
+                          </span>
+                          <span className="text-[11px] text-slate-500 block truncate">
+                            Apply for gate pass and track your requests
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                    </button>
+
+                    {/* Row 2: Class Incharge Portal */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPortal("teacher")}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-pointer group text-left animate-stagger-2"
+                    >
+                      <div className="flex items-center space-x-3.5 min-w-0">
+                        <div className="p-2 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shrink-0">
+                          <School className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 block truncate group-hover:text-blue-900 transition-colors">
+                            Class Incharge Portal
+                          </span>
+                          <span className="text-[11px] text-slate-500 block truncate">
+                            Review and approve student requests
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                    </button>
+
+                    {/* Row 3: Teacher Staff Portal */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPortal("faculty")}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-pointer group text-left animate-stagger-3"
+                    >
+                      <div className="flex items-center space-x-3.5 min-w-0">
+                        <div className="p-2 rounded-xl bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shrink-0">
+                          <ClipboardList className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 block truncate group-hover:text-blue-900 transition-colors">
+                            Teacher Staff Portal
+                          </span>
+                          <span className="text-[11px] text-slate-500 block truncate">
+                            Manage student gate-pass activity
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                    </button>
+
+                    {/* Row 4: HOD Portal */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (hods.length > 0) {
+                          setShowHODDropdown(!showHODDropdown);
+                        } else {
+                          handleSelectPortal("hod");
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-pointer group text-left animate-stagger-4"
+                    >
+                      <div className="flex items-center space-x-3.5 min-w-0">
+                        <div className="p-2 rounded-xl bg-teal-50 text-teal-600 group-hover:bg-teal-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shrink-0">
+                          <Users className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 block truncate group-hover:text-blue-900 transition-colors">
+                            HOD Portal
+                          </span>
+                          <span className="text-[11px] text-slate-500 block truncate">
+                            Approve and monitor department requests
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                    </button>
+
+                    {/* HOD Dynamic Dropdown Logic */}
+                    {showHODDropdown && (
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 animate-fade-in">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Select Department HOD</span>
+                          <button onClick={() => setShowHODDropdown(false)} className="text-[10px] text-slate-400 hover:text-slate-600 font-bold">Cancel</button>
+                        </div>
+                        <select
+                          value={selectedDemoHOD}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedDemoHOD(val);
+                            if (val) {
+                              handleSelectPortal("hod", val);
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        >
+                          <option value="">-- Choose Department HOD --</option>
+                          {hods.map((h) => (
+                            <option key={h.id} value={h.email}>
+                              {h.name} ({h.department})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Row 5: Principal Portal */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPortal("principal")}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-pointer group text-left animate-stagger-5"
+                    >
+                      <div className="flex items-center space-x-3.5 min-w-0">
+                        <div className="p-2 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shrink-0">
+                          <ShieldCheck className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 block truncate group-hover:text-blue-900 transition-colors">
+                            Principal Portal
+                          </span>
+                          <span className="text-[11px] text-slate-500 block truncate">
+                            Oversee and manage overall activity
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                    </button>
+
+                    {/* Row 6: Guard Station */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPortal("guard")}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-pointer group text-left animate-stagger-6"
+                    >
+                      <div className="flex items-center space-x-3.5 min-w-0">
+                        <div className="p-2 rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shrink-0">
+                          <Shield className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 block truncate group-hover:text-blue-900 transition-colors">
+                            Guard Station
+                          </span>
+                          <span className="text-[11px] text-slate-500 block truncate">
+                            Verify and record student exits
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                    </button>
+
+                    {/* Row 7: Administrator */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPortal("admin")}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-pointer group text-left animate-stagger-7"
+                    >
+                      <div className="flex items-center space-x-3.5 min-w-0">
+                        <div className="p-2 rounded-xl bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 shrink-0">
+                          <Lock className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 block truncate group-hover:text-blue-900 transition-colors">
+                            Administrator
+                          </span>
+                          <span className="text-[11px] text-slate-500 block truncate">
+                            System management and reports
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                    </button>
+                  </div>
+                </div>
+              ) : requires2FA ? (
+                /* STEP 2-FACTOR: EMAIL OTP VERIFICATION VIEW */
+                <div className="space-y-5">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRequires2FA(false);
+                        setTwoFactorOtp("");
+                        setError(null);
+                        setSuccessMsg(null);
+                      }}
+                      className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center space-x-1 transition cursor-pointer"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      <span>Back to Login</span>
+                    </button>
+                    <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                      Step 2 of 2
+                    </span>
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center shadow-xs">
+                    <div className="h-10 w-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      2-Step Email Verification
+                    </h3>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      A 6-digit verification code has been sent to your registered institutional email:
+                    </p>
+                    <div className="mt-2 inline-block px-3 py-1 bg-white rounded-lg text-xs font-bold text-blue-700 border border-blue-200 shadow-xs">
+                      ✉️ {maskedPhone || "registered email"}
+                    </div>
+                  </div>
+
+                  <form className="space-y-4" onSubmit={handleVerify2FA}>
+                    <div>
+                      <label htmlFor="twoFactorOtp" className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider text-center">
+                        Enter 6-Digit Verification Code
+                      </label>
+                      <div className="mt-2 relative">
+                        <input
+                          id="twoFactorOtp"
+                          type="text"
+                          maxLength={6}
+                          required
+                          value={twoFactorOtp}
+                          onChange={(e) => setTwoFactorOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                          className="block w-full text-center tracking-[0.5em] text-lg font-black py-2.5 px-4 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs"
+                          placeholder="••••••"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading || twoFactorOtp.length < 6}
+                      className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition cursor-pointer"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
+                          Verifying Code...
+                        </>
+                      ) : (
+                        <>
+                          <span>Verify &amp; Log In</span>
+                          <ChevronRight className="ml-1.5 h-4 w-4 text-blue-200" />
+                        </>
+                      )}
+                    </button>
+
+                    <div className="text-center pt-1">
+                      <button
+                        type="button"
+                        onClick={handleResend2FA}
+                        disabled={resendCountdown > 0 || loading}
+                        className="text-xs font-bold text-slate-500 hover:text-blue-600 disabled:opacity-50 transition cursor-pointer"
+                      >
+                        {resendCountdown > 0 ? (
+                          `Resend OTP in ${resendCountdown}s`
+                        ) : (
+                          `Didn't receive code? Resend Email OTP`
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ) : !isRegistering && !isForgotPassword ? (
+                /* STEP 2: SIGN IN VIEW FOR SELECTED PORTAL */
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPortal(null)}
+                      className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center space-x-1 transition cursor-pointer"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      <span>Select Different Portal</span>
+                    </button>
+                    {(selectedPortal === "student" || selectedPortal === "faculty") && (
+                      <button
+                        onClick={() => {
+                          setIsRegistering(true);
+                          setIsForgotPassword(false);
+                          setError(null);
+                          setSuccessMsg(null);
+                        }}
+                        className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center space-x-1 transition cursor-pointer"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        <span>Register Account</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Selected Portal</div>
+                      <div className="text-sm font-bold text-slate-900">{getPortalTitle(selectedPortal)}</div>
+                    </div>
+                    <span className="px-2.5 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full border border-blue-200">
+                      Sign In
+                    </span>
+                  </div>
+
+                  <form className="space-y-3.5" onSubmit={handleLoginSubmit} autoComplete="off">
+                    <div>
+                      <label htmlFor="email" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        Institutional Email Address
+                      </label>
+                      <div className="mt-1 relative rounded-md shadow-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Mail className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                          id="email"
+                          type="email"
+                          required
+                          autoComplete="off"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs font-medium"
+                          placeholder="Enter your institutional email"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center">
+                        <label htmlFor="password" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                          Password
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsForgotPassword(true);
+                            setIsRegistering(false);
+                            setError(null);
+                            setSuccessMsg(null);
+                          }}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition cursor-pointer"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
+                      <div className="mt-1 relative rounded-md shadow-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Lock className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                          id="password"
+                          type="password"
+                          required
+                          autoComplete="new-password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs font-medium"
+                          placeholder="Enter your password"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-xs text-xs font-bold text-white bg-[#0a1e33] hover:bg-[#112d4a] focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition cursor-pointer"
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
+                            Verifying Credentials...
+                          </>
+                        ) : (
+                          <>
+                            <span>Sign In to {getPortalTitle(selectedPortal)}</span>
+                            <ChevronRight className="ml-1.5 h-4 w-4 text-blue-300" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ) : isForgotPassword ? (
+                /* VIEW 3: FORGOT PASSWORD VIEW */
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 pb-2 border-b border-slate-100">
+                    <button
+                      onClick={() => {
+                        setIsForgotPassword(false);
+                        setOtpSent(false);
+                        setError(null);
+                        setSuccessMsg(null);
+                      }}
+                      className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      {otpSent ? "Enter Verification Code" : "Reset Your Password"}
+                    </h3>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start space-x-2">
+                    <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                    <span className="text-[11px] text-blue-800 font-medium leading-relaxed">
+                      {otpSent ? "Enter the 6-digit OTP code sent to your email, then set and confirm your new account password." : "Provide your registered institutional email to receive a secure 6-digit verification code."}
+                    </span>
+                  </div>
+
+                  {!otpSent ? (
+                    <form className="space-y-3.5" onSubmit={handleRequestOTP}>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Institutional Email ID</label>
+                        <div className="mt-1 relative rounded-md shadow-xs">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Mail className="h-4 w-4 text-slate-400" />
+                          </div>
+                          <input
+                            required
+                            type="email"
+                            placeholder="email@sbjit.edu.in"
+                            value={forgotEmail}
+                            onChange={(e) => setForgotEmail(e.target.value)}
+                            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full flex justify-center items-center py-2.5 px-4 rounded-xl shadow-xs text-xs font-bold text-white bg-[#0a1e33] hover:bg-[#112d4a] disabled:opacity-50 cursor-pointer transition"
+                        >
+                          {loading ? <>
+                            <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
+                            Sending Verification Code...
+                          </> : "Request Verification OTP"}
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <form className="space-y-3" onSubmit={handleForgotPasswordSubmit}>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Institutional Email ID</label>
+                        <div className="mt-1 relative rounded-md shadow-xs">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Mail className="h-4 w-4 text-slate-400" />
+                          </div>
+                          <input
+                            disabled
+                            type="email"
+                            value={forgotEmail}
+                            className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 text-xs font-medium cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Enter 6-Digit OTP</label>
+                        <div className="mt-1 relative rounded-md shadow-xs">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <ShieldCheck className="h-4 w-4 text-slate-400" />
+                          </div>
+                          <input
+                            required
+                            type="text"
+                            maxLength={6}
+                            placeholder="e.g. 123456"
+                            value={forgotOtp}
+                            onChange={(e) => setForgotOtp(e.target.value.replace(/[^0-9]/g, ""))}
+                            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">New Password</label>
+                        <div className="mt-1 relative rounded-md shadow-xs">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Lock className="h-4 w-4 text-slate-400" />
+                          </div>
+                          <input
+                            required
+                            type="password"
+                            placeholder="••••••••"
+                            value={forgotNewPassword}
+                            onChange={(e) => setForgotNewPassword(e.target.value)}
+                            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Confirm New Password</label>
+                        <div className="mt-1 relative rounded-md shadow-xs">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Lock className="h-4 w-4 text-slate-400" />
+                          </div>
+                          <input
+                            required
+                            type="password"
+                            placeholder="••••••••"
+                            value={forgotConfirmPassword}
+                            onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex flex-col space-y-2">
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full flex justify-center items-center py-2.5 px-4 rounded-xl shadow-xs text-xs font-bold text-white bg-[#0a1e33] hover:bg-[#112d4a] disabled:opacity-50 cursor-pointer transition"
+                        >
+                          {loading ? <Loader2 className="animate-spin h-4 w-4 text-white" /> : "Verify and Reset Password"}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={handleRequestOTP}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-700 text-center transition cursor-pointer"
+                        >
+                          Resend Verification OTP Code
+                        </button>
+                      </div>
+                    </form>
                   )}
                 </div>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-slate-400" />
+              ) : (
+                /* VIEW 2: NEW STUDENT / FACULTY SELF-REGISTRATION FORM */
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 pb-2 border-b border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRegistering(false);
+                        setError(null);
+                      }}
+                      className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      Register {regRole === "faculty" ? "Faculty Member Account" : "Student Account"}
+                    </h3>
                   </div>
-                  <select
-                    required
-                    value={regHODId}
-                    onChange={(e) => setRegHODId(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
-                  >
-                    <option value="" className="dark:bg-slate-900">-- Choose Department HOD --</option>
-                    {hods.map((h) => (
-                      <option key={h.id} value={h.id} className="dark:bg-slate-900">
-                        {h.name} ({h.department})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">College Email ID</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-slate-400" />
+                  {/* Role Switcher */}
+                  <div className="flex bg-slate-100 p-1 rounded-xl space-x-1">
+                    <button
+                      type="button"
+                      onClick={() => setRegRole("student")}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
+                        regRole === "student"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      Student Account
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRegRole("faculty")}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
+                        regRole === "faculty"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      Faculty Account
+                    </button>
                   </div>
-                  <input
-                    required
-                    type="email"
-                    autoComplete="off"
-                    placeholder="Enter your institutional email address"
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Your Mobile No.</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-4 w-4 text-slate-400" />
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start space-x-2">
+                    <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                      Registration is restricted to institutional email addresses ending in <strong>@sbjit.edu.in</strong>.
+                    </span>
                   </div>
-                  <input
-                    required
-                    type="tel"
-                    autoComplete="off"
-                    placeholder="Enter your mobile number"
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Password</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input
-                    required
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="Enter your password"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none"
-                  />
-                </div>
-              </div>
+                  <form className="space-y-3" onSubmit={handleRegisterSubmit} autoComplete="off">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">
+                        {regRole === "faculty" ? "Full Faculty Name" : "Full Student Name"}
+                      </label>
+                      <div className="mt-1 relative rounded-md shadow-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                          required
+                          type="text"
+                          autoComplete="off"
+                          placeholder={regRole === "faculty" ? "Enter faculty full name" : "Enter student full name"}
+                          value={regName}
+                          onChange={(e) => setRegName(e.target.value)}
+                          className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                      </div>
+                    </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex justify-center items-center py-2.5 px-4 rounded-xl shadow-md text-xs font-bold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 disabled:opacity-50 cursor-pointer transition-all"
-                >
-                  {loading ? <Loader2 className="animate-spin h-4 w-4 text-white" /> : "Register Your Account"}
-                </button>
-              </div>
-            </form>
+                    {regRole === "student" && (
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Roll Number</label>
+                        <div className="mt-1 relative rounded-md shadow-xs">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <ClipboardList className="h-4 w-4 text-slate-400" />
+                          </div>
+                          <input
+                            required
+                            type="text"
+                            autoComplete="off"
+                            placeholder="Enter your roll number"
+                            value={regRollNo}
+                            onChange={(e) => setRegRollNo(e.target.value)}
+                            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Academic Department</label>
+                      <div className="mt-1 relative rounded-md shadow-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Building2 className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <select
+                          required
+                          value={regDept}
+                          onChange={(e) => handleDepartmentChange(e.target.value)}
+                          className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        >
+                          <option value="">Select Department</option>
+                          {departments.map((dept) => (
+                            <option key={dept.id} value={dept.department_name}>
+                              {dept.department_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {regRole === "student" && (
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Class Incharge Teacher</label>
+                        <div className="mt-1 relative rounded-md shadow-xs">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <School className="h-4 w-4 text-slate-400" />
+                          </div>
+                          <select
+                            required
+                            value={regClassTeacherId}
+                            onChange={(e) => setRegClassTeacherId(e.target.value)}
+                            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          >
+                            <option value="">Select Class Teacher</option>
+                            {teachers.filter(t => !regDept || t.department === regDept).map((teacher) => (
+                              <option key={teacher.id} value={teacher.id}>
+                                {teacher.name} ({teacher.class_name || teacher.department})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Department HOD</label>
+                      <div className="mt-1 relative rounded-md shadow-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Building2 className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <select
+                          required
+                          value={regHODId}
+                          onChange={(e) => setRegHODId(e.target.value)}
+                          className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        >
+                          <option value="">Select Department HOD</option>
+                          {hods.map((hod) => (
+                            <option key={hod.id} value={hod.id}>
+                              {hod.name} ({hod.department})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Institutional Email Address</label>
+                      <div className="mt-1 relative rounded-md shadow-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Mail className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                          required
+                          type="email"
+                          autoComplete="off"
+                          placeholder="yourname@sbjit.edu.in"
+                          value={regEmail}
+                          onChange={(e) => setRegEmail(e.target.value)}
+                          className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Mobile Number</label>
+                      <div className="mt-1 relative rounded-md shadow-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Phone className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                          required
+                          type="tel"
+                          autoComplete="off"
+                          placeholder="Enter 10-digit mobile number"
+                          value={regPhone}
+                          onChange={(e) => setRegPhone(e.target.value)}
+                          className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">Password</label>
+                      <div className="mt-1 relative rounded-md shadow-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Lock className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                          required
+                          type="password"
+                          autoComplete="new-password"
+                          placeholder="Create a strong password"
+                          value={regPassword}
+                          onChange={(e) => setRegPassword(e.target.value)}
+                          className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full flex justify-center items-center py-2.5 px-4 rounded-xl shadow-xs text-xs font-bold text-white bg-[#0a1e33] hover:bg-[#112d4a] disabled:opacity-50 cursor-pointer transition"
+                      >
+                        {loading ? <Loader2 className="animate-spin h-4 w-4 text-white" /> : "Register Your Account"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+            </div>
           </div>
-        )}
-
-        <div className="mt-6 flex items-center justify-center text-[10px] text-slate-400 dark:text-slate-500 space-x-1.5 font-bold">
-          <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-          <span>Secure SSL Encryption Enabled</span>
         </div>
+      </main>
 
-      </div>
+      {/* 3. FOOTER */}
+      <footer className="bg-[#0a1e33] border-t border-[#081726] text-slate-400 text-xs py-3 px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 z-30">
+        <div className="text-[11px] text-slate-400 text-center sm:text-left">
+          © 2026 S. B. Jain Institute of Technology, Management & Research, Nagpur
+        </div>
+        <div className="flex items-center space-x-1.5 text-[11px] text-slate-400">
+          <ShieldCheck className="h-4 w-4 text-emerald-400" />
+          <span>Secure SSL Encrypted Connection</span>
+        </div>
+        <div className="flex items-center space-x-1.5 text-[11px] text-slate-400">
+          <Code className="h-3.5 w-3.5 text-blue-400" />
+          <span>Designed &amp; Developed by Team S.A.R.A</span>
+        </div>
+      </footer>
     </div>
-
-    {/* Infinite Running Marquee Footer Ticker */}
-    <div className="relative z-20 mt-6 w-full overflow-hidden bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-xl border-t border-b border-emerald-500/20 py-2.5 shadow-2xl">
-      <div className="flex whitespace-nowrap animate-marquee">
-        <span className="mx-6 text-xs font-extrabold tracking-wider text-slate-200 dark:text-slate-200 flex items-center space-x-3 shrink-0">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm glow-emerald">DESIGNED &amp; DEVELOPED BY TEAM S.A.R.A</span>
-          <span className="text-emerald-400">⚡</span>
-          <span className="text-slate-300 dark:text-slate-300">Smart Digital GatePass &amp; LateMark Monitoring System</span>
-          <span className="text-emerald-400">•</span>
-          <span className="text-teal-400 font-bold">S. B. Jain Institute of Technology, Management &amp; Research</span>
-          <span className="text-emerald-400">•</span>
-        </span>
-        <span className="mx-6 text-xs font-extrabold tracking-wider text-slate-200 dark:text-slate-200 flex items-center space-x-3 shrink-0">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm glow-emerald">DESIGNED &amp; DEVELOPED BY TEAM S.A.R.A</span>
-          <span className="text-emerald-400">⚡</span>
-          <span className="text-slate-300 dark:text-slate-300">Smart Digital GatePass &amp; LateMark Monitoring System</span>
-          <span className="text-emerald-400">•</span>
-          <span className="text-teal-400 font-bold">S. B. Jain Institute of Technology, Management &amp; Research</span>
-          <span className="text-emerald-400">•</span>
-        </span>
-      </div>
-    </div>
-  </div>;
+  );
 }

@@ -131,7 +131,13 @@ function MainPortal() {
   // Resolve dashboard view contents
   let content;
   if (!role || !user) {
-    content = <Login onLoginSuccess={handleLoginSuccess} />;
+    content = (
+      <Login
+        onLoginSuccess={handleLoginSuccess}
+        isDarkMode={isDarkMode}
+        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+      />
+    );
   } else {
     switch (role) {
       case 'student':
@@ -156,23 +162,29 @@ function MainPortal() {
         content = <PrincipalDashboard user={user} onLogout={handleLogout} />;
         break;
       default:
-        content = <Login onLoginSuccess={handleLoginSuccess} />;
+        content = (
+          <Login
+            onLoginSuccess={handleLoginSuccess}
+            isDarkMode={isDarkMode}
+            onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+          />
+        );
     }
   }
 
   return (
     <div className="relative">
-      {/* Global Theme Toggle Button */}
-
-      {/* Global Theme Toggle Button */}
-      <button
-        type="button"
-        onClick={() => setIsDarkMode(!isDarkMode)}
-        className="fixed top-4 right-4 z-[9999] p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-md hover:scale-105 transition-all cursor-pointer"
-        aria-label="Toggle dark mode"
-      >
-        {isDarkMode ? <Sun className="h-5 w-5 text-amber-400 animate-pulse" /> : <Moon className="h-5 w-5 text-slate-700" />}
-      </button>
+      {/* Global Theme Toggle Button for authenticated dashboards */}
+      {user && role && (
+        <button
+          type="button"
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="fixed top-4 right-4 z-[9999] p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-md hover:scale-105 transition-all cursor-pointer"
+          aria-label="Toggle dark mode"
+        >
+          {isDarkMode ? <Sun className="h-5 w-5 text-amber-400 animate-pulse" /> : <Moon className="h-5 w-5 text-slate-700" />}
+        </button>
+      )}
 
       {content}
     </div>
