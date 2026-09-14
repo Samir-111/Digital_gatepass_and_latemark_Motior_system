@@ -110,31 +110,74 @@ const sendSMS = async (phoneNumber, message) => {
   }
 };
 
-// Helper to send OTP email (using nodemailer with SMTP or fallback to terminal logging)
-const sendOTPEmail = async (email, otp) => {
+// Helper to send OTP email (using Brevo HTTPS REST API with fallback to nodemailer SMTP or console)
+const sendOTPEmail = async (email, otp, purpose = '2-Step Verification Code') => {
+  const brevoApiKey = (process.env.BREVO_API_KEY || '').trim();
+  const senderEmail = (process.env.BREVO_SENDER_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || 'sbjitnagpur@gmail.com').trim();
+  const senderName = process.env.BREVO_SENDER_NAME || 'Campus GatePass Portal';
+
+  const subject = `Campus Portal ${purpose}: ${otp}`;
+  const textContent = `Your One-Time Password (OTP) for ${purpose} is: ${otp}. It is valid for 5 minutes.`;
+  const htmlContent = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 24px; color: #1e293b; max-width: 540px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; background: #ffffff;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #059669; font-size: 22px; font-weight: 800; margin: 0;">S. B. Jain Institute of Technology</h2>
+        <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Digital Gatepass & Security Verification System</p>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
+        <p style="font-size: 14px; font-weight: 600; color: #334155; margin-top: 0;">${purpose}</p>
+        <div style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #0f172a; margin: 12px 0;">
+          ${otp}
+        </div>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">⏱ Valid for <b>5 minutes</b>. Do not share this code with anyone.</p>
+      </div>
+      <p style="font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.5; margin-bottom: 0;">
+        If you did not initiate this login request, please contact college administration immediately.
+      </p>
+    </div>
+  `;
+
+  // 1. Primary: Brevo HTTPS REST API (Zero port-blocking on Render/Vercel)
+  if (brevoApiKey && !brevoApiKey.includes('YOUR_')) {
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': brevoApiKey,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: email }],
+          subject: subject,
+          htmlContent: htmlContent,
+          textContent: textContent
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json().catch(() => ({}));
+        console.log(`[Brevo Email Gateway] OTP successfully sent to ${email} (MessageId: ${result.messageId || 'ok'})`);
+        return true;
+      } else {
+        const errText = await response.text();
+        console.error(`[Brevo Email Gateway Error] HTTP ${response.status}:`, errText);
+      }
+    } catch (err) {
+      console.error(`[Brevo Email Gateway Network Error]:`, err.message);
+    }
+  }
+
+  // 2. Fallback: SMTP via Nodemailer
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587');
   const user = process.env.SMTP_USER || process.env.SMTP_FROM || 'sbjitnagpur@gmail.com';
   const rawPass = process.env.SMTP_PASS || 'gjof mtzf ffqr yeml';
-  const pass = rawPass.replace(/\s+/g, ''); // Strip spaces from Gmail App Passwords
+  const pass = rawPass.replace(/\s+/g, '');
   const from = process.env.SMTP_FROM || user || 'sbjitnagpur@gmail.com';
 
-  const isConfigured = !!(host && user && pass);
-
-  const subject = 'Your Password Reset OTP Code';
-  const textContent = `Your One-Time Password (OTP) for resetting your campus access portal password is: ${otp}. It is valid for 10 minutes.`;
-  const htmlContent = `
-    <div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-      <h2 style="color: #10b981; font-size: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">Campus Access Portal Password Reset</h2>
-      <p style="font-size: 14px; line-height: 1.5; color: #334155;">You requested to reset your password. Use the following One-Time Password (OTP) to proceed:</p>
-      <div style="font-size: 32px; font-weight: 800; background: #f8fafc; color: #0f172a; padding: 18px; text-align: center; border-radius: 10px; letter-spacing: 4px; margin: 24px 0; border: 1px dashed #cbd5e1;">
-        ${otp}
-      </div>
-      <p style="font-size: 12px; line-height: 1.5; color: #64748b; margin-bottom: 0;">This OTP code is valid for 10 minutes and is for single use only. If you did not request a password reset, please ignore this email.</p>
-    </div>
-  `;
-
-  if (isConfigured) {
+  if (host && user && pass) {
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -152,20 +195,20 @@ const sendOTPEmail = async (email, otp) => {
         html: htmlContent
       });
 
-      console.log(`[OTP Email] Real Gmail OTP successfully dispatched to ${email}`);
+      console.log(`[SMTP Fallback] OTP dispatched via SMTP to ${email}`);
       return true;
     } catch (error) {
-      console.warn(`[OTP Email] Gmail Service dispatch note:`, error?.message || error);
+      console.warn(`[SMTP Fallback Error]:`, error?.message || error);
     }
   }
 
-  // Fallback console log for local development/unconfigured SMTP
+  // 3. Fallback: Terminal Logging
   console.log('\n====================================================');
-  console.log(`[OTP SERVICE] (LOCAL FALLBACK)`);
+  console.log(`[OTP SERVICE] (LOCAL CONSOLE FALLBACK)`);
   console.log(`To: ${email}`);
   console.log(`OTP: ${otp}`);
-  console.log(`Message: "${textContent}"`);
-  console.log(`Note: Configure SMTP_HOST, SMTP_USER, SMTP_PASS, etc. in .env to send real emails`);
+  console.log(`Purpose: ${purpose}`);
+  console.log(`Note: Add BREVO_API_KEY in .env for production transactional email`);
   console.log('====================================================\n');
   return false;
 };
@@ -323,7 +366,7 @@ app.post('/api/login', async (req, res) => {
   });
 
   // Trigger both Gmail & WhatsApp OTP dispatches in parallel background promises (instant <50ms response)
-  sendOTPEmail(userEmail, otp).catch(err => console.warn('[Gmail OTP Dispatch Note]:', err?.message));
+  sendOTPEmail(userEmail, otp, '2-Step Login Verification Code').catch(err => console.warn('[Brevo/Gmail OTP Dispatch Note]:', err?.message));
 
   if (userPhone) {
     sendWhatsAppMessage({
@@ -409,10 +452,8 @@ app.post('/api/login/resend-2fa', async (req, res) => {
   challenge.expiresAt = Date.now() + (5 * 60 * 1000);
   twoFactorChallenges.set(challengeId, challenge);
 
-  const userEmail = challenge.email || challenge.user.email || '';
-  
-  // Non-blocking async dispatches
-  sendOTPEmail(userEmail, newOtp).catch(err => console.warn('[Resend Gmail OTP Error]:', err?.message));
+  const userEmail = challenge.email || challenge.user.email || '';  // Non-blocking async dispatches
+  sendOTPEmail(userEmail, newOtp, '2-Step Login Verification Code').catch(err => console.warn('[Resend OTP Error]:', err?.message));
 
   if (challenge.phone) {
     sendWhatsAppMessage({
@@ -429,7 +470,8 @@ app.post('/api/login/resend-2fa', async (req, res) => {
 
   res.json({
     success: true,
-    message: `A new 6-digit verification code has been sent to your registered Gmail address (${maskedEmail}).`
+    maskedEmail,
+    message: `A new 6-digit verification code has been dispatched to your registered Gmail (${maskedEmail}) and WhatsApp.`
   });
 });
 
@@ -562,8 +604,8 @@ app.post('/api/forgot-password/request-otp', async (req, res) => {
     // Store OTP in database/memory
     db.storeOTP(email, otp);
 
-    // Send the OTP email exclusively via Gmail
-    const emailSent = await sendOTPEmail(email, otp);
+    // Send the OTP email via Brevo REST API / fallback
+    const emailSent = await sendOTPEmail(email, otp, 'Password Reset OTP Code');
 
     const maskedEmail = email ? email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length)) : 'registered email';
 
