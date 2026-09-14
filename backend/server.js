@@ -220,13 +220,27 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
     cleanNumber = '91' + cleanNumber;
   }
 
-  const timeString = exitTime || new Date().toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+  let timeString = exitTime;
+  if (!timeString || timeString.includes('GMT') || timeString.includes('T')) {
+    try {
+      const dt = exitTime ? new Date(exitTime) : new Date();
+      timeString = dt.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      timeString = new Date().toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+  }
 
-  const messageBody = customMessage || `*GATEPASS EXIT ALERT* 🚪\n\nDear Parent, your ward *${studentName}* (Roll No: ${rollNo}) has checked out and departed the college premises.\n\n_Time: ${timeString}_${reason ? `\n_Reason: ${reason}_` : ''}\n\n- S. B. Jain Institute of Technology, Management and Research`;
+  const messageBody = customMessage || `*GATEPASS EXIT ALERT* 🚪\n\nDear Parent, your ward *${studentName}* (Roll No: ${rollNo}) has checked out and departed the college premises.\n\n_Time: ${timeString}_\n_Reason: ${reason || 'Official / Permitted Outing'}_\n\n- S. B. Jain Institute of Technology, Management and Research`;
 
   const logId = 'walog-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
   let status = 'failed';
@@ -1331,11 +1345,12 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), async (req
   db.addLog(req.user.id, req.user.name, 'guard', `Marked exit for ${pass.user_type === 'faculty' ? 'Faculty ' + pass.faculty_name : 'Student ' + pass.student_name} on pass ${id}`);
 
   if (pass.user_type === 'faculty' || pass.faculty_id) {
+    const facultyExitTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit', hour12: true });
     db.addNotification(
       pass.faculty_id,
       'teacher',
       'Campus Exit Marked 🚪',
-      `You checked out of campus gate at ${new Date().toLocaleTimeString()}. Have a safe trip!`,
+      `You checked out of campus gate at ${facultyExitTime}. Have a safe trip!`,
       'status_changed',
       id
     );
@@ -1345,12 +1360,19 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), async (req
   // Trigger real-time parent WhatsApp alert by changing student status to "Left" in Firestore/memory
   db.updateStudentStatusByRollNo(pass.student_roll_no, 'Left');
 
+  const exitTimeString = new Date().toLocaleTimeString('en-US', {
+    timeZone: 'Asia/Kolkata',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+
   // Notify student of exit
   db.addNotification(
     pass.student_id,
     'student',
     'Campus Exit Marked 🚪',
-    `You checked out of the campus gate at ${new Date().toLocaleTimeString()}. Safe travels!`,
+    `You checked out of the campus gate at ${exitTimeString}. Safe travels!`,
     'status_changed',
     id
   );
@@ -1359,8 +1381,6 @@ app.post('/api/guard/exit', authenticateJWT, authorizeRoles('guard'), async (req
   const parentPhone = (pass.student_parent_phone && pass.student_parent_phone !== 'N/A')
     ? pass.student_parent_phone
     : (db.getOfficialParentPhone(pass.student_roll_no, '') || '+91 9022616290');
-
-  const exitTimeString = new Date().toLocaleTimeString();
 
   console.log('====================================================');
   console.log(`[CAMPUS EXIT WHATSAPP ALERT DISPATCH]`);
@@ -1406,12 +1426,14 @@ app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req, re
   const updated = db.markReturn(id);
   db.addLog(req.user.id, req.user.name, 'guard', `Marked return for ${pass.user_type === 'faculty' ? 'Faculty ' + pass.faculty_name : 'Student ' + pass.student_name}, gate pass closed.`);
 
+  const returnTimeStr = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit', hour12: true });
+
   if (pass.user_type === 'faculty' || pass.faculty_id) {
     db.addNotification(
       pass.faculty_id,
       'teacher',
       'Campus Return Registered ✅',
-      `Welcome back! Your campus return was registered at ${new Date().toLocaleTimeString()} and the gate pass is now closed.`,
+      `Welcome back! Your campus return was registered at ${returnTimeStr} and the gate pass is now closed.`,
       'status_changed',
       id
     );
@@ -1426,7 +1448,7 @@ app.post('/api/guard/return', authenticateJWT, authorizeRoles('guard'), (req, re
     pass.student_id,
     'student',
     'Campus Return Registered ✅',
-    `Welcome back! Your return was registered at ${new Date().toLocaleTimeString()} and the gate pass is now closed.`,
+    `Welcome back! Your return was registered at ${returnTimeStr} and the gate pass is now closed.`,
     'status_changed',
     id
   );
