@@ -17,12 +17,27 @@ import {
   Trash2,
   ShieldAlert,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Sun,
+  Moon,
+  ShieldCheck,
+  Calendar,
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
+  Camera,
+  Info,
+  QrCode,
+  GraduationCap,
+  Building2,
+  Phone,
+  Mail
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
 import NotificationCenter from "./NotificationCenter";
 import sbjainLogo from "../assets/sbjain-logo.png";
-export default function StudentDashboard({ user, onLogout }) {
+
+export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleTheme }) {
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -49,31 +64,35 @@ export default function StudentDashboard({ user, onLogout }) {
   const [submittingLate, setSubmittingLate] = useState(false);
   const [cancelPassId, setCancelPassId] = useState(null);
   const [toast, setToast] = useState(null);
+
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => {
       setToast(null);
-    }, 4e3);
+    }, 4000);
   };
+
   const fetchPasses = async () => {
     setLoading(true);
     try {
       const data = await gatepassService.getStudentHistory();
-      setPasses(data);
+      setPasses(data || []);
     } catch (err) {
       setError(err.message || "Failed to fetch gate passes.");
     } finally {
       setLoading(false);
     }
   };
+
   const fetchLateEntries = async () => {
     try {
       const data = await gatepassService.getLateComeEntries();
-      setLateEntries(data);
+      setLateEntries(data || []);
     } catch (err) {
       console.error("Failed to fetch late entries:", err);
     }
   };
+
   const handleLateComeSubmit = async (e) => {
     e.preventDefault();
     if (!lateTime || !lateReason) {
@@ -96,6 +115,7 @@ export default function StudentDashboard({ user, onLogout }) {
       setSubmittingLate(false);
     }
   };
+
   useEffect(() => {
     fetchPasses();
     fetchLateEntries();
@@ -113,14 +133,14 @@ export default function StudentDashboard({ user, onLogout }) {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
   const handleApply = async (e) => {
     e.preventDefault();
     if (!reason || !exitDate || !exitTimeOnly) {
-      showToast("Kripya saare mandatory fields (Reason, Leaving Date, aur Leaving Time) ko sahi se fill karein!", "error");
+      showToast("Please fill all mandatory fields (Reason, Leaving Date, and Leaving Time).", "error");
       return;
     }
 
-    // Combine date and time (using local browser time)
     const combinedExitDateTime = new Date(`${exitDate}T${exitTimeOnly}:00`);
 
     setSubmitLoading(true);
@@ -141,9 +161,11 @@ export default function StudentDashboard({ user, onLogout }) {
       setSubmitLoading(false);
     }
   };
+
   const handleCancelPass = (passId) => {
     setCancelPassId(passId);
   };
+
   const executeCancelPass = async () => {
     if (!cancelPassId) return;
     try {
@@ -155,6 +177,7 @@ export default function StudentDashboard({ user, onLogout }) {
       showToast(err.message || "Failed to cancel request.", "error");
     }
   };
+
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -165,11 +188,12 @@ export default function StudentDashboard({ user, onLogout }) {
       });
       showToast("Profile updated successfully!");
       setProfileSuccess(true);
-      setTimeout(() => setProfileSuccess(false), 3e3);
+      setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err) {
       showToast(err.message || "Failed to update profile.", "error");
     }
   };
+
   const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -180,318 +204,469 @@ export default function StudentDashboard({ user, onLogout }) {
       reader.readAsDataURL(file);
     }
   };
+
   const getStatusBadge = (status) => {
     const styles = {
-      pending: "bg-amber-50 text-amber-700 border-amber-200",
-      pending_hod: "bg-blue-50 text-blue-700 border-blue-200",
-      approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      rejected: "bg-rose-50 text-rose-700 border-rose-200",
-      exited: "bg-indigo-50 text-indigo-700 border-indigo-200",
-      closed: "bg-slate-100 text-slate-700 border-slate-200",
-      cancelled: "bg-slate-50 text-slate-400 border-slate-200"
+      pending: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30",
+      pending_hod: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30",
+      approved: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+      rejected: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30",
+      exited: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/30",
+      closed: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700",
+      cancelled: "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
     };
     const labels = {
       pending: "Pending Teacher Approval",
-      pending_hod: "Pending HOD Approval",
-      approved: "Approved - Ready",
-      rejected: "Rejected",
-      exited: "Out (Active)",
-      closed: "Returned (Closed)",
-      cancelled: "Cancelled"
+      pending_hod: "Pending HOD Clearance",
+      approved: "Approved • Ready at Gate",
+      rejected: "Application Rejected",
+      exited: "Out-Of-Campus (Active)",
+      closed: "Returned & Closed",
+      cancelled: "Cancelled by Student"
     };
-    return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${styles[status]}`}>
-        {labels[status]}
-      </span>;
+    return (
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${styles[status] || styles.pending}`}>
+        {labels[status] || status}
+      </span>
+    );
   };
+
   const getRiskBadge = (level) => {
     if (!level) return null;
     const styles = {
-      low: "bg-blue-50 text-blue-700 border-blue-100",
-      medium: "bg-amber-50 text-amber-700 border-amber-100",
-      high: "bg-red-50 text-red-700 border-red-100"
+      low: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+      medium: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30",
+      high: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30"
     };
-    return <span className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${styles[level]}`}>
-        <Sparkles className="h-3 w-3 text-current" />
-        <span>Risk level: {level}</span>
-      </span>;
+    return (
+      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider ${styles[level] || styles.low}`}>
+        <Sparkles className="h-3 w-3" />
+        <span>Risk: {level}</span>
+      </span>
+    );
   };
+
   const activePass = passes.find((p) => p.status === "pending" || p.status === "pending_hod" || p.status === "approved" || p.status === "exited");
-  return <div className="min-h-screen bg-slate-100 pb-12 font-sans">
-      {
-    /* Navigation header */
-  }
-      <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+  const completedCount = passes.filter((p) => p.status === "closed").length;
+
+  return (
+    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-12 transition-colors">
+      {/* 1. TOP HEADER (INSTITUTIONAL NAVY #0a1e33) */}
+      <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <img src={sbjainLogo} alt="SB Jain Logo" className="h-10 w-10 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0 border border-slate-100" />
-              <span className="font-black font-heading text-slate-950 dark:text-white tracking-tight text-xs sm:text-sm md:text-base leading-tight max-w-[150px] sm:max-w-none line-clamp-2 select-none flex flex-wrap">
-                {"S. B. Jain Institute of Technology, Management and Research".split("").map((char, i) => (
-                  <span
-                    key={i}
-                    className="inline-block transition-all duration-200 cubic-bezier(0.175, 0.885, 0.32, 1.275) hover:scale-135 hover:-translate-y-1 hover:text-emerald-600 dark:hover:text-cyan-400 hover:drop-shadow-[0_0_12px_rgba(16,185,129,0.9)] cursor-pointer"
-                  >
-                    {char === " " ? "\u00A0" : char}
-                  </span>
-                ))}
-              </span>
-              <span className="hidden lg:inline bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-emerald-200 shrink-0">Student</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <NotificationCenter />
-              <div className="flex items-center space-x-2 text-sm text-slate-700">
-                {photo ? <img src={photo} alt={user.name} className="h-8 w-8 rounded-full border border-slate-200 object-cover" /> : <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center">
-                    <User className="h-4 w-4 text-slate-500" />
-                  </div>}
-                <span className="font-medium hidden md:inline">{user.name}</span>
+          <div className="flex items-center justify-between h-16">
+            {/* College Identity */}
+            <div className="flex items-center space-x-3.5 min-w-0">
+              <div className="h-11 w-11 bg-white rounded-xl p-1 border border-white/20 shadow-xs flex items-center justify-center shrink-0">
+                <img
+                  src={sbjainLogo}
+                  alt="SBJITMR Logo"
+                  className="h-9 w-9 object-contain"
+                />
               </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-xs sm:text-sm font-bold text-white leading-tight truncate">
+                    S. B. Jain Institute of Technology, Management and Research
+                  </h1>
+                  <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    STUDENT PORTAL
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 font-medium">Nagpur • Digital Gate Pass &amp; Outing System</p>
+              </div>
+            </div>
+
+            {/* Actions: Notifications + User Preview + Theme Toggle + Logout */}
+            <div className="flex items-center space-x-3 shrink-0">
+              <NotificationCenter />
+
+              <div className="hidden sm:flex items-center space-x-2.5 pl-2 pr-1">
+                {photo ? (
+                  <img src={photo} alt={user.name} className="h-8 w-8 rounded-full border border-white/20 object-cover" />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-emerald-300">
+                    <User className="h-4 w-4" />
+                  </div>
+                )}
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-bold text-white leading-tight">{user.name}</span>
+                  <span className="text-[10px] text-slate-300 font-mono">Roll: {user.roll_no}</span>
+                </div>
+              </div>
+
+              <div className="h-6 w-px bg-white/15 hidden sm:block" />
+
+              {/* Theme Toggle Button */}
               <button
-    onClick={onLogout}
-    className="inline-flex items-center px-3 py-1.5 border border-slate-200 text-xs font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition cursor-pointer"
-  >
-                <LogOut className="h-3.5 w-3.5 mr-1" />
-                Logout
+                type="button"
+                onClick={onToggleTheme || (() => {
+                  const isDark = document.documentElement.classList.toggle("dark");
+                  localStorage.setItem("theme", isDark ? "dark" : "light");
+                })}
+                className="p-1.5 sm:p-2 rounded-lg border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4 text-slate-200" />}
+              </button>
+
+              {/* Sign Out Button */}
+              <button
+                onClick={onLogout}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 border border-white/20 hover:border-white/40 text-xs font-semibold rounded-lg text-white bg-white/5 hover:bg-white/15 transition shadow-xs cursor-pointer"
+                title="Sign out of Student Session"
+              >
+                <LogOut className="h-3.5 w-3.5 text-slate-300" />
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      {
-    /* Main Container */
-  }
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        
-        {
-    /* Student Mini Profile Header */
-  }
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 animate-fade-in-up glass-card relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
-          <div className="flex items-center space-x-4">
-            {photo ? <img src={photo} alt={user.name} className="h-16 w-16 rounded-2xl border-2 border-emerald-500/30 object-cover shadow-md" /> : <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner">
-                <User className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-              </div>}
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 font-heading">{user.name}</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{user.department} • Roll No: <span className="font-semibold text-slate-700 dark:text-slate-200 font-mono">{user.roll_no}</span></p>
+      {/* 2. MAIN CONTAINER */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+        {/* Student Profile & Navigation Banner Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5 sm:p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-5 border-b border-slate-100 dark:border-slate-800/80">
+            {/* Student Info */}
+            <div className="flex items-center space-x-4">
+              <div className="relative shrink-0">
+                {photo ? (
+                  <img
+                    src={photo}
+                    alt={user.name}
+                    className="h-16 w-16 sm:h-18 sm:w-18 rounded-2xl border-2 border-slate-200 dark:border-slate-700 object-cover shadow-sm"
+                  />
+                ) : (
+                  <div className="h-16 w-16 sm:h-18 sm:w-18 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 border-2 border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <User className="h-8 w-8" />
+                  </div>
+                )}
+                <span className="absolute -bottom-1 -right-1 h-5 w-5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center" title="Student Active Account">
+                  <CheckCircle2 className="h-3 w-3 text-white" />
+                </span>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    {user.name}
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20">
+                    {user.department || "Engineering"}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                  <span className="flex items-center gap-1">
+                    <GraduationCap className="h-3.5 w-3.5 text-slate-400" />
+                    Roll No: <strong className="text-slate-700 dark:text-slate-200">{user.roll_no}</strong>
+                  </span>
+                  {user.email && (
+                    <span className="hidden sm:flex items-center gap-1">
+                      <Mail className="h-3.5 w-3.5 text-slate-400" />
+                      {user.email}
+                    </span>
+                  )}
+                  {user.phone && (
+                    <span className="hidden md:flex items-center gap-1">
+                      <Phone className="h-3.5 w-3.5 text-slate-400" />
+                      {user.phone}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-3 gap-3 shrink-0">
+              <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Passes</span>
+                <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{passes.length}</span>
+              </div>
+              <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Completed</span>
+                <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">{completedCount}</span>
+              </div>
+              <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Late Marks</span>
+                <span className="text-base sm:text-lg font-black text-amber-600 dark:text-amber-400">{lateEntries.length}</span>
+              </div>
             </div>
           </div>
-          <div className="flex gap-2 shrink-0 overflow-x-auto pb-1 md:pb-0">
-            <button
-    onClick={() => setActiveTab("status")}
-    className={`px-4 py-2 rounded-xl text-xs font-bold transition btn-interactive cursor-pointer ${activeTab === "status" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md glow-emerald" : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700"}`}
-  >
-              GatePass Status
-            </button>
-            <button
-    onClick={() => setActiveTab("apply")}
-    className={`px-4 py-2 rounded-xl text-xs font-bold transition btn-interactive cursor-pointer flex items-center space-x-1 ${activeTab === "apply" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md glow-emerald" : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700"}`}
-  >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Apply New</span>
-            </button>
-            <button
-    onClick={() => setActiveTab("history")}
-    className={`px-4 py-2 rounded-xl text-xs font-bold transition btn-interactive cursor-pointer ${activeTab === "history" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md glow-emerald" : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700"}`}
-  >
-              My History ({passes.length})
-            </button>
-            <button
-    onClick={() => setActiveTab("profile")}
-    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${activeTab === "profile" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"}`}
-  >
-              Edit Profile
-            </button>
-            <button
-    onClick={() => {
-      setActiveTab("late");
-      fetchLateEntries();
-    }}
-    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1 ${activeTab === "late" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"}`}
-  >
-              <Clock className="h-3.5 w-3.5" />
-              <span>Late Entry</span>
-            </button>
+
+          {/* Sub-Navigation Tabs Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto pt-4 no-scrollbar">
+            {[
+              { id: "status", label: "Gate Pass Status", icon: Compass, badge: activePass ? "Active" : null, badgeColor: "bg-emerald-500 text-white" },
+              { id: "apply", label: "Apply Gate Pass", icon: Plus, badge: null },
+              { id: "history", label: "My History", icon: FileText, badge: passes.length, badgeColor: "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300" },
+              { id: "late", label: "Late Arrival Log", icon: Clock, badge: lateEntries.length, badgeColor: "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300" },
+              { id: "profile", label: "Profile Settings", icon: User, badge: null }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    if (tab.id === "late") fetchLateEntries();
+                  }}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? "bg-[#1e60d5] text-white shadow-sm"
+                      : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/70 border border-slate-200/80 dark:border-slate-700/60"
+                  }`}
+                >
+                  <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                  <span>{tab.label}</span>
+                  {tab.badge !== null && (
+                    <span className={`text-[10px] px-2 py-0.2 rounded-full font-extrabold ${isActive ? "bg-white/20 text-white" : tab.badgeColor}`}>
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {
-    /* Dynamic tab contents */
-  }
-        
-        {
-    /* TAB 1: PASS STATUS */
-  }
-        {activeTab === "status" && <div className="space-y-6">
-            {loading ? <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto" />
-                <p className="text-sm text-slate-500 mt-2 font-medium">Checking active gate passes...</p>
-              </div> : activePass ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {
-    /* QR Code display and actions */
-  }
-                <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
-                  <h3 className="text-sm font-bold text-slate-800 mb-4">Gate Pass QR Code</h3>
-                  
-                  {activePass.qr_code && activePass.status !== "exited" ? <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 inline-block mb-4 shadow-inner">
-                      <img src={activePass.qr_code} alt="GatePass QR Code" className="h-52 w-52" />
-                      <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-2">Single Use Verified</div>
-                    </div> : activePass.status === "exited" ? <div className="bg-emerald-50 rounded-2xl border border-emerald-200 h-52 w-52 flex flex-col items-center justify-center mb-4 p-4 text-emerald-700">
-                      <CheckCircle className="h-12 w-12 text-emerald-500 mb-2" />
-                      <span className="text-xs font-bold text-center">QR Code Expired</span>
-                      <span className="text-[10px] text-emerald-600 mt-1 font-medium text-center">Exit scanned &amp; logged at gate by security</span>
-                    </div> : <div className="bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 h-52 w-52 flex flex-col items-center justify-center mb-4 p-4 text-slate-400">
-                      <ShieldAlert className="h-10 w-10 text-slate-300 mb-2" />
-                      <span className="text-xs font-bold text-center">QR Code will generate upon HOD approval</span>
-                    </div>}
+        {/* 3. DYNAMIC TAB CONTENTS */}
 
-                  {activePass.qr_code && activePass.status !== "exited" && <a
-    href={activePass.qr_code}
-    download={`gatepass-${activePass.id}.png`}
-    className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition"
-  >
+        {/* TAB 1: PASS STATUS */}
+        {activeTab === "status" && (
+          <div className="space-y-6">
+            {loading ? (
+              <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto" />
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 font-medium">Checking active gate passes...</p>
+              </div>
+            ) : activePass ? (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* QR Code Security Card (4 cols) */}
+                <div className="lg:col-span-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center text-center">
+                  <div className="w-full flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <QrCode className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      Security Gate Pass QR
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">#{activePass.id}</span>
+                  </div>
+
+                  {activePass.qr_code && activePass.status !== "exited" ? (
+                    <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 inline-block mb-4 shadow-sm">
+                      <img src={activePass.qr_code} alt="GatePass QR Code" className="h-48 w-48 rounded-xl mx-auto" />
+                      <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mt-2.5 flex items-center justify-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span>Single-Use Verified Pass</span>
+                      </div>
+                    </div>
+                  ) : activePass.status === "exited" ? (
+                    <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-800/80 h-48 w-48 flex flex-col items-center justify-center mb-4 p-4 text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle className="h-12 w-12 text-emerald-500 mb-2" />
+                      <span className="text-xs font-bold text-center">QR Scanned at Gate</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium text-center">Exit recorded by security checkpoint</span>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 h-48 w-48 flex flex-col items-center justify-center mb-4 p-4 text-slate-400">
+                      <ShieldAlert className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
+                      <span className="text-xs font-bold text-center text-slate-600 dark:text-slate-300">QR Generating Upon Clearance</span>
+                      <span className="text-[10px] text-slate-400 mt-1">Awaiting approval</span>
+                    </div>
+                  )}
+
+                  {activePass.qr_code && activePass.status !== "exited" && (
+                    <a
+                      href={activePass.qr_code}
+                      download={`gatepass-${activePass.id}.png`}
+                      className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition"
+                    >
                       <Download className="h-4 w-4 mr-1.5" />
                       Download QR Code
-                    </a>}
-                  <p className="text-[10px] text-slate-400 mt-3 font-medium text-center max-w-xs">
-                    Present this QR to the security guard at the college gate. To prevent duplicate scans, do not share screenshot. Code expires immediately after exit is logged.
-                  </p>
+                    </a>
+                  )}
+
+                  <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 text-left w-full">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                      <strong className="text-slate-700 dark:text-slate-300">Protocol:</strong> Present this QR to the gate security guard on exit. Do not share screenshots. Pass closes upon scan.
+                    </p>
+                  </div>
                 </div>
 
-                {
-    /* Pass Details details card */
-  }
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
+                {/* Pass Dossier Card (8 cols) */}
+                <div className="lg:col-span-8 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                     <div>
-                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gate Pass ID: {activePass.id}</span>
-                      <h2 className="text-lg font-bold text-slate-800 mt-0.5">Active Gate Pass Details</h2>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Gate Pass Record Dossier</span>
+                      <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
+                        Pass #{activePass.id} • Active Outing Request
+                      </h3>
                     </div>
                     {getStatusBadge(activePass.status)}
                   </div>
 
-                  {activePass.risk_level && <div className={`p-4 rounded-xl mb-4 border flex items-start space-x-3 ${activePass.risk_level === "high" ? "bg-red-50 border-red-100 text-red-800" : activePass.risk_level === "medium" ? "bg-amber-50 border-amber-100 text-amber-800" : "bg-blue-50 border-blue-100 text-blue-800"}`}>
+                  {/* AI Risk Assessment Banner */}
+                  {activePass.risk_level && (
+                    <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+                      activePass.risk_level === "high"
+                        ? "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300"
+                        : activePass.risk_level === "medium"
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300"
+                        : "bg-blue-500/10 border-blue-500/30 text-blue-800 dark:text-blue-300"
+                    }`}>
                       <Sparkles className="h-5 w-5 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-xs font-bold uppercase tracking-wider">Monthly Usage Risk Rating: {activePass.risk_level}</div>
+                      <div className="flex-1">
+                        <div className="text-xs font-bold uppercase tracking-wider flex items-center justify-between">
+                          <span>Monthly Usage Risk Rating: {activePass.risk_level}</span>
+                        </div>
                         <div className="text-xs font-medium mt-1 leading-relaxed">{activePass.risk_remarks}</div>
                       </div>
-                    </div>}
+                    </div>
+                  )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div className="space-y-1.5">
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Reason for Outing</span>
-                      <span className="text-sm font-semibold text-slate-800 flex items-center">
-                        <FileText className="h-4 w-4 text-slate-400 mr-1.5 shrink-0" />
-                        {activePass.reason}
+                  {/* Metadata Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Reason for Outing</span>
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-start gap-2">
+                        <FileText className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                        <span>{activePass.reason}</span>
                       </span>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Expected Exit Window</span>
-                      <span className="text-sm font-semibold text-slate-800 flex items-center">
-                        <Clock className="h-4 w-4 text-slate-400 mr-1.5 shrink-0" />
-                        {new Date(activePass.exit_time).toLocaleString()}
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Requested Exit Window</span>
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-slate-400 shrink-0" />
+                        <span>{new Date(activePass.exit_time).toLocaleString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
                       </span>
                     </div>
-
-                    {activePass.approved_by && <div className="space-y-1.5 md:col-span-2 border-t border-slate-50 pt-4">
-                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">HOD Remarks</span>
-                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs font-semibold text-slate-600 leading-relaxed">
-                          Verified & Approved by: <span className="text-slate-800 font-bold">{activePass.approved_by}</span>
-                          <p className="mt-1 font-medium text-slate-500 italic">"{activePass.remarks}"</p>
-                        </div>
-                      </div>}
                   </div>
 
-                  {activePass.status === "pending" && <div className="border-t border-slate-100 pt-4 flex justify-end">
+                  {/* Approver Remarks Box */}
+                  {activePass.approved_by && (
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Faculty / HOD Clearance Remarks</span>
+                      <div className="text-xs text-slate-700 dark:text-slate-200 font-semibold">
+                        Authorized by: <strong className="text-slate-900 dark:text-white">{activePass.approved_by}</strong>
+                      </div>
+                      {activePass.remarks && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 italic">"{activePass.remarks}"</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Action Banner */}
+                  {activePass.status === "pending" && (
+                    <div className="pt-2 flex items-center justify-between">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Application pending in Class Teacher / HOD clearance queue.</p>
                       <button
-    onClick={() => handleCancelPass(activePass.id)}
-    className="inline-flex items-center px-4 py-2 border border-red-200 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 transition cursor-pointer"
-  >
+                        onClick={() => handleCancelPass(activePass.id)}
+                        className="inline-flex items-center px-4 py-2 border border-rose-500/30 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition cursor-pointer"
+                      >
                         <Trash2 className="h-4 w-4 mr-1.5" />
                         Cancel Request
                       </button>
-                    </div>}
+                    </div>
+                  )}
 
-                  {activePass.status === "approved" && <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-start space-x-3 text-emerald-800">
-                      <CheckCircle className="h-5 w-5 mt-0.5 shrink-0" />
-                      <div>
-                        <div className="text-xs font-bold">Approved and Active!</div>
-                        <p className="text-xs font-medium mt-1">
-                          Your pass is ready. Show the guard the QR code to log your exit. Once scanned, this pass will be closed.
+                  {activePass.status === "approved" && (
+                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 flex items-center gap-3">
+                      <CheckCircle className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <div className="text-xs">
+                        <strong className="font-bold">Pass is Authorized &amp; Active!</strong>
+                        <p className="text-emerald-700 dark:text-emerald-400 mt-0.5">Please show your QR code to security at the main gate.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePass.status === "exited" && (
+                    <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-800 dark:text-indigo-300 flex items-center gap-3">
+                      <Clock className="h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                      <div className="text-xs">
+                        <strong className="font-bold">Currently Outside Campus</strong>
+                        <p className="text-indigo-700 dark:text-indigo-400 mt-0.5">
+                          Exit logged at {new Date(activePass.exit_marked_at).toLocaleTimeString()}. Remember to return before curfew.
                         </p>
                       </div>
-                    </div>}
-
-                  {activePass.status === "exited" && <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-start space-x-3 text-indigo-800">
-                      <Clock className="h-5 w-5 mt-0.5 shrink-0" />
-                      <div>
-                        <div className="text-xs font-bold">Currently Outside Campus</div>
-                        <p className="text-xs font-medium mt-1">
-                          Your exit was recorded at <span className="font-bold">{new Date(activePass.exit_marked_at).toLocaleTimeString()}</span>. Make sure to check in at the guard desk upon return to close this pass.
-                        </p>
-                      </div>
-                    </div>}
-
+                    </div>
+                  )}
                 </div>
-              </div> : <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-lg mx-auto">
-                <Compass className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-base font-bold text-slate-800">No Active Gate Pass</h3>
-                <p className="text-sm text-slate-500 mt-1 font-medium leading-relaxed">
-                  You currently do not have any pending, approved, or active out-of-campus gate passes. Need to go outside college boundaries? Apply for a new gate pass.
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-8 max-w-lg mx-auto">
+                <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400 dark:text-slate-500">
+                  <Compass className="h-8 w-8" />
+                </div>
+                <h3 className="text-base font-bold text-slate-800 dark:text-white">No Active Gate Pass</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-medium leading-relaxed">
+                  You do not have any pending or active out-of-campus passes at the moment. Need to leave campus for official or urgent work?
                 </p>
                 <button
-    onClick={() => setActiveTab("apply")}
-    className="mt-5 inline-flex items-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
-  >
-                  Apply Gate Pass
+                  onClick={() => setActiveTab("apply")}
+                  className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-[#1e60d5] hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Apply for Gate Pass</span>
                 </button>
-              </div>}
-          </div>}
+              </div>
+            )}
+          </div>
+        )}
 
-        {
-    /* TAB 2: APPLY FORM */
-  }
-        {activeTab === "apply" && <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto">
-            <div className="border-b border-slate-200 pb-4 mb-5">
-              <h2 className="text-lg font-bold text-slate-800">Out-Of-Campus Gate Pass Application</h2>
-              <p className="text-xs text-slate-500 font-medium">Your request will automatically route to your registered Class Incharge (Class Teacher) and HOD for approvals.</p>
+        {/* TAB 2: APPLY FORM */}
+        {activeTab === "apply" && (
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm max-w-2xl mx-auto space-y-6">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-lg">
+                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <span>Out-Of-Campus Gate Pass Application</span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                Your request will automatically route to your registered Class Teacher and HOD for official sign-off.
+              </p>
             </div>
 
             <form onSubmit={handleApply} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Reason for Leaving Campus</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Reason for Leaving Campus <span className="text-rose-500">*</span>
+                </label>
                 <textarea
-    required
-    rows={3}
-    value={reason}
-    onChange={(e) => setReason(e.target.value)}
-    placeholder="Provide complete details (e.g. Urgent personal work, dental checkup)..."
-    className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white focus:border-slate-900 text-sm placeholder-slate-400"
-  />
+                  required
+                  rows={3}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Provide complete genuine details (e.g., Medical appointment, university duty, urgent personal work)..."
+                  className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 text-xs placeholder-slate-400 leading-relaxed font-medium"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Leaving Date</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Leaving Date <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     required
                     type="date"
                     min={getTodayLocalDateStr()}
                     value={exitDate}
                     onChange={(e) => setExitDate(e.target.value)}
-                    className="block w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white focus:border-slate-900 text-sm"
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 text-xs font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Leaving Time (9:00 AM - 6:00 PM)</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Leaving Time (09:00 AM - 06:00 PM) <span className="text-rose-500">*</span>
+                  </label>
                   <select
                     required
                     value={exitTimeOnly}
                     onChange={(e) => setExitTimeOnly(e.target.value)}
-                    className="block w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white focus:border-slate-900 text-sm"
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 text-xs font-medium cursor-pointer"
                   >
                     <option value="09:00">09:00 AM</option>
                     <option value="09:30">09:30 AM</option>
@@ -516,353 +691,408 @@ export default function StudentDashboard({ user, onLogout }) {
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 pt-4 flex justify-end space-x-3">
+              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2.5 font-medium">
+                <Info className="h-4 w-4 shrink-0 text-blue-500" />
+                <span>Parent SMS &amp; WhatsApp notifications are sent automatically upon security gate exit scan.</span>
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-end gap-3">
                 <button
-    type="button"
-    onClick={() => setActiveTab("status")}
-    className="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-  >
+                  type="button"
+                  onClick={() => setActiveTab("status")}
+                  className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
                   Cancel
                 </button>
                 <button
-    type="submit"
-    disabled={submitLoading}
-    className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-md flex items-center space-x-2 transition cursor-pointer"
-  >
-                  {submitLoading ? <>
+                  type="submit"
+                  disabled={submitLoading}
+                  className="px-6 py-2.5 bg-[#1e60d5] hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition cursor-pointer"
+                >
+                  {submitLoading ? (
+                    <>
                       <RefreshCw className="animate-spin h-4 w-4" />
-                      <span>Analyzing & Submitting...</span>
-                    </> : <>
+                      <span>Submitting Application...</span>
+                    </>
+                  ) : (
+                    <>
                       <span>Submit Application</span>
-                      <ArrowUpRight className="h-4 w-4 text-emerald-400" />
-                    </>}
+                      <ArrowUpRight className="h-4 w-4" />
+                    </>
+                  )}
                 </button>
               </div>
             </form>
-          </div>}
+          </div>
+        )}
 
-        {
-    /* TAB 3: PASS HISTORY */
-  }
-        {activeTab === "history" && <div className="space-y-6">
-            {
-    /* Month-wise distribution panel */
-  }
-            {passes.length > 0 && <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center space-x-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span>Month-wise Usage Statistics</span>
+        {/* TAB 3: PASS HISTORY */}
+        {activeTab === "history" && (
+          <div className="space-y-6">
+            {/* Monthly Statistics Overview */}
+            {passes.length > 0 && (
+              <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+                <h3 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-blue-600" />
+                  <span>Month-Wise Outing Statistics</span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Object.entries(
-    passes.reduce((acc, pass) => {
-      const date = new Date(pass.exit_time || pass.created_at);
-      const monthName = date.toLocaleString("default", { month: "long", year: "numeric" });
-      const dayStr = date.toLocaleDateString(void 0, { day: "numeric", month: "short" });
-      if (!acc[monthName]) {
-        acc[monthName] = { total: 0, closed: 0, pending: 0, approved: 0, dates: [] };
-      }
-      acc[monthName].total++;
-      if (pass.status === "closed") acc[monthName].closed++;
-      else if (pass.status === "pending") acc[monthName].pending++;
-      else if (pass.status === "approved" || pass.status === "exited") acc[monthName].approved++;
-      acc[monthName].dates.push(`${dayStr} (${pass.status.toUpperCase()})`);
-      return acc;
-    }, {})
-  ).map(([month, stat]) => <div key={month} className="p-4 rounded-xl bg-slate-50 border border-slate-200 shadow-inner flex flex-col justify-between">
+                    passes.reduce((acc, pass) => {
+                      const date = new Date(pass.exit_time || pass.created_at);
+                      const monthName = date.toLocaleString("default", { month: "long", year: "numeric" });
+                      const dayStr = date.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+                      if (!acc[monthName]) {
+                        acc[monthName] = { total: 0, closed: 0, pending: 0, approved: 0, dates: [] };
+                      }
+                      acc[monthName].total++;
+                      if (pass.status === "closed") acc[monthName].closed++;
+                      else if (pass.status === "pending" || pass.status === "pending_hod") acc[monthName].pending++;
+                      else if (pass.status === "approved" || pass.status === "exited") acc[monthName].approved++;
+                      acc[monthName].dates.push(`${dayStr} (${pass.status.toUpperCase()})`);
+                      return acc;
+                    }, {})
+                  ).map(([month, stat]) => (
+                    <div key={month} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 shadow-xs flex flex-col justify-between">
                       <div>
-                        <div className="font-bold text-slate-900 text-sm mb-1">{month}</div>
-                        <div className="text-slate-500 text-xs font-semibold mb-3">
-                          Total Passes Taken: <span className="text-slate-800 font-extrabold">{stat.total}</span>
+                        <div className="font-bold text-slate-900 dark:text-white text-sm mb-1">{month}</div>
+                        <div className="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-3">
+                          Total Passes: <span className="text-slate-900 dark:text-white font-extrabold">{stat.total}</span>
                         </div>
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-[9px] font-bold rounded-full">Completed: {stat.closed}</span>
-                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded-full">Approved/Active: {stat.approved}</span>
-                          {stat.pending > 0 && <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-bold rounded-full">Pending: {stat.pending}</span>}
-                        </div>
-                      </div>
-                      <div className="border-t border-slate-200 pt-2 mt-2">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide block mb-1">Pass Dates &amp; Status:</span>
-                        <div className="text-[10px] text-slate-600 font-medium flex flex-wrap gap-1 max-h-24 overflow-y-auto">
-                          {stat.dates.map((d, idx) => <span key={idx} className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700">{d}</span>)}
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded-full">Completed: {stat.closed}</span>
+                          <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full">Approved: {stat.approved}</span>
+                          {stat.pending > 0 && <span className="px-2 py-0.5 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-bold rounded-full">Pending: {stat.pending}</span>}
                         </div>
                       </div>
-                    </div>)}
+                      <div className="border-t border-slate-200 dark:border-slate-700 pt-2.5 mt-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block mb-1">Pass Dates &amp; Status:</span>
+                        <div className="text-[10px] text-slate-600 dark:text-slate-300 font-medium flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                          {stat.dates.map((d, idx) => (
+                            <span key={idx} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-200">{d}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>}
+              </div>
+            )}
 
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+            {/* Passes Table */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800">My GatePass History</h2>
-                  <p className="text-xs text-slate-500 font-medium">Record of all past out-of-campus gate passes.</p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">My Gate Pass History Records</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Historical register of all outing requests.</p>
                 </div>
                 <button
-    onClick={fetchPasses}
-    className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 cursor-pointer"
-    title="Refresh List"
-  >
+                  onClick={fetchPasses}
+                  className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer"
+                  title="Refresh History"
+                >
                   <RefreshCw className="h-4 w-4" />
                 </button>
               </div>
 
-              {passes.length === 0 ? <div className="text-center py-12 p-8 text-slate-400">
-                  <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300" />
-                  <span className="text-sm font-semibold">No gate passes recorded yet.</span>
-                </div> : <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-100">
-                    <thead className="bg-slate-50">
+              {passes.length === 0 ? (
+                <div className="text-center py-16 text-slate-400 dark:text-slate-500">
+                  <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                  <span className="text-sm font-semibold">No gate pass records found.</span>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60">
                       <tr>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">GatePass ID</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Requested Exit Time</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Scan / Exit Timestamp</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 tracking-wider">AI Security Score</th>
+                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pass ID</th>
+                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reason for Outing</th>
+                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exit Window</th>
+                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gate Scan Timestamp</th>
+                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Risk Level</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-slate-100 text-xs">
-                      {passes.map((pass) => <tr key={pass.id} className="hover:bg-slate-50/50">
-                          <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-800">{pass.id}</td>
+                    <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                      {passes.map((pass) => (
+                        <tr key={pass.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                          <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-800 dark:text-slate-200">#{pass.id}</td>
                           <td className="px-6 py-4">
-                            <div className="font-semibold text-slate-800 max-w-xs truncate">{pass.reason}</div>
+                            <div className="font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">{pass.reason}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                            <div>{new Date(pass.exit_time).toLocaleString()}</div>
+                          <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-medium">
+                            {new Date(pass.exit_time).toLocaleString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-[11px] text-slate-600">
-                            {pass.exit_marked_at ? <span className="font-semibold text-slate-800">{new Date(pass.exit_marked_at).toLocaleString()}</span> : <span className="text-slate-400">Not Scanned</span>}
+                          <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                            {pass.exit_marked_at ? (
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                {new Date(pass.exit_marked_at).toLocaleTimeString()}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 dark:text-slate-500 font-italic">Not Scanned</span>
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
                           <td className="px-6 py-4 whitespace-nowrap">{getRiskBadge(pass.risk_level)}</td>
-                        </tr>)}
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
-                </div>}
+                </div>
+              )}
             </div>
-          </div>}
+          </div>
+        )}
 
-        {
-    /* TAB 4: PROFILE EDIT */
-  }
-        {activeTab === "profile" && <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-xl mx-auto">
-            <div className="border-b border-slate-200 pb-4 mb-5">
-              <h2 className="text-lg font-bold text-slate-800">My Profile Configuration</h2>
-              <p className="text-xs text-slate-500 font-medium">Keep your registration details accurate for security audit logs.</p>
-            </div>
-
-            {profileSuccess && <div className="mb-4 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-lg text-xs font-semibold text-emerald-700">
-                Profile updated successfully.
-              </div>}
-
-            <form onSubmit={handleProfileUpdate} className="space-y-5">
-              <div className="flex flex-col items-center justify-center space-y-2 mb-4">
-                {photo ? <img src={photo} alt={user.name} className="h-24 w-24 rounded-full border-2 border-slate-200 object-cover shadow" /> : <div className="h-24 w-24 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center">
-                    <User className="h-10 w-10 text-slate-400" />
-                  </div>}
-                <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg transition">
-                  Upload Photo File
-                  <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Full Name</label>
-                  <input
-    disabled
-    type="text"
-    value={user.name}
-    className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 text-sm cursor-not-allowed"
-  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Roll Number</label>
-                  <input
-    disabled
-    type="text"
-    value={user.roll_no}
-    className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 text-sm cursor-not-allowed"
-  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email Address</label>
-                  <input
-    type="email"
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Phone Number</label>
-                  <input
-    type="text"
-    value={phone}
-    onChange={(e) => setPhone(e.target.value)}
-    className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-  />
-                </div>
-              </div>
-
-              <div className="border-t border-slate-200 pt-4 flex justify-end">
-                <button
-    type="submit"
-    className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
-  >
-                  Save Profile Info
-                </button>
-              </div>
-            </form>
-          </div>}
-
-        {
-    /* TAB 5: LATE COME ENTRY */
-  }
-        {activeTab === "late" && <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {
-    /* Form to submit late come */
-  }
-            <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        {/* TAB 4: LATE COME ENTRY */}
+        {activeTab === "late" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Form to submit late come (5 cols) */}
+            <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Self Late-Arrival Logging</h2>
-                <p className="text-xs text-slate-500 font-medium">As directed by your teacher, please enter your exact arrival time and genuine reason below.</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  <span>Self Late-Arrival Logging</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                  Enter your genuine arrival time and explanation for teacher attendance review.
+                </p>
               </div>
 
               <form onSubmit={handleLateComeSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Exact Arrival Time</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Exact Arrival Time <span className="text-rose-500">*</span>
+                  </label>
                   <input
-    type="datetime-local"
-    value={lateTime}
-    onChange={(e) => setLateTime(e.target.value)}
-    required
-    className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-  />
+                    type="datetime-local"
+                    value={lateTime}
+                    onChange={(e) => setLateTime(e.target.value)}
+                    required
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Reason for Coming Late</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Reason for Coming Late <span className="text-rose-500">*</span>
+                  </label>
                   <textarea
-    rows={4}
-    value={lateReason}
-    onChange={(e) => setLateReason(e.target.value)}
-    required
-    placeholder="Provide a detailed explanation (e.g., missed college bus, heavy rain, train delay, medical emergency)"
-    className="block w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-slate-900 leading-relaxed placeholder:text-slate-400"
-  />
+                    rows={4}
+                    value={lateReason}
+                    onChange={(e) => setLateReason(e.target.value)}
+                    required
+                    placeholder="Provide detailed reason (e.g. Bus breakdown, heavy rain, train delay, medical emergency)..."
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500 leading-relaxed placeholder-slate-400"
+                  />
                 </div>
 
                 <button
-    type="submit"
-    disabled={submittingLate}
-    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer"
-  >
-                  {submittingLate ? <span className="inline-block animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white" /> : <>
+                  type="submit"
+                  disabled={submittingLate}
+                  className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {submittingLate ? (
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  ) : (
+                    <>
                       <Clock className="h-4 w-4" />
-                      <span>Log Late Arrival</span>
-                    </>}
+                      <span>Log Late Arrival Entry</span>
+                    </>
+                  )}
                 </button>
               </form>
             </div>
 
-            {
-    /* History timeline */
-  }
-            <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-              <div className="flex items-center justify-between">
+            {/* History timeline (7 cols) */}
+            <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900 font-sans">My Late Come History</h2>
-                  <p className="text-xs text-slate-500 font-medium">Monthly logs submitted for review by your class teacher.</p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">My Late Entry History</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Logs submitted for class teacher records.</p>
                 </div>
-                <span className="bg-slate-100 text-slate-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-slate-200">
+                <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
                   Total: {lateEntries.length}
                 </span>
               </div>
 
-              {lateEntries.length === 0 ? <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400">
-                  <Clock className="h-10 w-10 mx-auto text-slate-300 mb-2" />
-                  <p className="text-xs font-bold">No late entries logged yet.</p>
-                  <p className="text-[10px] text-slate-400 mt-1 max-w-xs mx-auto">Any late-come self-reports requested by teachers will be displayed here.</p>
-                </div> : <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
-                  {lateEntries.map((entry) => <div key={entry.id} className="p-4 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/60 transition flex flex-col sm:flex-row justify-between gap-4">
+              {lateEntries.length === 0 ? (
+                <div className="text-center py-16 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500">
+                  <Clock className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No late entries recorded.</p>
+                  <p className="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">Any late-come self-reports submitted will appear in this timeline.</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                  {lateEntries.map((entry) => (
+                    <div key={entry.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100/80 dark:hover:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 transition flex flex-col sm:flex-row justify-between gap-3">
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center space-x-2">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 uppercase">
                             Late Arrival
                           </span>
                           <span className="text-[10px] text-slate-400 font-bold">
-                            Logged on: {new Date(entry.created_at).toLocaleDateString(void 0, { day: "numeric", month: "short", year: "numeric" })}
+                            Logged: {new Date(entry.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                        <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
                           "{entry.reason}"
                         </p>
                       </div>
                       <div className="flex flex-col sm:items-end justify-center shrink-0">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Arrival Timestamp</span>
-                        <span className="text-xs font-bold text-slate-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200 mt-0.5">
-                          {new Date(entry.arrival_time).toLocaleString(void 0, { dateStyle: "medium", timeStyle: "short" })}
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Arrival Time</span>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 mt-0.5">
+                          {new Date(entry.arrival_time).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
                         </span>
                       </div>
-                    </div>)}
-                </div>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>}
+          </div>
+        )}
 
-      </div>
+        {/* TAB 5: PROFILE EDIT */}
+        {activeTab === "profile" && (
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm max-w-xl mx-auto space-y-6">
+            <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <span>My Profile Configuration</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Keep your registration details accurate for college security records.</p>
+            </div>
 
-      {
-    /* Custom Cancellation Confirmation Modal */
-  }
-      {cancelPassId && <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-slate-100 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center space-x-3 text-red-500">
-              <div className="p-2.5 bg-red-50 rounded-2xl">
+            {profileSuccess && (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Profile updated successfully!</span>
+              </div>
+            )}
+
+            <form onSubmit={handleProfileUpdate} className="space-y-5">
+              <div className="flex flex-col items-center justify-center space-y-2.5 pb-2">
+                {photo ? (
+                  <img src={photo} alt={user.name} className="h-24 w-24 rounded-2xl border-2 border-slate-200 dark:border-slate-700 object-cover shadow-sm" />
+                ) : (
+                  <div className="h-24 w-24 rounded-2xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400">
+                    <User className="h-10 w-10" />
+                  </div>
+                )}
+                <label className="cursor-pointer inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-xl transition">
+                  <Camera className="h-3.5 w-3.5" />
+                  <span>Upload Photo</span>
+                  <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Full Name</label>
+                  <input
+                    disabled
+                    type="text"
+                    value={user.name}
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Roll Number</label>
+                  <input
+                    disabled
+                    type="text"
+                    value={user.roll_no}
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-end">
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-[#1e60d5] hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition cursor-pointer"
+                >
+                  Save Profile Info
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </main>
+
+      {/* 4. MODALS & TOAST NOTIFICATIONS */}
+      {/* Custom Cancellation Confirmation Modal */}
+      {cancelPassId && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-500">
+              <div className="p-2.5 bg-rose-500/10 rounded-xl">
                 <AlertTriangle className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">Cancel Gate Pass Request</h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gate pass action</p>
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm">Cancel Gate Pass Request</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gate Pass Action</p>
               </div>
             </div>
-            <div className="text-xs text-slate-600 space-y-2 leading-relaxed">
-              <p>
-                Are you sure you want to cancel this pending gate pass request?
-              </p>
-              <p className="bg-amber-50 text-amber-700 p-2.5 rounded-xl border border-amber-100 font-medium">
+            <div className="text-xs text-slate-600 dark:text-slate-300 space-y-2 leading-relaxed">
+              <p>Are you sure you want to cancel this pending gate pass request?</p>
+              <p className="bg-amber-500/10 text-amber-800 dark:text-amber-300 p-2.5 rounded-xl border border-amber-500/20 font-medium">
                 This will recall your application from HOD queues. You will need to create a new application if you change your mind.
               </p>
             </div>
-            <div className="flex space-x-2 pt-2">
+            <div className="flex gap-2 pt-2">
               <button
-    onClick={() => setCancelPassId(null)}
-    className="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
-  >
+                onClick={() => setCancelPassId(null)}
+                className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
+              >
                 Go Back
               </button>
               <button
-    onClick={executeCancelPass}
-    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition cursor-pointer"
-  >
-                Yes, Cancel Pass
+                onClick={executeCancelPass}
+                className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+              >
+                Yes, Cancel
               </button>
             </div>
           </div>
-        </div>}
+        </div>
+      )}
 
-      {
-    /* Custom Toast Notification System */
-  }
-      {toast && <div className="fixed bottom-5 right-5 z-[100] max-w-sm w-full bg-white rounded-2xl border border-slate-100 shadow-2xl p-4 flex items-center space-x-3 animate-in slide-in-from-bottom duration-300">
-          <div className={`p-2 rounded-xl shrink-0 ${toast.type === "success" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}>
-            {toast.type === "success" ? <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg> : <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>}
+      {/* Custom Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-[100] max-w-sm w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 flex items-center gap-3">
+          <div className={`p-2 rounded-xl shrink-0 ${toast.type === "success" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"}`}>
+            {toast.type === "success" ? (
+              <CheckCircle2 className="h-5 w-5" />
+            ) : (
+              <AlertCircle className="h-5 w-5" />
+            )}
           </div>
-          <div className="flex-1">
-            <p className="text-xs font-bold text-slate-900">{toast.type === "success" ? "Success" : "Error"}</p>
-            <p className="text-[11px] text-slate-500 font-medium">{toast.message}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-slate-900 dark:text-white">{toast.type === "success" ? "Success" : "Notice"}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">{toast.message}</p>
           </div>
-        </div>}
-
-    </div>;
+        </div>
+      )}
+    </div>
+  );
 }

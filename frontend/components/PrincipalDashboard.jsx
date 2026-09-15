@@ -28,8 +28,9 @@ import {
   Moon
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
+import sbjainLogo from "../assets/sbjain-logo.png";
 
-export default function PrincipalDashboard({ user, onLogout }) {
+export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggleTheme }) {
   const [activeTab, setActiveTab] = useState("pending"); // "pending", "history", "all"
   const [pendingPasses, setPendingPasses] = useState([]);
   const [historyPasses, setHistoryPasses] = useState([]);
@@ -38,23 +39,6 @@ export default function PrincipalDashboard({ user, onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("All");
 
-  // Theme toggle state
-  const [darkMode, setDarkMode] = useState(() => {
-    return document.documentElement.classList.contains("dark");
-  });
-
-  const toggleTheme = () => {
-    if (darkMode) {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setDarkMode(false);
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setDarkMode(true);
-    }
-  };
-  
   // Modal state for Approve / Reject action
   const [selectedPass, setSelectedPass] = useState(null);
   const [modalType, setModalType] = useState(null); // 'approve' | 'reject' | 'view_qr'
@@ -195,116 +179,135 @@ export default function PrincipalDashboard({ user, onLogout }) {
   ).length;
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-12 transition-colors">
+    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-12 transition-colors">
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center gap-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 shadow-lg shadow-amber-500/20">
-            <Award className="h-6 w-6 text-white" />
+      <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md px-4 sm:px-6 py-3">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <img
+              src={sbjainLogo}
+              alt="S.B. Jain Institute Logo"
+              className="h-11 w-11 sm:h-12 sm:w-12 object-contain bg-white rounded-xl p-1 shadow-sm border border-white/20 shrink-0"
+            />
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-white font-extrabold text-sm sm:text-base tracking-tight drop-shadow-sm">
+                  S. B. Jain Institute of Technology, Management and Research
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 uppercase tracking-wider">
+                  PRINCIPAL &amp; EXECUTIVE PORTAL
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 font-medium">
+                Nagpur • Campus-Wide Authorization &amp; Gate Pass Monitoring
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              Principal Authorization Portal
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-semibold">
-                Executive Access
-              </span>
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Welcome back, <span className="text-slate-800 dark:text-slate-200 font-medium">{user?.name || "Dr. Principal"}</span> • Management & Approvals
-            </p>
+
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:block text-right">
+              <div className="text-xs font-semibold text-white">{user?.name || "Dr. Principal"}</div>
+              <div className="text-[11px] text-slate-400">Principal &amp; Executive Approvals</div>
+            </div>
+
+            <button
+              onClick={onToggleTheme}
+              className="p-1.5 sm:p-2 rounded-lg border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-200" />}
+            </button>
+
+            <button
+              onClick={fetchDashboardData}
+              disabled={loading}
+              className="p-1.5 sm:p-2 rounded-lg border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              title="Refresh Data"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-amber-400" : ""}`} />
+            </button>
+
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/20 text-white bg-white/10 hover:bg-white/20 transition text-xs font-bold cursor-pointer"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={fetchDashboardData}
-            disabled={loading}
-            className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors border border-slate-200 dark:border-slate-700/50 flex items-center gap-2 text-xs font-semibold cursor-pointer"
-            title="Refresh Data"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-amber-500" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-
-          <button
-            onClick={onLogout}
-            className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Sign Out</span>
-          </button>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
         {/* Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="p-5 rounded-2xl bg-amber-500/10 dark:bg-gradient-to-br dark:from-amber-500/10 dark:to-amber-600/5 border border-amber-500/30 dark:border-amber-500/20 shadow-sm relative overflow-hidden">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
                   Pending Faculty Gatepasses
                 </p>
                 <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
                   {pendingPasses.length}
                 </h3>
               </div>
-              <div className="p-3 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300">
+              <div className="p-3 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-300">
                 <Clock className="h-6 w-6" />
               </div>
             </div>
-            <p className="text-xs text-amber-700/80 dark:text-amber-300/70 mt-3">Awaiting Principal Sign-Off</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Awaiting Principal Sign-Off</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-emerald-500/10 dark:bg-gradient-to-br dark:from-emerald-500/10 dark:to-emerald-600/5 border border-emerald-500/30 dark:border-emerald-500/20 shadow-sm">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                   Approved Passes
                 </p>
                 <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
                   {statsApprovedToday}
                 </h3>
               </div>
-              <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-700 dark:text-emerald-3资源 text-emerald-300">
+              <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
                 <CheckCircle className="h-6 w-6" />
               </div>
             </div>
-            <p className="text-xs text-emerald-700/80 dark:text-emerald-300/70 mt-3">Authorized for Exit</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Authorized for Exit</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-sky-500/10 dark:bg-gradient-to-br dark:from-sky-500/10 dark:to-sky-600/5 border border-sky-500/30 dark:border-sky-500/20 shadow-sm">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-semibold text-sky-700 dark:text-sky-400 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">
                   Currently Off-Campus
                 </p>
                 <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
                   {statsOffCampus}
                 </h3>
               </div>
-              <div className="p-3 rounded-xl bg-sky-500/20 text-sky-700 dark:text-sky-300">
+              <div className="p-3 rounded-xl bg-sky-500/20 text-sky-600 dark:text-sky-300">
                 <LogOut className="h-6 w-6" />
               </div>
             </div>
-            <p className="text-xs text-sky-700/80 dark:text-sky-300/70 mt-3">Active Exits Logged</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Active Exits Logged</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-indigo-500/10 dark:bg-gradient-to-br dark:from-indigo-500/10 dark:to-indigo-600/5 border border-indigo-500/30 dark:border-indigo-500/20 shadow-sm">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                   Total College Passes
                 </p>
                 <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
                   {allCollegePasses.length}
                 </h3>
               </div>
-              <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-700 dark:text-indigo-300">
+              <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-300">
                 <FileText className="h-6 w-6" />
               </div>
             </div>
-            <p className="text-xs text-indigo-700/80 dark:text-indigo-300/70 mt-3">Faculty & Student Combined</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Faculty &amp; Student Combined</p>
           </div>
         </div>
 

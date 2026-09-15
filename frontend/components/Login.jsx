@@ -65,6 +65,8 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
   const [studentsList, setStudentsList] = useState([]);
   const [selectedDemoHOD, setSelectedDemoHOD] = useState("");
   const [showHODDropdown, setShowHODDropdown] = useState(false);
+  const [selectedDemoTeacher, setSelectedDemoTeacher] = useState("");
+  const [showTeacherDropdown, setShowTeacherDropdown] = useState(false);
 
   // 2-Step Authentication (2FA) State
   const [requires2FA, setRequires2FA] = useState(false);
@@ -280,8 +282,13 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
     setError(null);
     setSuccessMsg(null);
     setShowHODDropdown(false);
+    setShowTeacherDropdown(false);
 
-    setEmail("");
+    if (specificEmail) {
+      setEmail(specificEmail);
+    } else {
+      setEmail("");
+    }
     setPassword("");
   };
 
@@ -584,7 +591,14 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
                     {/* Row 2: Class Incharge Portal */}
                     <button
                       type="button"
-                      onClick={() => handleSelectPortal("teacher")}
+                      onClick={() => {
+                        setShowHODDropdown(false);
+                        if (teachers.length > 0) {
+                          setShowTeacherDropdown(!showTeacherDropdown);
+                        } else {
+                          handleSelectPortal("teacher");
+                        }
+                      }}
                       className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-blue-200 bg-white hover:bg-blue-50/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-pointer group text-left animate-stagger-2"
                     >
                       <div className="flex items-center space-x-3.5 min-w-0">
@@ -600,8 +614,45 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
                           </span>
                         </div>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                      <ChevronRight className={`h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 ${showTeacherDropdown ? 'rotate-90 text-blue-600' : 'group-hover:translate-x-1'} shrink-0 ml-2`} />
                     </button>
+
+                    {/* Class Incharge Dynamic Dropdown Logic */}
+                    {showTeacherDropdown && (
+                      <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 animate-fade-in shadow-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase text-blue-800 tracking-wider">Select Class Incharge</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowTeacherDropdown(false);
+                              handleSelectPortal("teacher");
+                            }}
+                            className="text-[10px] text-blue-600 hover:text-blue-800 font-bold hover:underline"
+                          >
+                            Manual Entry &rarr;
+                          </button>
+                        </div>
+                        <select
+                          value={selectedDemoTeacher}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedDemoTeacher(val);
+                            if (val) {
+                              handleSelectPortal("teacher", val);
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-blue-300 rounded-lg bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs"
+                        >
+                          <option value="">-- Choose Class Incharge --</option>
+                          {teachers.map((t) => (
+                            <option key={t.id} value={t.email}>
+                              {t.name} ({t.class_name || t.department})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
                     {/* Row 3: Teacher Staff Portal */}
                     <button
@@ -629,6 +680,7 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
                     <button
                       type="button"
                       onClick={() => {
+                        setShowTeacherDropdown(false);
                         if (hods.length > 0) {
                           setShowHODDropdown(!showHODDropdown);
                         } else {
@@ -650,15 +702,24 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
                           </span>
                         </div>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-x-1 shrink-0 ml-2" />
+                      <ChevronRight className={`h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-all duration-300 ${showHODDropdown ? 'rotate-90 text-teal-600' : 'group-hover:translate-x-1'} shrink-0 ml-2`} />
                     </button>
 
                     {/* HOD Dynamic Dropdown Logic */}
                     {showHODDropdown && (
-                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 animate-fade-in">
+                      <div className="p-3 bg-teal-50/70 border border-teal-200 rounded-xl space-y-2 animate-fade-in shadow-xs">
                         <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Select Department HOD</span>
-                          <button onClick={() => setShowHODDropdown(false)} className="text-[10px] text-slate-400 hover:text-slate-600 font-bold">Cancel</button>
+                          <span className="text-[10px] font-bold uppercase text-teal-800 tracking-wider">Select Department HOD</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowHODDropdown(false);
+                              handleSelectPortal("hod");
+                            }}
+                            className="text-[10px] text-teal-600 hover:text-teal-800 font-bold hover:underline"
+                          >
+                            Manual Entry &rarr;
+                          </button>
                         </div>
                         <select
                           value={selectedDemoHOD}
@@ -669,7 +730,7 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
                               handleSelectPortal("hod", val);
                             }
                           }}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          className="w-full px-3 py-2 border border-teal-300 rounded-lg bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 shadow-xs"
                         >
                           <option value="">-- Choose Department HOD --</option>
                           {hods.map((h) => (
@@ -879,9 +940,16 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
 
                   <form className="space-y-3.5" onSubmit={handleLoginSubmit} autoComplete="off">
                     <div>
-                      <label htmlFor="email" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                        Institutional Email Address
-                      </label>
+                      <div className="flex justify-between items-center">
+                        <label htmlFor="email" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                          Institutional Email Address
+                        </label>
+                        {email && (selectedPortal === "hod" || selectedPortal === "teacher") && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            ✓ Auto-filled
+                          </span>
+                        )}
+                      </div>
                       <div className="mt-1 relative rounded-md shadow-xs">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <Mail className="h-4 w-4 text-slate-400" />
@@ -926,12 +994,18 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
                           type="password"
                           required
                           autoComplete="new-password"
+                          autoFocus={Boolean(email)}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs font-medium"
                           placeholder="Enter your password"
                         />
                       </div>
+                      {email && (selectedPortal === "hod" || selectedPortal === "teacher") && (
+                        <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                          Email auto-populated. Enter your password to log in.
+                        </p>
+                      )}
                     </div>
 
                     <div className="pt-2">

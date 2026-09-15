@@ -129,63 +129,53 @@ function MainPortal() {
   }
 
   // Resolve dashboard view contents
+  const toggleThemeHandler = () => setIsDarkMode(!isDarkMode);
+
   let content;
   if (!role || !user) {
     content = (
       <Login
         onLoginSuccess={handleLoginSuccess}
         isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        onToggleTheme={toggleThemeHandler}
       />
     );
   } else {
     switch (role) {
       case 'student':
-        content = <StudentDashboard user={user} onLogout={handleLogout} />;
+        content = <StudentDashboard user={user} onLogout={handleLogout} isDarkMode={isDarkMode} onToggleTheme={toggleThemeHandler} />;
         break;
       case 'hod':
-        content = <HODDashboard user={user} onLogout={handleLogout} />;
+        content = <HODDashboard user={user} onLogout={handleLogout} isDarkMode={isDarkMode} onToggleTheme={toggleThemeHandler} />;
         break;
       case 'guard':
-        content = <GuardDashboard user={user} onLogout={handleLogout} />;
+        content = <GuardDashboard user={user} onLogout={handleLogout} isDarkMode={isDarkMode} onToggleTheme={toggleThemeHandler} />;
         break;
       case 'admin':
-        content = <AdminDashboard user={user} onLogout={handleLogout} />;
+        content = <AdminDashboard user={user} onLogout={handleLogout} isDarkMode={isDarkMode} onToggleTheme={toggleThemeHandler} />;
         break;
       case 'teacher':
-        content = <TeacherDashboard user={user} onLogout={handleLogout} />;
+        content = <TeacherDashboard user={user} onLogout={handleLogout} isDarkMode={isDarkMode} onToggleTheme={toggleThemeHandler} />;
         break;
       case 'faculty':
-        content = <FacultyDashboard user={user} onLogout={handleLogout} />;
+        content = <FacultyDashboard user={user} onLogout={handleLogout} isDarkMode={isDarkMode} onToggleTheme={toggleThemeHandler} />;
         break;
       case 'principal':
-        content = <PrincipalDashboard user={user} onLogout={handleLogout} />;
+        content = <PrincipalDashboard user={user} onLogout={handleLogout} isDarkMode={isDarkMode} onToggleTheme={toggleThemeHandler} />;
         break;
       default:
         content = (
           <Login
             onLoginSuccess={handleLoginSuccess}
             isDarkMode={isDarkMode}
-            onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+            onToggleTheme={toggleThemeHandler}
           />
         );
     }
   }
 
   return (
-    <div className="relative">
-      {/* Global Theme Toggle Button for authenticated dashboards */}
-      {user && role && (
-        <button
-          type="button"
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="fixed top-4 right-4 z-[9999] p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-md hover:scale-105 transition-all cursor-pointer"
-          aria-label="Toggle dark mode"
-        >
-          {isDarkMode ? <Sun className="h-5 w-5 text-amber-400 animate-pulse" /> : <Moon className="h-5 w-5 text-slate-700" />}
-        </button>
-      )}
-
+    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
       {content}
     </div>
   );

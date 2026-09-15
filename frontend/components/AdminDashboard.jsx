@@ -38,13 +38,15 @@ import {
   Home,
   Settings,
   CheckCircle2,
-  ChevronDown
+  ChevronDown,
+  Sun,
+  Moon
 } from "lucide-react";
 import { apiFetch } from "../lib/api.js";
 import { gatepassService } from "../services/gatepassService.js";
 import sbjainLogo from "../assets/sbjain-logo.png";
 
-export default function AdminDashboard({ user, onLogout }) {
+export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleTheme }) {
   const [stats, setStats] = useState(null);
   const [deptList, setDeptList] = useState([]);
   const [studentList, setStudentList] = useState([]);
@@ -653,6 +655,20 @@ export default function AdminDashboard({ user, onLogout }) {
               </div>
 
               <div className="h-6 w-px bg-white/15 hidden sm:block" />
+
+              {/* Theme Toggle Button */}
+              <button
+                type="button"
+                onClick={onToggleTheme || (() => {
+                  const isDark = document.documentElement.classList.toggle("dark");
+                  localStorage.setItem("theme", isDark ? "dark" : "light");
+                })}
+                className="p-1.5 sm:p-2 rounded-lg border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4 text-slate-200" />}
+              </button>
 
               <button
                 onClick={onLogout}
