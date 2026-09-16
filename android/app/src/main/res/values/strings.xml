@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SBJIT GatePass</string>
+    <string name="title_activity_main">SBJIT GatePass</string>
+    <string name="package_name">com.sbjit.digitalgatepass</string>
+    <string name="custom_url_scheme">com.sbjit.digitalgatepass</string>
+</resources>

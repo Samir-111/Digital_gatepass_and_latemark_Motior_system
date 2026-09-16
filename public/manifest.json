@@ -1,0 +1,17 @@
+{
+  "short_name": "SBJIT GatePass",
+  "name": "SBJIT Digital GatePass & Late-Mark System",
+  "icons": [
+    {
+      "src": "/frontend/assets/sbjain-logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait"
+}
