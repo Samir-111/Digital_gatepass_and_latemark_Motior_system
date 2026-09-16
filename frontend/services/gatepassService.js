@@ -258,6 +258,30 @@ export const gatepassService = {
     return apiFetch('/api/admin/whatsapp/status');
   },
 
+  getWhatsappConfig: async () => {
+    return apiFetch('/api/admin/whatsapp/config');
+  },
+
+  updateWhatsappConfig: async (payload) => {
+    return apiFetch('/api/admin/whatsapp/config', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  resetWhatsappConfig: async () => {
+    return apiFetch('/api/admin/whatsapp/reset', {
+      method: 'POST',
+    });
+  },
+
+  testWhatsappMessage: async (payload) => {
+    return apiFetch('/api/admin/whatsapp/test', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
   getWhatsappLogs: async () => {
     return apiFetch('/api/admin/whatsapp/logs');
   },

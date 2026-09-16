@@ -113,6 +113,7 @@ export class Database {
         this.data.lateComeEntries = deduplicateById(this.data.lateComeEntries || []);
         this.data.whatsappStatus = this.data.whatsappStatus || { status: 'DISCONNECTED', qr: null };
         this.data.whatsappLogs = this.data.whatsappLogs || [];
+        this.data.whatsappConfig = this.data.whatsappConfig || null;
 
         if (this.data.principals.length === 0) {
           const salt = bcrypt.genSaltSync(10);
@@ -1518,6 +1519,30 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
     return false;
   }
 
+  getWhatsAppConfig() {
+    return this.data.whatsappConfig || null;
+  }
+
+  updateWhatsAppConfig(config) {
+    this.data.whatsappConfig = {
+      idInstance: config.idInstance ? String(config.idInstance).trim() : '',
+      apiTokenInstance: config.apiTokenInstance ? String(config.apiTokenInstance).trim() : '',
+      apiUrl: config.apiUrl ? String(config.apiUrl).trim() : '',
+      updated_at: new Date().toISOString(),
+      updated_by: config.updated_by || 'Admin'
+    };
+    this.saveLocal();
+    this.saveDoc('settings', 'whatsappConfig', this.data.whatsappConfig);
+    return this.data.whatsappConfig;
+  }
+
+  resetWhatsAppConfig() {
+    this.data.whatsappConfig = null;
+    this.saveLocal();
+    this.deleteDoc('settings', 'whatsappConfig');
+    return true;
+  }
+
   getWhatsAppStatus() {
     return this.data.whatsappStatus || { status: 'DISCONNECTED', qr: null };
   }
@@ -1525,11 +1550,7 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
   updateWhatsAppStatus(statusObj) {
     this.data.whatsappStatus = statusObj;
     this.saveLocal();
-    if (this.firestore) {
-      this.firestore.collection('settings').doc('whatsappStatus').set(statusObj).catch(err => {
-        console.error('[Firestore Error] Failed to update whatsapp status:', err);
-      });
-    }
+    this.saveDoc('settings', 'whatsappStatus', statusObj);
   }
 
   getWhatsAppLogs() {
@@ -1545,10 +1566,6 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
       this.data.whatsappLogs = this.data.whatsappLogs.slice(0, 100);
     }
     this.saveLocal();
-    if (this.firestore) {
-      this.firestore.collection('whatsappLogs').doc(log.id).set(log).catch(err => {
-        console.error('[Firestore Error] Failed to save whatsapp log:', err);
-      });
-    }
+    this.saveDoc('whatsappLogs', log.id, log);
   }
 }

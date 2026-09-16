@@ -359,6 +359,40 @@ const sendGatePassEmailAlert = async ({
   return false;
 };
 
+// Helper to get active effective WhatsApp configuration (DB overrides .env)
+const getEffectiveWhatsAppConfig = () => {
+  const dbConfig = db.getWhatsAppConfig();
+  if (dbConfig && dbConfig.idInstance && dbConfig.apiTokenInstance) {
+    const instanceId = dbConfig.idInstance.trim().replace(/['"]/g, '');
+    const apiToken = dbConfig.apiTokenInstance.trim().replace(/['"]/g, '');
+    const rawUrl = dbConfig.apiUrl || (instanceId ? `https://${instanceId.substring(0, 4)}.api.greenapi.com` : 'https://7107.api.greenapi.com');
+    const apiUrl = rawUrl.trim().replace(/['"]/g, '').replace(/\/$/, '');
+    return {
+      instanceId,
+      apiToken,
+      apiUrl,
+      source: 'Admin Settings (Saved in System)',
+      isCustom: true,
+      updated_at: dbConfig.updated_at,
+      updated_by: dbConfig.updated_by
+    };
+  }
+
+  const envInstance = (process.env.GREEN_API_INSTANCE_ID || '710722683037').trim().replace(/['"]/g, '');
+  const envToken = (process.env.GREEN_API_TOKEN || '37e35fefa1de4a6b8bea6b9d083d8e06c5a2402d03704bb0a0').trim().replace(/['"]/g, '');
+  const rawUrl = process.env.GREEN_API_URL || (envInstance ? `https://${envInstance.substring(0, 4)}.api.greenapi.com` : 'https://7107.api.greenapi.com');
+  const apiUrl = rawUrl.trim().replace(/['"]/g, '').replace(/\/$/, '');
+  return {
+    instanceId: envInstance,
+    apiToken: envToken,
+    apiUrl,
+    source: 'Environment Default (.env)',
+    isCustom: false,
+    updated_at: null,
+    updated_by: null
+  };
+};
+
 // Helper to dispatch WhatsApp message to parent and audit the result
 const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, exitTime, customMessage }) => {
   let cleanNumber = (parentPhone || '').replace(/[^0-9]/g, '');
@@ -392,11 +426,8 @@ const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, e
   let status = 'failed';
   let errorMsg = null;
 
-  // Green-API exclusive WhatsApp dispatch with fallback credentials for cloud deployment
-  const instanceId = (process.env.GREEN_API_INSTANCE_ID || '710722683037').trim().replace(/['"]/g, '');
-  const apiToken = (process.env.GREEN_API_TOKEN || '37e35fefa1de4a6b8bea6b9d083d8e06c5a2402d03704bb0a0').trim().replace(/['"]/g, '');
-  const rawUrl = process.env.GREEN_API_URL || (instanceId ? `https://${instanceId.substring(0, 4)}.api.greenapi.com` : 'https://7107.api.greenapi.com');
-  const apiUrl = rawUrl.trim().replace(/['"]/g, '').replace(/\/$/, '');
+  // Green-API dynamic configuration (Admin Settings or .env fallback)
+  const { instanceId, apiToken, apiUrl } = getEffectiveWhatsAppConfig();
 
   if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
     try {
@@ -1079,7 +1110,6 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
             'Class / Section': studentInfo.class_name || teacher.class_name || 'N/A',
             'Reason': reason,
             'Departure Time': new Date(exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
-            'Expected Return': new Date(finalReturnTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
             'AI Risk Check': `${risk_level.toUpperCase()} (${risk_remarks})`
           }
         }).catch(err => console.warn('[Email Alert Error (Teacher on apply)]:', err?.message));
@@ -1519,8 +1549,7 @@ app.post('/api/faculty/apply', authenticateJWT, authorizeRoles('teacher'), (req,
         'Department': req.user.department || 'General',
         'Reason': reason,
         'Vehicle No': vehicle_no || 'N/A',
-        'Departure Time': new Date(exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
-        'Expected Return': new Date(finalReturnTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+        'Departure Time': new Date(exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
       }
     }).catch(err => console.warn('[Email Alert Error (HOD on faculty apply)]:', err?.message));
   }
@@ -1999,12 +2028,136 @@ app.get('/api/admin/logs', authenticateJWT, authorizeRoles('admin'), (req, res) 
   res.json(db.getLogs());
 });
 
-// WhatsApp Engine Status and Log Monitor APIs (Green-API Exclusive)
+// WhatsApp Engine Status, Configuration & Audit APIs (Green-API Exclusive)
+app.get('/api/admin/whatsapp/config', authenticateJWT, authorizeRoles('admin'), (req, res) => {
+  const config = getEffectiveWhatsAppConfig();
+  const rawToken = config.apiToken || '';
+  const maskedToken = rawToken
+    ? (rawToken.length > 10 ? `${rawToken.slice(0, 6)}••••••••${rawToken.slice(-4)}` : '••••••••')
+    : 'Not Configured';
+
+  res.json({
+    idInstance: config.instanceId,
+    apiTokenMasked: maskedToken,
+    apiUrl: config.apiUrl,
+    source: config.source,
+    isCustom: config.isCustom,
+    updated_at: config.updated_at,
+    updated_by: config.updated_by
+  });
+});
+
+app.post('/api/admin/whatsapp/config', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
+  const { idInstance, apiToken1, apiToken2, apiToken3, apiUrl } = req.body;
+
+  if (!idInstance || !idInstance.trim()) {
+    return res.status(400).json({ error: 'Green-API Instance ID (idInstance) is required.' });
+  }
+  if (!apiToken1 || !apiToken1.trim()) {
+    return res.status(400).json({ error: 'New API Token (1st input) is required.' });
+  }
+  if (!apiToken2 || !apiToken2.trim()) {
+    return res.status(400).json({ error: 'Please enter the API Token a 2nd time for confirmation.' });
+  }
+  if (!apiToken3 || !apiToken3.trim()) {
+    return res.status(400).json({ error: 'Please enter the API Token a 3rd time for security verification.' });
+  }
+
+  const token1 = apiToken1.trim();
+  const token2 = apiToken2.trim();
+  const token3 = apiToken3.trim();
+  const cleanId = idInstance.trim().replace(/['"]/g, '');
+
+  // 🔒 3-Step Verification check: all 3 inputs must match exactly
+  if (token1 !== token2 || token1 !== token3) {
+    return res.status(400).json({
+      error: 'Security verification failed: All 3 API Token inputs must match exactly to prevent accidental mistakes or deletions.'
+    });
+  }
+
+  const targetUrl = (apiUrl && apiUrl.trim() ? apiUrl.trim() : (cleanId ? `https://${cleanId.substring(0, 4)}.api.greenapi.com` : 'https://7107.api.greenapi.com')).replace(/\/$/, '');
+
+  // Live test Green API connection with the new credentials
+  let stateInstance = 'unknown';
+  let connectionWarning = null;
+  try {
+    const stateUrl = `${targetUrl}/waInstance${cleanId}/getStateInstance/${token1}`;
+    const response = await fetch(stateUrl);
+    if (response.ok) {
+      const data = await response.json();
+      stateInstance = data.stateInstance || 'authorized';
+    } else {
+      const errText = await response.text();
+      connectionWarning = `Green-API response HTTP ${response.status}: ${errText}`;
+    }
+  } catch (err) {
+    connectionWarning = `Could not reach Green-API endpoint (${err.message}). Configuration saved.`;
+  }
+
+  db.updateWhatsAppConfig({
+    idInstance: cleanId,
+    apiTokenInstance: token1,
+    apiUrl: targetUrl,
+    updated_by: req.user.name
+  });
+
+  const isConnected = stateInstance === 'authorized';
+  db.updateWhatsAppStatus({
+    status: isConnected ? 'CONNECTED' : (connectionWarning ? 'DISCONNECTED' : 'NOT_AUTHORIZED'),
+    provider: 'Green-API',
+    idInstance: cleanId,
+    stateInstance,
+    error: connectionWarning,
+    updated_at: new Date().toISOString()
+  });
+
+  db.addLog(req.user.id, req.user.name, 'admin', `Updated Green-API WhatsApp account to instance #${cleanId} (3-step verification passed).`);
+
+  res.json({
+    success: true,
+    message: connectionWarning
+      ? `WhatsApp configuration saved! (Note: ${connectionWarning})`
+      : `WhatsApp Green-API account (Instance ${cleanId}) successfully connected & verified!`,
+    status: isConnected ? 'CONNECTED' : 'DISCONNECTED',
+    stateInstance
+  });
+});
+
+app.post('/api/admin/whatsapp/reset', authenticateJWT, authorizeRoles('admin'), (req, res) => {
+  db.resetWhatsAppConfig();
+  db.addLog(req.user.id, req.user.name, 'admin', 'Reset WhatsApp gateway configuration to default .env settings.');
+  res.json({ success: true, message: 'WhatsApp configuration reset to default .env settings.' });
+});
+
+app.post('/api/admin/whatsapp/test', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
+  const { phone, message } = req.body;
+  if (!phone || !phone.trim()) {
+    return res.status(400).json({ error: 'Target mobile phone number is required.' });
+  }
+
+  try {
+    const testLog = await sendWhatsAppMessage({
+      parentPhone: phone.trim(),
+      studentName: 'Test Student',
+      rollNo: 'TEST-001',
+      reason: 'Admin Gateway Test Dispatch',
+      exitTime: new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', timeStyle: 'short' }),
+      customMessage: message || `🔔 *Campus GatePass System Test Alert*\n\nThis is a real-time verification test from your Digital GatePass WhatsApp Gateway at S. B. Jain Institute.\n\n_Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}_\n_Status: Active & Operational_`
+    });
+
+    if (testLog.status === 'success') {
+      res.json({ success: true, message: `Test WhatsApp message successfully sent to ${phone}!` });
+    } else {
+      res.status(502).json({ error: `Failed to deliver test message: ${testLog.error || 'Check instance connection'}` });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to dispatch test message.' });
+  }
+});
+
 app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), async (req, res) => {
   try {
-    const instanceId = process.env.GREEN_API_INSTANCE_ID;
-    const apiToken = process.env.GREEN_API_TOKEN;
-    const apiUrl = (process.env.GREEN_API_URL || (instanceId ? `https://${instanceId.substring(0, 4)}.api.greenapi.com` : '')).replace(/\/$/, '');
+    const { instanceId, apiToken, apiUrl, source } = getEffectiveWhatsAppConfig();
 
     if (instanceId && apiToken && !instanceId.includes('YOUR_') && !apiToken.includes('YOUR_')) {
       try {
@@ -2019,6 +2172,7 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
             idInstance: instanceId,
             qr: null,
             stateInstance: data.stateInstance,
+            source,
             updated_at: new Date().toISOString()
           };
           db.updateWhatsAppStatus(statusObj);
@@ -2032,7 +2186,8 @@ app.get('/api/admin/whatsapp/status', authenticateJWT, authorizeRoles('admin'), 
     const unconfiguredStatus = {
       status: 'DISCONNECTED',
       provider: 'Green-API',
-      error: 'GREEN_API_INSTANCE_ID or GREEN_API_TOKEN missing in .env',
+      error: 'GREEN_API_INSTANCE_ID or GREEN_API_TOKEN is not configured.',
+      source,
       updated_at: new Date().toISOString()
     };
     db.updateWhatsAppStatus(unconfiguredStatus);

@@ -40,7 +40,14 @@ import {
   CheckCircle2,
   ChevronDown,
   Sun,
-  Moon
+  Moon,
+  Key,
+  Check,
+  ExternalLink,
+  ShieldAlert,
+  Sparkles,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { apiFetch } from "../lib/api.js";
 import { gatepassService } from "../services/gatepassService.js";
@@ -61,6 +68,20 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
   const [whatsappStatus, setWhatsappStatus] = useState({ status: 'DISCONNECTED', qr: null });
   const [whatsappLogs, setWhatsappLogs] = useState([]);
   const [whatsappLoading, setWhatsappLoading] = useState(false);
+  const [whatsappConfig, setWhatsappConfig] = useState(null);
+  const [waInstanceId, setWaInstanceId] = useState("");
+  const [waApiUrl, setWaApiUrl] = useState("");
+  const [waApiToken1, setWaApiToken1] = useState("");
+  const [waApiToken2, setWaApiToken2] = useState("");
+  const [waApiToken3, setWaApiToken3] = useState("");
+  const [showToken1, setShowToken1] = useState(false);
+  const [showToken2, setShowToken2] = useState(false);
+  const [showToken3, setShowToken3] = useState(false);
+  const [updatingWaConfig, setUpdatingWaConfig] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [testWaPhone, setTestWaPhone] = useState("");
+  const [testWaMsg, setTestWaMsg] = useState("");
+  const [sendingTestWa, setSendingTestWa] = useState(false);
   const [adminDeptFilter, setAdminDeptFilter] = useState("all");
   const [adminStatusFilter, setAdminStatusFilter] = useState("all");
   const [adminSearch, setAdminSearch] = useState("");
@@ -154,10 +175,96 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
       setWhatsappStatus(statusData);
       const logsData = await gatepassService.getWhatsappLogs();
       setWhatsappLogs(logsData || []);
+      const configData = await gatepassService.getWhatsappConfig();
+      setWhatsappConfig(configData);
+      if (configData && !waInstanceId) {
+        setWaInstanceId(configData.instanceId || "");
+        setWaApiUrl(configData.apiUrl || "https://api.green-api.com");
+      }
     } catch (err) {
       console.error("Failed to fetch WhatsApp details:", err);
     } finally {
       setWhatsappLoading(false);
+    }
+  };
+
+  const handleUpdateWhatsappConfig = async (e) => {
+    if (e) e.preventDefault();
+    if (!waInstanceId.trim()) {
+      showToast("Instance ID is required", "error");
+      return;
+    }
+    if (!waApiToken1.trim() || !waApiToken2.trim() || !waApiToken3.trim()) {
+      showToast("Please enter the new API token in all 3 verification fields", "error");
+      return;
+    }
+    if (waApiToken1 !== waApiToken2 || waApiToken1 !== waApiToken3) {
+      showToast("Token mismatch! All 3 token entries must match exactly.", "error");
+      return;
+    }
+
+    setUpdatingWaConfig(true);
+    try {
+      const res = await gatepassService.updateWhatsappConfig({
+        instanceId: waInstanceId.trim(),
+        apiUrl: waApiUrl.trim() || "https://api.green-api.com",
+        apiToken1: waApiToken1.trim(),
+        apiToken2: waApiToken2.trim(),
+        apiToken3: waApiToken3.trim(),
+      });
+      showToast(res.message || "WhatsApp gateway credentials updated successfully!");
+      setWaApiToken1("");
+      setWaApiToken2("");
+      setWaApiToken3("");
+      setShowConfigModal(false);
+      fetchWhatsappInfo();
+    } catch (err) {
+      showToast(err.message || "Failed to update WhatsApp configuration", "error");
+    } finally {
+      setUpdatingWaConfig(false);
+    }
+  };
+
+  const handleResetWhatsappConfig = async () => {
+    if (!window.confirm("Are you sure you want to reset WhatsApp settings to default .env configuration?")) {
+      return;
+    }
+    setUpdatingWaConfig(true);
+    try {
+      const res = await gatepassService.resetWhatsappConfig();
+      showToast(res.message || "WhatsApp gateway reset to default .env settings");
+      setWaInstanceId("");
+      setWaApiToken1("");
+      setWaApiToken2("");
+      setWaApiToken3("");
+      fetchWhatsappInfo();
+    } catch (err) {
+      showToast(err.message || "Failed to reset WhatsApp configuration", "error");
+    } finally {
+      setUpdatingWaConfig(false);
+    }
+  };
+
+  const handleSendTestWhatsapp = async (e) => {
+    if (e) e.preventDefault();
+    if (!testWaPhone.trim()) {
+      showToast("Please enter a valid 10-digit mobile number", "error");
+      return;
+    }
+    setSendingTestWa(true);
+    try {
+      const res = await gatepassService.testWhatsappMessage({
+        phone: testWaPhone.trim(),
+        message: testWaMsg.trim() || undefined,
+      });
+      showToast(res.message || "Test WhatsApp message sent successfully!");
+      setTestWaPhone("");
+      setTestWaMsg("");
+      fetchWhatsappInfo();
+    } catch (err) {
+      showToast(err.message || "Failed to send test WhatsApp message", "error");
+    } finally {
+      setSendingTestWa(false);
     }
   };
 
@@ -2434,120 +2541,452 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
             </div>
           )}
 
-          {/* TAB 10: WHATSAPP ALERT ENGINE */}
+          {/* TAB 10: WHATSAPP ALERT ENGINE & GATEWAY CREDENTIALS */}
           {activeTab === "whatsapp" && (
             <div className="space-y-6">
+              {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-3">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    WhatsApp Alert Gateway & Dispatch Audit
+                  <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+                    <span>WhatsApp Alert Gateway & Credentials Engine</span>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Green-API Cloud
+                    </span>
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Monitor active Green-API connection status and instant parent notifications.
+                    Manage active WhatsApp dispatch account, execute 3-step secure key rotation, and audit parent exit alerts.
                   </p>
                 </div>
-                <button
-                  onClick={fetchWhatsappInfo}
-                  disabled={whatsappLoading}
-                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-md shadow-sm transition cursor-pointer disabled:opacity-50"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${whatsappLoading ? "animate-spin" : ""}`} />
-                  <span>Refresh Gateway</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowConfigModal(true)}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-md shadow-sm transition cursor-pointer"
+                  >
+                    <Key className="h-3.5 w-3.5" />
+                    <span>Change WhatsApp Account / Key</span>
+                  </button>
+                  <button
+                    onClick={fetchWhatsappInfo}
+                    disabled={whatsappLoading}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-md shadow-sm transition cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${whatsappLoading ? "animate-spin" : ""}`} />
+                    <span>Refresh</span>
+                  </button>
+                </div>
               </div>
 
+              {/* Status & Quick Test Cards Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Gateway Status Card */}
-                <div className="lg:col-span-1 border border-slate-200 rounded-lg p-5 bg-slate-50 flex flex-col items-center justify-center text-center min-h-[260px]">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 self-start">
-                    Connection State
-                  </h4>
-                  
-                  {whatsappStatus.status === "CONNECTED" ? (
-                    <div className="space-y-3">
-                      <div className="mx-auto h-12 w-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center">
-                        <MessageSquare className="h-6 w-6" />
-                      </div>
-                      <div className="inline-flex items-center px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        GATEWAY ACTIVE
-                      </div>
-                      <p className="text-xs text-slate-600 px-2 leading-relaxed">
-                        Green API Cloud Gateway (Instance {whatsappStatus.idInstance || "710722683037"}) is active & authorized. Alerts trigger automatically at student exit scan.
-                      </p>
+                {/* Active Gateway Details Card */}
+                <div className="lg:col-span-1 border border-slate-200 rounded-lg p-5 bg-gradient-to-br from-slate-50 to-white shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Active Gateway Account
+                      </h4>
+                      {whatsappStatus.status === "CONNECTED" ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          ● CONNECTED
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                          ● OFFLINE / DISCONNECTED
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="mx-auto h-12 w-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center">
-                        <AlertCircle className="h-6 w-6" />
+
+                    <div className="space-y-2.5 text-xs">
+                      <div className="p-3 bg-white rounded-md border border-slate-200 shadow-xs space-y-1.5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Instance ID:</span>
+                          <span className="font-mono font-bold text-slate-900">
+                            {whatsappConfig?.instanceId || whatsappStatus.idInstance || "Not configured"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Active Token:</span>
+                          <span className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+                            {whatsappConfig?.maskedToken || "••••••••"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Config Source:</span>
+                          <span className={`font-semibold px-1.5 py-0.2 rounded text-[10px] ${whatsappConfig?.isCustom ? "bg-purple-100 text-purple-800" : "bg-slate-100 text-slate-700"}`}>
+                            {whatsappConfig?.source === "custom_db" ? "Custom (Admin Dashboard)" : "Default (.env file)"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">API Endpoint:</span>
+                          <span className="font-mono text-[11px] text-slate-600 truncate max-w-[170px]" title={whatsappConfig?.apiUrl}>
+                            {whatsappConfig?.apiUrl || "https://api.green-api.com"}
+                          </span>
+                        </div>
                       </div>
-                      <div className="inline-flex items-center px-3 py-1 rounded text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
-                        GATEWAY DISCONNECTED
-                      </div>
-                      <p className="text-xs text-slate-600 px-2 leading-relaxed">
-                        {whatsappStatus.error || "Gateway instance unreachable. Ensure GREEN_API credentials in your .env file are configured."}
-                      </p>
+
+                      {whatsappStatus.status !== "CONNECTED" && whatsappStatus.error && (
+                        <div className="p-2.5 bg-rose-50 border border-rose-200 rounded text-rose-700 text-[11px] flex items-start space-x-1.5">
+                          <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500 mt-0.5" />
+                          <span>{whatsappStatus.error}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between mt-3">
+                    <button
+                      onClick={() => setShowConfigModal(true)}
+                      className="text-xs text-emerald-700 hover:text-emerald-900 font-bold inline-flex items-center space-x-1 cursor-pointer"
+                    >
+                      <span>Update Account / Key</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                    {whatsappConfig?.isCustom && (
                       <button
-                        disabled={whatsappLoading}
-                        onClick={fetchWhatsappInfo}
-                        className="mt-2 inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-md shadow-sm transition cursor-pointer disabled:opacity-50"
+                        onClick={handleResetWhatsappConfig}
+                        disabled={updatingWaConfig}
+                        className="text-[11px] text-slate-500 hover:text-rose-600 font-semibold underline cursor-pointer disabled:opacity-50"
                       >
-                        <RefreshCw className={`h-3.5 w-3.5 ${whatsappLoading ? "animate-spin" : ""}`} />
-                        <span>Recheck Status</span>
+                        Reset to .env
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                {/* Audit Logs Table */}
-                <div className="lg:col-span-2 border border-slate-200 rounded-lg p-5 bg-white flex flex-col">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-                    Recent Dispatches Audit
-                  </h4>
-                  
-                  <div className="overflow-x-auto flex-1 border border-slate-200 rounded-md">
-                    <table className="min-w-full divide-y divide-slate-200 text-xs">
-                      <thead className="bg-slate-50">
-                        <tr>
-                          <th className="px-3.5 py-2 text-left font-semibold text-slate-600 uppercase">Student</th>
-                          <th className="px-3.5 py-2 text-left font-semibold text-slate-600 uppercase">Parent Phone</th>
-                          <th className="px-3.5 py-2 text-left font-semibold text-slate-600 uppercase">Timestamp</th>
-                          <th className="px-3.5 py-2 text-left font-semibold text-slate-600 uppercase">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 text-slate-700">
-                        {whatsappLogs.map((log) => (
-                          <tr key={log.id} className="hover:bg-slate-50 transition">
-                            <td className="px-3.5 py-2.5">
-                              <div className="font-bold text-slate-900">{log.studentName}</div>
-                              <div className="text-[10px] text-slate-400">Roll: {log.rollNo}</div>
-                            </td>
-                            <td className="px-3.5 py-2.5 font-mono font-semibold">{log.parentPhone}</td>
-                            <td className="px-3.5 py-2.5 text-slate-500">
-                              {new Date(log.sent_at).toLocaleDateString()} {new Date(log.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </td>
-                            <td className="px-3.5 py-2.5 whitespace-nowrap">
-                              {log.status === "success" ? (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
-                                  DELIVERED
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200 text-[10px] font-bold" title={log.error}>
-                                  FAILED
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                        {whatsappLogs.length === 0 && (
-                          <tr>
-                            <td colSpan={4} className="text-center py-8 text-slate-400 font-medium">
-                              No WhatsApp notifications recorded yet.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                {/* Quick Live Test Dispatcher */}
+                <div className="lg:col-span-2 border border-slate-200 rounded-lg p-5 bg-white shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center space-x-1.5">
+                        <Send className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>Instant Live WhatsApp Delivery Test</span>
+                      </h4>
+                      <span className="text-[11px] text-slate-400">Verifies recipient delivery in real-time</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mb-3 leading-relaxed">
+                      Send a verification message to any mobile number to confirm that the active Green-API account is delivering parent alerts and 2FA codes without issues.
+                    </p>
+
+                    <form onSubmit={handleSendTestWhatsapp} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-1">
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Mobile Number *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 9876543210"
+                          value={testWaPhone}
+                          onChange={(e) => setTestWaPhone(e.target.value)}
+                          className="w-full text-xs px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-emerald-500 focus:outline-hidden font-mono"
+                          required
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Custom Message (Optional)
+                        </label>
+                        <div className="flex space-x-2">
+                          <input
+                            type="text"
+                            placeholder="Defaults to standard system test message..."
+                            value={testWaMsg}
+                            onChange={(e) => setTestWaMsg(e.target.value)}
+                            className="flex-1 text-xs px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-emerald-500 focus:outline-hidden"
+                          />
+                          <button
+                            type="submit"
+                            disabled={sendingTestWa || !testWaPhone.trim()}
+                            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-md shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
+                          >
+                            {sendingTestWa ? (
+                              <>
+                                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                <span>Sending...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-3.5 w-3.5" />
+                                <span>Send Test</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </form>
                   </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span className="flex items-center space-x-1">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Standard Indian mobile format automatically prefixed with +91</span>
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-400">Green-API REST v2</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal / Dialog: 3-Step Secure Key Verification */}
+              {showConfigModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+                  <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
+                    <div className="flex items-start justify-between pb-3 border-b border-slate-200">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+                          <Key className="h-5 w-5 text-emerald-600" />
+                          <span>Switch WhatsApp Gateway Account</span>
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Change the active Green-API account credentials used for all college gatepass parent alerts.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowConfigModal(false)}
+                        className="text-slate-400 hover:text-slate-600 text-xl font-bold p-1 cursor-pointer"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    {/* Security Notice */}
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs flex items-start space-x-2.5">
+                      <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="leading-relaxed">
+                        <span className="font-bold">3-Step Key Verification Safeguard:</span>
+                        <p className="text-[11px] text-amber-800 mt-0.5">
+                          To prevent accidental deletion or typos that could disrupt live parent alerts, please type or paste the new Green-API Token <strong>3 times</strong> below. The system will save only when all 3 entries match identically.
+                        </p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleUpdateWhatsappConfig} className="space-y-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Green-API Instance ID *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 710722683037"
+                            value={waInstanceId}
+                            onChange={(e) => setWaInstanceId(e.target.value)}
+                            className="w-full text-xs px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            API Server URL
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://api.green-api.com"
+                            value={waApiUrl}
+                            onChange={(e) => setWaApiUrl(e.target.value)}
+                            className="w-full text-xs px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono text-slate-600"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Step 1: New API Token */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-xs font-bold text-slate-700">
+                            1. Enter New API Token *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setShowToken1(!showToken1)}
+                            className="text-[11px] text-slate-500 hover:text-slate-800 inline-flex items-center space-x-1 cursor-pointer"
+                          >
+                            {showToken1 ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                            <span>{showToken1 ? "Hide" : "Show"}</span>
+                          </button>
+                        </div>
+                        <input
+                          type={showToken1 ? "text" : "password"}
+                          placeholder="Paste new Green-API Token (1st time)"
+                          value={waApiToken1}
+                          onChange={(e) => setWaApiToken1(e.target.value)}
+                          className="w-full text-xs px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono"
+                          required
+                        />
+                      </div>
+
+                      {/* Step 2: Confirm API Token */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-xs font-bold text-slate-700">
+                            2. Re-enter API Token (2nd Time) *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setShowToken2(!showToken2)}
+                            className="text-[11px] text-slate-500 hover:text-slate-800 inline-flex items-center space-x-1 cursor-pointer"
+                          >
+                            {showToken2 ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                            <span>{showToken2 ? "Hide" : "Show"}</span>
+                          </button>
+                        </div>
+                        <input
+                          type={showToken2 ? "text" : "password"}
+                          placeholder="Paste new Green-API Token (2nd time to confirm)"
+                          value={waApiToken2}
+                          onChange={(e) => setWaApiToken2(e.target.value)}
+                          className="w-full text-xs px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono"
+                          required
+                        />
+                      </div>
+
+                      {/* Step 3: Final Verification */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-xs font-bold text-slate-700">
+                            3. Final Verification (3rd Time) *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setShowToken3(!showToken3)}
+                            className="text-[11px] text-slate-500 hover:text-slate-800 inline-flex items-center space-x-1 cursor-pointer"
+                          >
+                            {showToken3 ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                            <span>{showToken3 ? "Hide" : "Show"}</span>
+                          </button>
+                        </div>
+                        <input
+                          type={showToken3 ? "text" : "password"}
+                          placeholder="Paste new Green-API Token (3rd time for safety)"
+                          value={waApiToken3}
+                          onChange={(e) => setWaApiToken3(e.target.value)}
+                          className="w-full text-xs px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono"
+                          required
+                        />
+                      </div>
+
+                      {/* Real-time Match Verification Indicator */}
+                      <div className="p-3 rounded-lg border text-xs flex items-center justify-between transition">
+                        {waApiToken1 && waApiToken2 && waApiToken3 ? (
+                          waApiToken1 === waApiToken2 && waApiToken1 === waApiToken3 ? (
+                            <div className="flex items-center space-x-2 text-emerald-700 bg-emerald-50 border-emerald-200 w-full p-2 rounded">
+                              <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
+                              <span className="font-bold text-[11px]">
+                                All 3 token entries match identically! Ready to apply.
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2 text-rose-700 bg-rose-50 border-rose-200 w-full p-2 rounded">
+                              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                              <span className="font-bold text-[11px]">
+                                Tokens do not match! Please check all 3 entries carefully.
+                              </span>
+                            </div>
+                          )
+                        ) : (
+                          <div className="flex items-center space-x-2 text-slate-500 bg-slate-50 border-slate-200 w-full p-2 rounded text-[11px]">
+                            <Lock className="h-4 w-4 shrink-0 text-slate-400" />
+                            <span>Fill all 3 fields with your new Green-API token to unlock verification.</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setShowConfigModal(false)}
+                          className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-xs rounded-md cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={
+                            updatingWaConfig ||
+                            !waInstanceId.trim() ||
+                            !waApiToken1.trim() ||
+                            !waApiToken2.trim() ||
+                            !waApiToken3.trim() ||
+                            waApiToken1 !== waApiToken2 ||
+                            waApiToken1 !== waApiToken3
+                          }
+                          className="inline-flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-md shadow-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {updatingWaConfig ? (
+                            <>
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              <span>Validating & Connecting...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-3.5 w-3.5" />
+                              <span>Save & Connect WhatsApp Account</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Audit Logs Table */}
+              <div className="border border-slate-200 rounded-lg p-5 bg-white flex flex-col shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-3 border-b border-slate-100 gap-2">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Recent Parent WhatsApp Dispatches Audit
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Real-time delivery log of student exit and late-mark parent notifications.
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 self-start sm:self-auto">
+                    {whatsappLogs.length} Records Logged
+                  </span>
+                </div>
+                
+                <div className="overflow-x-auto flex-1 border border-slate-200 rounded-md">
+                  <table className="min-w-full divide-y divide-slate-200 text-xs">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-3.5 py-2.5 text-left font-semibold text-slate-600 uppercase">Student</th>
+                        <th className="px-3.5 py-2.5 text-left font-semibold text-slate-600 uppercase">Parent Phone</th>
+                        <th className="px-3.5 py-2.5 text-left font-semibold text-slate-600 uppercase">Timestamp</th>
+                        <th className="px-3.5 py-2.5 text-left font-semibold text-slate-600 uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {whatsappLogs.map((log) => (
+                        <tr key={log.id} className="hover:bg-slate-50 transition">
+                          <td className="px-3.5 py-2.5">
+                            <div className="font-bold text-slate-900">{log.studentName}</div>
+                            <div className="text-[10px] text-slate-400 font-mono">Roll: {log.rollNo}</div>
+                          </td>
+                          <td className="px-3.5 py-2.5 font-mono font-semibold text-slate-800">{log.parentPhone}</td>
+                          <td className="px-3.5 py-2.5 text-slate-500 font-mono text-[11px]">
+                            {new Date(log.sent_at).toLocaleDateString()} {new Date(log.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </td>
+                          <td className="px-3.5 py-2.5 whitespace-nowrap">
+                            {log.status === "success" ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
+                                DELIVERED
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200 text-[10px] font-bold" title={log.error}>
+                                FAILED
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {whatsappLogs.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="text-center py-8 text-slate-400 font-medium">
+                            No WhatsApp notifications recorded yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
