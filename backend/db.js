@@ -19,19 +19,21 @@ function deduplicateById(items, isGatepass = false) {
   if (!Array.isArray(items)) return [];
   const map = new Map();
   for (const item of items) {
-    if (!item || !item.id) continue;
-    if (!map.has(item.id)) {
-      map.set(item.id, item);
+    if (!item) continue;
+    const key = item.id || item.roll_no || item.email || (item._id ? String(item._id) : null);
+    if (!key) continue;
+    if (!map.has(key)) {
+      map.set(key, item);
     } else {
-      const existing = map.get(item.id);
+      const existing = map.get(key);
       if (isGatepass) {
         if (existing.status === 'pending' && item.status !== 'pending') {
-          map.set(item.id, item);
+          map.set(key, item);
         } else if (item.status === 'closed' || item.status === 'exited') {
-          map.set(item.id, item);
+          map.set(key, item);
         }
       } else {
-        map.set(item.id, item);
+        map.set(key, { ...existing, ...item });
       }
     }
   }
@@ -299,7 +301,7 @@ export class Database {
       const collections = [
         'departments', 'students', 'teachers', 'hods', 'guards',
         'admins', 'principals', 'gatepasses', 'logs', 'notifications',
-        'officialParentContacts', 'lateComeEntries', 'whatsappLogs'
+        'officialParentContacts', 'lateComeEntries', 'whatsappLogs', 'settings'
       ];
 
       const loadedData = {};
@@ -319,6 +321,14 @@ export class Database {
 
       this.data = { ...this.data, ...loadedData };
       this.data.gatepasses = deduplicateById(this.data.gatepasses || [], true);
+      this.data.officialParentContacts = deduplicateById(this.data.officialParentContacts || []);
+
+      if (loadedData.settings && Array.isArray(loadedData.settings)) {
+        const waCfg = loadedData.settings.find(s => s.id === 'whatsappConfig');
+        if (waCfg) this.data.whatsappConfig = waCfg;
+        const waStat = loadedData.settings.find(s => s.id === 'whatsappStatus');
+        if (waStat) this.data.whatsappStatus = waStat;
+      }
       console.log('[MongoDB Atlas] Synchronization completed! Total gate passes loaded:', this.data.gatepasses.length);
       this.lastSyncTime = Date.now();
       this.saveLocal();
@@ -1305,11 +1315,23 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
   }
 
   saveOfficialParentContacts(contacts) {
-    this.data.officialParentContacts = contacts;
+    const sanitizedList = (contacts || []).map(c => {
+      const cleanRoll = (c.roll_no || '').trim();
+      const sanitizedId = cleanRoll.replace(/[\/\\#?%]/g, '_');
+      return {
+        id: c.id || sanitizedId,
+        roll_no: cleanRoll,
+        name: (c.name || '').trim(),
+        parent_phone: (c.parent_phone || '').trim(),
+        updated_at: new Date().toISOString()
+      };
+    }).filter(c => c.roll_no);
+
+    this.data.officialParentContacts = sanitizedList;
 
     this.data.students.forEach(student => {
       if (student.roll_no) {
-        const match = contacts.find(
+        const match = sanitizedList.find(
           c => c.roll_no && c.roll_no.trim().toLowerCase() === student.roll_no.trim().toLowerCase()
         );
         if (match) {
@@ -1319,12 +1341,9 @@ CREATE TABLE IF NOT EXISTS ActivityLogs (
       }
     });
 
-    // Save each to Firestore
-    contacts.forEach(contact => {
-      if (contact.roll_no) {
-        const sanitizedId = contact.roll_no.replace(/[\/\\#?%]/g, '_');
-        this.saveDoc('officialParentContacts', sanitizedId, contact);
-      }
+    // Save each to MongoDB / cloud database
+    sanitizedList.forEach(contact => {
+      this.saveDoc('officialParentContacts', contact.id, contact);
     });
 
     this.saveLocal();
