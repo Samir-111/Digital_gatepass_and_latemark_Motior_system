@@ -39,7 +39,7 @@ import { gatepassService } from "../services/gatepassService.js";
 import sbjainLogo from "../assets/sbjain-logo.png";
 
 export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleTheme }) {
-  const [activeTab, setActiveTab] = useState("faculty");
+  const [activeTab, setActiveTab] = useState("gatepasses");
   const [lateEntries, setLateEntries] = useState([]);
   const [gatePasses, setGatePasses] = useState([]);
   const [myStudents, setMyStudents] = useState([]);
@@ -184,6 +184,10 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(() => {
+      fetchData();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSendSMS = async (entryId, parentPhone, studentName, arrivalTime) => {
@@ -221,9 +225,11 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
       const remarks = teacherRemarks[passId] || "Approved by Class Teacher";
       await gatepassService.approveGatePassTeacher(passId, remarks);
       setGatePasses((prev) => prev.map((p) => p.id === passId ? { ...p, status: "pending_hod", remarks } : p));
+      await fetchData();
       alert("GatePass approved successfully and forwarded to HOD!");
     } catch (err) {
       alert(err.message || "Failed to approve gatepass.");
+      await fetchData();
     } finally {
       setProcessingPassId(null);
     }
@@ -232,16 +238,18 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
   const handleRejectPass = async (passId) => {
     const remarks = teacherRemarks[passId];
     if (!remarks || remarks.trim() === "") {
-      alert("Kripya rejection ki wajah (Remarks) likhein taaki student ko reject hone ka reason pata chale!");
+      alert("Please provide a reason / remarks for rejecting the gate pass.");
       return;
     }
     setProcessingPassId(passId);
     try {
       await gatepassService.rejectGatePassTeacher(passId, remarks);
       setGatePasses((prev) => prev.map((p) => p.id === passId ? { ...p, status: "rejected", remarks } : p));
+      await fetchData();
       alert("GatePass rejected.");
     } catch (err) {
       alert(err.message || "Failed to reject gatepass.");
+      await fetchData();
     } finally {
       setProcessingPassId(null);
     }
@@ -320,7 +328,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
   const activeGatePassKPI = gatePasses.filter((p) => p.status === "pending").length;
   const forwardedGatePassKPI = gatePasses.filter((p) => p.status === "pending_hod").length;
   const historicalPasses = filteredGatePasses.filter((p) => p.status !== "pending");
-  const isClassIncharge = user?.user_type === "class_teacher" || (user?.class_name && user?.class_name !== "Faculty Member");
+  const isClassIncharge = true;
 
   return (
     <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors">
@@ -338,12 +346,8 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                   <h1 className="text-xs sm:text-sm md:text-base font-bold text-white tracking-tight leading-tight truncate">
                     S. B. Jain Institute of Technology, Management and Research
                   </h1>
-                  <span className={`hidden sm:inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border shrink-0 ${
-                    isClassIncharge
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
-                      : "bg-amber-500/20 text-amber-300 border-amber-400/30"
-                  }`}>
-                    {isClassIncharge ? "CLASS INCHARGE PORTAL" : "FACULTY STAFF PORTAL"}
+                  <span className="hidden sm:inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border shrink-0 bg-emerald-500/20 text-emerald-300 border-emerald-400/30">
+                    CLASS INCHARGE &amp; FACULTY PORTAL
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-300 font-medium tracking-wide">
@@ -365,9 +369,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                     <span>{user?.name}</span>
                   </span>
                   <span className="text-[10px] text-slate-300 font-medium">
-                    {user?.user_type === "faculty" || user?.class_name === "Faculty Member" || !user?.class_name
-                      ? `Faculty • ${user?.department || "Academics"}`
-                      : `Incharge: ${user?.class_name}`}
+                    {user?.class_name ? `Class Incharge • ${user?.class_name}` : `Faculty • ${user?.department || "Academics"}`}
                   </span>
                 </div>
               </div>
@@ -413,13 +415,9 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                 <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
                   Welcome back, {user?.name}!
                 </h2>
-                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider ${
-                  isClassIncharge
-                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-                    : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-                }`}>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
                   <ShieldCheck className="h-3 w-3" />
-                  <span>{isClassIncharge ? "Class Incharge" : "Faculty Member"}</span>
+                  <span>Class Incharge &amp; Faculty</span>
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
@@ -427,7 +425,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                   <Building2 className="h-3.5 w-3.5 text-slate-400" />
                   <span>Department: <strong className="text-slate-700 dark:text-slate-200">{user?.department || "Engineering & Technology"}</strong></span>
                 </span>
-                {isClassIncharge && (
+                {user?.class_name && (
                   <span className="flex items-center gap-1">
                     <GraduationCap className="h-3.5 w-3.5 text-emerald-500" />
                     <span>Assigned Class: <strong className="text-emerald-700 dark:text-emerald-300">{user?.class_name}</strong></span>
@@ -458,6 +456,29 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
         {/* 3. Modern Tab Navigation Header */}
         <div className="flex flex-wrap border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0b132b] p-1.5 rounded-2xl shadow-sm gap-1.5">
           <button
+            onClick={() => setActiveTab("gatepasses")}
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === "gatepasses"
+                ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            <span>Student GatePass Approvals</span>
+            {activeGatePassKPI > 0 ? (
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-amber-500 text-white animate-pulse">
+                {activeGatePassKPI} Pending
+              </span>
+            ) : (
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                activeTab === "gatepasses" ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+              }`}>
+                0
+              </span>
+            )}
+          </button>
+
+          <button
             onClick={() => setActiveTab("faculty")}
             className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === "faculty"
@@ -474,66 +495,39 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
             </span>
           </button>
 
-          {isClassIncharge && (
-            <>
-              <button
-                onClick={() => setActiveTab("gatepasses")}
-                className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === "gatepasses"
-                    ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <FileText className="h-4 w-4" />
-                <span>Student GatePass Approvals</span>
-                {activeGatePassKPI > 0 ? (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-amber-500 text-white animate-pulse">
-                    {activeGatePassKPI} Pending
-                  </span>
-                ) : (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                    activeTab === "gatepasses" ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  }`}>
-                    0
-                  </span>
-                )}
-              </button>
+          <button
+            onClick={() => setActiveTab("late")}
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === "late"
+                ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            }`}
+          >
+            <Clock className="h-4 w-4" />
+            <span>Student Late Logs</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+              activeTab === "late" ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+            }`}>
+              {lateEntries.length}
+            </span>
+          </button>
 
-              <button
-                onClick={() => setActiveTab("late")}
-                className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === "late"
-                    ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <Clock className="h-4 w-4" />
-                <span>Student Late Logs</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                  activeTab === "late" ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                }`}>
-                  {lateEntries.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("students")}
-                className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                  activeTab === "students"
-                    ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <Users className="h-4 w-4" />
-                <span>Class Roll Registry</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                  activeTab === "students" ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                }`}>
-                  {myStudents.length}
-                </span>
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => setActiveTab("students")}
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === "students"
+                ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            <span>Class Roll Registry</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+              activeTab === "students" ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+            }`}>
+              {myStudents.length}
+            </span>
+          </button>
         </div>
 
         {/* 4. Analytics KPI Grid for GatePasses */}
@@ -1047,7 +1041,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
         {/* ------------------------------------------------------------- */}
         {/* TAB 2: STUDENT GATEPASS APPROVALS */}
         {/* ------------------------------------------------------------- */}
-        {activeTab === "gatepasses" && isClassIncharge && (
+        {activeTab === "gatepasses" && (
           <div className="space-y-6 animate-fade-in">
             {/* Protocol Banner */}
             <div className="bg-blue-50 dark:bg-blue-950/40 border-l-4 border-blue-500 p-4 rounded-r-2xl shadow-xs flex items-start space-x-3">
@@ -1419,7 +1413,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
         {/* ------------------------------------------------------------- */}
         {/* TAB 4: MY CLASS ROLL REGISTRY */}
         {/* ------------------------------------------------------------- */}
-        {activeTab === "students" && isClassIncharge && (
+        {activeTab === "students" && (
           <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4 animate-fade-in">
             <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>

@@ -95,19 +95,19 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
 
   const handleLateComeSubmit = async (e) => {
     e.preventDefault();
-    if (!lateTime || !lateReason) {
-      showToast("Please select arrival time and reason.", "error");
+    if (!lateReason || !lateReason.trim()) {
+      showToast("Please enter reason for coming late.", "error");
       return;
     }
     setSubmittingLate(true);
     try {
+      const nowIso = new Date().toISOString();
       await gatepassService.submitLateCome({
-        arrival_time: lateTime,
-        reason: lateReason
+        arrival_time: nowIso,
+        reason: lateReason.trim()
       });
-      showToast("Late arrival logged successfully!");
+      showToast("Late arrival logged successfully with current date & time!");
       setLateReason("");
-      setLateTime("");
       await fetchLateEntries();
     } catch (err) {
       showToast(err.message || "Failed to log late arrival.", "error");
@@ -860,17 +860,27 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
               </div>
 
               <form onSubmit={handleLateComeSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    Exact Arrival Time <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={lateTime}
-                    onChange={(e) => setLateTime(e.target.value)}
-                    required
-                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500"
-                  />
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                      </span>
+                      <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider">
+                        Auto-Captured Timestamp
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold bg-amber-200/60 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded-md">
+                      Live System Time
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono mt-2">
+                    📅 {new Date().toLocaleDateString("en-IN", { dateStyle: "medium" })} &nbsp;|&nbsp; ⏰ {new Date().toLocaleTimeString("en-IN", { timeStyle: "short" })}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    System automatically logs your exact date &amp; time upon submission.
+                  </p>
                 </div>
 
                 <div>
@@ -882,7 +892,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                     value={lateReason}
                     onChange={(e) => setLateReason(e.target.value)}
                     required
-                    placeholder="Provide detailed reason (e.g. Bus breakdown, heavy rain, train delay, medical emergency)..."
+                    placeholder="Provide genuine explanation (e.g. Bus breakdown, heavy traffic, train delay, medical emergency)..."
                     className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-amber-500 leading-relaxed placeholder-slate-400"
                   />
                 </div>
@@ -897,7 +907,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                   ) : (
                     <>
                       <Clock className="h-4 w-4" />
-                      <span>Log Late Arrival Entry</span>
+                      <span>Submit Late Arrival</span>
                     </>
                   )}
                 </button>

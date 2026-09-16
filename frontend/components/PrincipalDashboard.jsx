@@ -130,11 +130,19 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
   // Extract departments list for filter
   const departments = [
     "All",
-    ...new Set(
-      (allCollegePasses || [])
-        .map((p) => p.faculty_department || p.student_department)
-        .filter(Boolean)
-    ),
+    ...new Set([
+      "Computer Science and Engineering",
+      "Information Technology",
+      "Electronics and Telecommunication",
+      "Electrical Engineering",
+      "Mechanical Engineering",
+      "Civil Engineering",
+      "Artificial Intelligence & Data Science",
+      "First Year / Applied Sciences",
+      ...(allCollegePasses || []).map((p) => p.faculty_department || p.student_department),
+      ...(pendingPasses || []).map((p) => p.faculty_department || p.student_department),
+      ...(historyPasses || []).map((p) => p.faculty_department || p.student_department),
+    ].filter(Boolean)),
   ];
 
   // Filtering helper
@@ -389,6 +397,44 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
             </select>
           </div>
         </div>
+
+        {/* Active Department / Search Filter Indicator */}
+        {(filterDepartment !== "All" || searchQuery) && (
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-5 p-3 px-4 bg-amber-500/10 dark:bg-slate-900/90 border border-amber-500/30 rounded-xl text-xs shadow-sm">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-slate-800 dark:text-slate-200">
+                Active Filter: {filterDepartment !== "All" && (
+                  <span className="font-bold text-amber-700 dark:text-amber-400 mr-2 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30">
+                    Dept: {filterDepartment}
+                  </span>
+                )}
+                {searchQuery && (
+                  <span className="font-medium text-slate-600 dark:text-slate-400">
+                    Search: "{searchQuery}"
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                {activeTab === "pending" && `Showing ${pendingFiltered.length} of ${pendingPasses.length} pending`}
+                {activeTab === "history" && `Showing ${historyFiltered.length} of ${historyPasses.length} faculty passes`}
+                {activeTab === "student_history" && `Showing ${studentFiltered.length} of ${studentPasses.length} student passes`}
+                {activeTab === "all" && `Showing ${allFiltered.length} of ${allCollegePasses.length} total records`}
+              </span>
+              <button
+                onClick={() => {
+                  setFilterDepartment("All");
+                  setSearchQuery("");
+                }}
+                className="text-rose-600 hover:text-rose-700 dark:text-rose-400 font-bold hover:underline cursor-pointer text-xs"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Tab 1: Pending Faculty Gatepasses */}
         {activeTab === "pending" && (

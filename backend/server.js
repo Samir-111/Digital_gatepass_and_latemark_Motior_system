@@ -213,6 +213,152 @@ const sendOTPEmail = async (email, otp, purpose = '2-Step Verification Code') =>
   return false;
 };
 
+// Helper to send transactional GatePass notification emails to Class Incharge, HOD, Principal, or Student
+const sendGatePassEmailAlert = async ({
+  toEmail,
+  recipientName,
+  recipientRole,
+  subject,
+  title,
+  badge = 'GATEPASS NOTIFICATION',
+  badgeColor = '#2563eb',
+  details = {},
+  message = '',
+  actionText = 'Open Portal',
+  actionUrl = ''
+}) => {
+  if (!toEmail || !toEmail.includes('@')) {
+    console.warn(`[GatePass Email Alert] No valid email provided for ${recipientName || recipientRole || 'recipient'}. Skipping email dispatch.`);
+    return false;
+  }
+
+  const brevoApiKey = (process.env.BREVO_API_KEY || '').trim();
+  const senderEmail = (process.env.BREVO_SENDER_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || 'sbjitnagpur@gmail.com').trim();
+  const senderName = process.env.BREVO_SENDER_NAME || 'Campus GatePass Portal';
+
+  const rowsHtml = Object.entries(details)
+    .filter(([_, val]) => val !== undefined && val !== null && val !== '')
+    .map(([key, val]) => `
+      <tr>
+        <td style="padding: 9px 14px; font-weight: 600; color: #475569; width: 34%; border-bottom: 1px solid #f1f5f9; font-size: 13px;">${key}:</td>
+        <td style="padding: 9px 14px; color: #0f172a; font-weight: 500; border-bottom: 1px solid #f1f5f9; font-size: 13px;">${val}</td>
+      </tr>
+    `).join('');
+
+  const htmlContent = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 24px; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; background: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #059669; font-size: 20px; font-weight: 800; margin: 0;">S. B. Jain Institute of Technology</h2>
+        <p style="color: #64748b; font-size: 13px; margin: 4px 0 0 0;">Digital Gatepass & Late-Mark Monitoring System</p>
+      </div>
+      
+      <div style="background: #f8fafc; border-left: 4px solid ${badgeColor}; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px;">
+        <div style="display: inline-block; background: ${badgeColor}; color: #ffffff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+          ${badge}
+        </div>
+        <h3 style="color: #0f172a; font-size: 17px; font-weight: 700; margin: 4px 0 6px 0;">${title}</h3>
+        <p style="color: #334155; font-size: 14px; margin: 0; line-height: 1.5;">${message}</p>
+      </div>
+
+      <div style="margin-bottom: 20px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 8px; padding: 12px 16px; text-align: center; margin-bottom: 20px;">
+        <p style="margin: 0; font-size: 13px; color: #166534; font-weight: 600;">
+          ⚡ Real-Time Automated Update: Please log in to your college portal dashboard to review or take action.
+        </p>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+      <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
+        This is an automated notification from SBJITMR Campus GatePass Portal. Please do not reply directly to this email.
+      </p>
+    </div>
+  `;
+
+  const textContent = `${title}\n\n${message}\n\n` + Object.entries(details).map(([k, v]) => `${k}: ${v}`).join('\n');
+
+  // 1. Primary: Brevo HTTPS REST API
+  if (brevoApiKey && !brevoApiKey.includes('YOUR_')) {
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': brevoApiKey,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: toEmail, name: recipientName || undefined }],
+          subject: subject,
+          htmlContent: htmlContent,
+          textContent: textContent
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json().catch(() => ({}));
+        console.log(`[GatePass Email Alert] Successfully sent via Brevo to ${toEmail} (${recipientRole || 'user'}) - MessageId: ${result.messageId || 'ok'}`);
+        return true;
+      } else {
+        const errText = await response.text();
+        console.error(`[GatePass Email Brevo Error] HTTP ${response.status}:`, errText);
+      }
+    } catch (err) {
+      console.error(`[GatePass Email Brevo Network Error]:`, err.message);
+    }
+  }
+
+  // 2. Fallback: SMTP via Nodemailer
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || '587');
+  const user = process.env.SMTP_USER || process.env.SMTP_FROM || 'sbjitnagpur@gmail.com';
+  const rawPass = process.env.SMTP_PASS || 'gjof mtzf ffqr yeml';
+  const pass = rawPass.replace(/\s+/g, '');
+  const from = process.env.SMTP_FROM || user || 'sbjitnagpur@gmail.com';
+
+  if (host && user && pass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 8000,
+      });
+
+      await transporter.sendMail({
+        from: `Campus GatePass Portal <${from}>`,
+        to: toEmail,
+        subject,
+        text: textContent,
+        html: htmlContent
+      });
+
+      console.log(`[GatePass Email Alert] Dispatched via SMTP to ${toEmail} (${recipientRole || 'user'})`);
+      return true;
+    } catch (error) {
+      console.warn(`[GatePass Email SMTP Error]:`, error?.message || error);
+    }
+  }
+
+  // 3. Fallback: Terminal Logging
+  console.log('\n====================================================');
+  console.log(`[GATEPASS EMAIL ALERT] (LOCAL CONSOLE DISPATCH)`);
+  console.log(`To: ${toEmail} (${recipientName || recipientRole})`);
+  console.log(`Subject: ${subject}`);
+  console.log(`Title: ${title}`);
+  console.log(`Details:`, details);
+  console.log('====================================================\n');
+  return false;
+};
+
 // Helper to dispatch WhatsApp message to parent and audit the result
 const sendWhatsAppMessage = async ({ parentPhone, studentName, rollNo, reason, exitTime, customMessage }) => {
   let cleanNumber = (parentPhone || '').replace(/[^0-9]/g, '');
@@ -704,7 +850,7 @@ app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (re
   const updated = db.updateGatePassStatus(id, 'pending_hod', undefined, remarks || 'Approved by Class Teacher');
   db.addLog(req.user.id, req.user.name, 'teacher', `Class Teacher approved gate pass ${id} for student ${pass.student_name}. Forwarding to HOD.`);
 
-  // Notify student
+  // Notify student (In-app)
   db.addNotification(
     pass.student_id,
     'student',
@@ -714,7 +860,7 @@ app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (re
     id
   );
 
-  // Notify HOD
+  // Notify HOD (In-app)
   db.addNotification(
     pass.selected_hod_id || 'hod-all',
     'hod',
@@ -724,6 +870,53 @@ app.post('/api/teacher/approve', authenticateJWT, authorizeRoles('teacher'), (re
     id,
     pass.student_department
   );
+
+  // 🔔 1. Dispatch Email Alert directly to HOD's email
+  const hodObj = (db.getHODs() || []).find(h => h.id === pass.selected_hod_id || (h.department && pass.student_department && h.department.toLowerCase() === pass.student_department.toLowerCase()));
+  if (hodObj?.email) {
+    sendGatePassEmailAlert({
+      toEmail: hodObj.email,
+      recipientName: hodObj.name,
+      recipientRole: 'Head of Department (HOD)',
+      subject: `📋 [HOD Clearance Required] GatePass Approved by Class Incharge for ${pass.student_name}`,
+      title: 'GatePass Awaiting Final HOD Clearance',
+      badge: 'PENDING HOD SIGN-OFF',
+      badgeColor: '#7c3aed',
+      message: `Class Incharge <b>${req.user.name}</b> has reviewed and <b>APPROVED</b> the gatepass request for student <b>${pass.student_name}</b>. It is now forwarded to your HOD dashboard for final authorization and QR generation.`,
+      details: {
+        'Student Name': pass.student_name,
+        'Roll Number': pass.student_roll_no || 'N/A',
+        'Department': pass.student_department || 'N/A',
+        'Class Incharge': req.user.name,
+        'Teacher Remarks': remarks || 'Approved by Class Teacher',
+        'Reason': pass.reason,
+        'Departure Time': pass.exit_time ? new Date(pass.exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'
+      }
+    }).catch(err => console.warn('[Email Alert Error (HOD forwarded)]:', err?.message));
+  }
+
+  // 🔔 2. Dispatch Email Alert to Student
+  const studentUser = (db.getStudents() || []).find(s => s.id === pass.student_id);
+  const studentEmail = studentUser?.email || pass.student_email;
+  if (studentEmail) {
+    sendGatePassEmailAlert({
+      toEmail: studentEmail,
+      recipientName: pass.student_name,
+      recipientRole: 'Student',
+      subject: `📝 GatePass Approved by Class Incharge (Forwarded to HOD)`,
+      title: 'Class Incharge Approved Your GatePass',
+      badge: 'FORWARDED TO HOD',
+      badgeColor: '#0284c7',
+      message: `Your Class Incharge <b>${req.user.name}</b> has <b>APPROVED</b> your gatepass request. It is now awaiting final clearance from your Head of Department (HOD).`,
+      details: {
+        'Student Name': pass.student_name,
+        'Class Incharge': req.user.name,
+        'Teacher Remarks': remarks || 'Approved',
+        'Reason': pass.reason,
+        'Departure Time': pass.exit_time ? new Date(pass.exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'
+      }
+    }).catch(err => console.warn('[Email Alert Error (Student progress)]:', err?.message));
+  }
 
   res.json(updated);
 });
@@ -742,7 +935,7 @@ app.post('/api/teacher/reject', authenticateJWT, authorizeRoles('teacher'), (req
   const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks);
   db.addLog(req.user.id, req.user.name, 'teacher', `Class Teacher rejected gate pass ${id} for student ${pass.student_name}. Reason: "${remarks}"`);
 
-  // Notify student
+  // Notify student (In-app)
   db.addNotification(
     pass.student_id,
     'student',
@@ -751,6 +944,28 @@ app.post('/api/teacher/reject', authenticateJWT, authorizeRoles('teacher'), (req
     'status_changed',
     id
   );
+
+  // 🔔 Dispatch Email Alert to Student
+  const studentUser = (db.getStudents() || []).find(s => s.id === pass.student_id);
+  const studentEmail = studentUser?.email || pass.student_email;
+  if (studentEmail) {
+    sendGatePassEmailAlert({
+      toEmail: studentEmail,
+      recipientName: pass.student_name,
+      recipientRole: 'Student',
+      subject: `❌ GatePass Request Rejected by Class Incharge`,
+      title: 'GatePass Application Rejected',
+      badge: 'REJECTED BY INCHARGE',
+      badgeColor: '#dc2626',
+      message: `Your gatepass application has been <b>REJECTED</b> by Class Incharge <b>${req.user.name}</b>.`,
+      details: {
+        'Student Name': pass.student_name,
+        'Reason Applied': pass.reason,
+        'Rejected By': `Class Incharge ${req.user.name}`,
+        'Rejection Remarks': remarks
+      }
+    }).catch(err => console.warn('[Email Alert Error (Teacher reject)]:', err?.message));
+  }
 
   res.json(updated);
 });
@@ -834,8 +1049,9 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
 
     const studentInfo = db.getStudents().find(s => s.id === studentId);
     const teacherId = studentInfo?.class_teacher_id;
+    const teacher = teacherId ? (db.getTeachers() || []).find(t => t.id === teacherId) : null;
 
-    if (teacherId) {
+    if (teacherId && teacher) {
       db.addNotification(
         teacherId,
         'teacher',
@@ -844,6 +1060,30 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
         'pending_request',
         gatePass.id
       );
+
+      // 🔔 Dispatch Real-Time Email to Class Incharge's Email
+      if (teacher.email) {
+        sendGatePassEmailAlert({
+          toEmail: teacher.email,
+          recipientName: teacher.name,
+          recipientRole: 'Class Incharge',
+          subject: `🔔 [Action Required] New GatePass Request: ${req.user.name} (${studentInfo.roll_no || 'Student'})`,
+          title: 'New GatePass Request Pending Your Approval',
+          badge: 'CLASS INCHARGE ACTION REQUIRED',
+          badgeColor: '#2563eb',
+          message: `Student <b>${req.user.name}</b> has applied for a gate pass and is awaiting your initial review.`,
+          details: {
+            'Student Name': req.user.name,
+            'Roll Number': studentInfo.roll_no || 'N/A',
+            'Department': req.user.department || studentInfo.department || 'N/A',
+            'Class / Section': studentInfo.class_name || teacher.class_name || 'N/A',
+            'Reason': reason,
+            'Departure Time': new Date(exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
+            'Expected Return': new Date(finalReturnTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
+            'AI Risk Check': `${risk_level.toUpperCase()} (${risk_remarks})`
+          }
+        }).catch(err => console.warn('[Email Alert Error (Teacher on apply)]:', err?.message));
+      }
     } else {
       db.addNotification(
         finalHODId || 'hod-all',
@@ -854,6 +1094,29 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
         gatePass.id,
         req.user.department
       );
+
+      // 🔔 Dispatch Real-Time Email directly to HOD
+      const hodObj = (db.getHODs() || []).find(h => h.id === finalHODId || (h.department && req.user.department && h.department.toLowerCase() === req.user.department.toLowerCase()));
+      if (hodObj?.email) {
+        sendGatePassEmailAlert({
+          toEmail: hodObj.email,
+          recipientName: hodObj.name,
+          recipientRole: 'Head of Department (HOD)',
+          subject: `🔔 [Action Required] New GatePass Request: ${req.user.name} (Direct HOD Review)`,
+          title: 'New GatePass Request (Direct HOD Clearance)',
+          badge: 'HOD ACTION REQUIRED',
+          badgeColor: '#7c3aed',
+          message: `Student <b>${req.user.name}</b> has submitted a gate pass request directly to HOD for review.`,
+          details: {
+            'Student Name': req.user.name,
+            'Roll Number': studentInfo.roll_no || 'N/A',
+            'Department': req.user.department || studentInfo.department || 'N/A',
+            'Reason': reason,
+            'Departure Time': new Date(exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
+            'Risk Level': `${risk_level.toUpperCase()}`
+          }
+        }).catch(err => console.warn('[Email Alert Error (HOD direct on apply)]:', err?.message));
+      }
     }
 
     const finalizedPass = db.getGatePassById(gatePass.id);
@@ -899,18 +1162,36 @@ app.post('/api/student/cancel', authenticateJWT, authorizeRoles('student'), (req
 // 3. HOD Routes
 app.get('/api/hod/pending', authenticateJWT, authorizeRoles('hod'), (req, res) => {
   const hodDept = req.user.department;
-  if (!hodDept) return res.status(400).json({ error: 'HOD department not specified in profile.' });
+  const hodId = req.user.id;
 
-  const passes = db.getGatePasses({ department: hodDept, status: 'pending_hod' });
+  const allPasses = db.getGatePasses();
+  const passes = allPasses.filter(p => {
+    const matchesHod = (p.selected_hod_id && p.selected_hod_id === hodId) ||
+      (hodDept && p.student_department && p.student_department.toLowerCase() === hodDept.toLowerCase()) ||
+      (hodDept && p.faculty_department && p.faculty_department.toLowerCase() === hodDept.toLowerCase());
+
+    if (!matchesHod) return false;
+
+    return p.status === 'pending_hod' || (p.status === 'pending' && (!p.class_teacher_id || p.class_teacher_id === ''));
+  });
+
   res.json(passes);
 });
 
 app.get('/api/hod/history', authenticateJWT, authorizeRoles('hod'), (req, res) => {
   const hodDept = req.user.department;
-  if (!hodDept) return res.status(400).json({ error: 'HOD department not specified.' });
+  const hodId = req.user.id;
 
-  const allPasses = db.getGatePasses({ department: hodDept });
-  const history = allPasses.filter(p => p.status !== 'pending' && p.status !== 'pending_hod');
+  const allPasses = db.getGatePasses();
+  const history = allPasses.filter(p => {
+    const matchesHod = (p.selected_hod_id && p.selected_hod_id === hodId) ||
+      (hodDept && p.student_department && p.student_department.toLowerCase() === hodDept.toLowerCase()) ||
+      (hodDept && p.faculty_department && p.faculty_department.toLowerCase() === hodDept.toLowerCase());
+
+    if (!matchesHod) return false;
+    return p.status !== 'pending' && p.status !== 'pending_hod';
+  });
+
   res.json(history);
 });
 
@@ -920,14 +1201,16 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req,
 
   const pass = db.getGatePassById(id);
   if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
-  if (pass.status !== 'pending_hod') return res.status(400).json({ error: 'Gate pass is not pending HOD clearance.' });
+  if (pass.status !== 'pending_hod' && pass.status !== 'pending') {
+    return res.status(400).json({ error: 'Gate pass is not pending HOD clearance.' });
+  }
 
   // Handle Faculty GatePass approval (Forwards to Principal)
   if (pass.user_type === 'faculty' || pass.faculty_id) {
     const updated = db.updateGatePassStatus(id, 'pending_principal', req.user.name, remarks || 'Approved by HOD. Forwarded to Principal.');
     db.addLog(req.user.id, req.user.name, 'hod', `HOD approved faculty gate pass ${id} for ${pass.faculty_name}. Forwarded to Principal for final clearance.`);
 
-    // Notify Faculty
+    // Notify Faculty (In-app)
     db.addNotification(
       pass.faculty_id,
       'teacher',
@@ -937,7 +1220,7 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req,
       id
     );
 
-    // Notify Principal
+    // Notify Principal (In-app)
     db.addNotification(
       'principal-1',
       'principal',
@@ -946,6 +1229,49 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req,
       'pending_request',
       id
     );
+
+    // 🔔 1. Dispatch Email Alert to Principal
+    const principalObj = (db.getPrincipals() || [])[0] || { email: 'principal@sbjit.edu.in', name: 'Dr. S. K. Principal' };
+    if (principalObj?.email) {
+      sendGatePassEmailAlert({
+        toEmail: principalObj.email,
+        recipientName: principalObj.name,
+        recipientRole: 'Principal',
+        subject: `🎓 [Principal Authorization] Faculty GatePass for ${pass.faculty_name}`,
+        title: 'Faculty GatePass Awaiting Principal Sign-Off',
+        badge: 'PRINCIPAL ACTION REQUIRED',
+        badgeColor: '#4f46e5',
+        message: `HOD <b>${req.user.name}</b> has approved and forwarded Faculty <b>${pass.faculty_name}</b>'s gate pass application. Please authorize it in your dashboard.`,
+        details: {
+          'Faculty Name': pass.faculty_name,
+          'Department': pass.faculty_department || 'Faculty',
+          'Reason': pass.reason,
+          'Cleared By': `HOD ${req.user.name}`,
+          'HOD Remarks': remarks || 'Approved & Forwarded'
+        }
+      }).catch(err => console.warn('[Email Alert Error (Principal on HOD approve)]:', err?.message));
+    }
+
+    // 🔔 2. Dispatch Email Alert to Faculty
+    const teacherObj = (db.getTeachers() || []).find(t => t.id === pass.faculty_id);
+    const facultyEmail = teacherObj?.email || pass.faculty_email;
+    if (facultyEmail) {
+      sendGatePassEmailAlert({
+        toEmail: facultyEmail,
+        recipientName: pass.faculty_name,
+        recipientRole: 'Faculty',
+        subject: `📝 Faculty GatePass Approved by HOD (Forwarded to Principal)`,
+        title: 'GatePass Approved by HOD',
+        badge: 'FORWARDED TO PRINCIPAL',
+        badgeColor: '#0284c7',
+        message: `Your gate pass application for <b>"${pass.reason}"</b> was approved by HOD <b>${req.user.name}</b> and forwarded to the Principal for final sign-off.`,
+        details: {
+          'Faculty Name': pass.faculty_name,
+          'HOD Name': req.user.name,
+          'Reason': pass.reason
+        }
+      }).catch(err => console.warn('[Email Alert Error (Faculty on HOD approve)]:', err?.message));
+    }
 
     return res.json(updated);
   }
@@ -975,7 +1301,7 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req,
     const updated = db.updateGatePassStatus(id, 'approved', req.user.name, remarks || 'Approved by HOD', qrCodeBase64);
     db.addLog(req.user.id, req.user.name, 'hod', `Approved gate pass ${id} for student ${pass.student_name}`);
 
-    // Notify student of approval
+    // Notify student of approval (In-app)
     db.addNotification(
       pass.student_id,
       'student',
@@ -984,6 +1310,31 @@ app.post('/api/hod/approve', authenticateJWT, authorizeRoles('hod'), async (req,
       'status_changed',
       id
     );
+
+    // 🔔 Dispatch Real-Time Email to Student
+    const studentUser = (db.getStudents() || []).find(s => s.id === pass.student_id);
+    const studentEmail = studentUser?.email || pass.student_email;
+    if (studentEmail) {
+      sendGatePassEmailAlert({
+        toEmail: studentEmail,
+        recipientName: pass.student_name,
+        recipientRole: 'Student',
+        subject: `🎉 GatePass APPROVED by HOD - QR Code Ready!`,
+        title: 'GatePass Approved & Authorized',
+        badge: 'APPROVED & QR READY',
+        badgeColor: '#059669',
+        message: `Your gatepass request for <b>"${pass.reason}"</b> has been <b>APPROVED</b> by HOD <b>${req.user.name}</b>. Your Digital QR Pass is now active in your student dashboard.`,
+        details: {
+          'Student Name': pass.student_name,
+          'Roll Number': pass.student_roll_no || 'N/A',
+          'Department': pass.student_department || 'N/A',
+          'Authorized By': `HOD ${req.user.name}`,
+          'Reason': pass.reason,
+          'Departure Time': pass.exit_time ? new Date(pass.exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : 'N/A',
+          'HOD Remarks': remarks || 'Approved'
+        }
+      }).catch(err => console.warn('[Email Alert Error (Student on HOD approve)]:', err?.message));
+    }
 
     // Real parents SMS notification
     const parentPhone = pass.student_parent_phone || '+91 9876543210';
@@ -1008,12 +1359,12 @@ app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req, res) =
 
   const pass = db.getGatePassById(id);
   if (!pass) return res.status(404).json({ error: 'Gate pass not found.' });
-  if (pass.status !== 'pending_hod') return res.status(400).json({ error: 'Gate pass is already processed or not pending HOD clearance.' });
+  if (pass.status !== 'pending_hod' && pass.status !== 'pending') return res.status(400).json({ error: 'Gate pass is already processed or not pending HOD clearance.' });
 
   const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks);
   db.addLog(req.user.id, req.user.name, 'hod', `Rejected gate pass ${id} for ${pass.user_type === 'faculty' ? pass.faculty_name : pass.student_name}`);
 
-  // Notify applicant of rejection
+  // Notify applicant of rejection (In-app)
   const recipientId = pass.user_type === 'faculty' ? pass.faculty_id : pass.student_id;
   const recipientRole = pass.user_type === 'faculty' ? 'teacher' : 'student';
 
@@ -1025,6 +1376,30 @@ app.post('/api/hod/reject', authenticateJWT, authorizeRoles('hod'), (req, res) =
     'status_changed',
     id
   );
+
+  // 🔔 Dispatch Real-Time Email to Applicant (Student or Faculty)
+  const recipientEmail = pass.user_type === 'faculty'
+    ? (db.getTeachers()?.find(t => t.id === pass.faculty_id)?.email || pass.faculty_email)
+    : (db.getStudents()?.find(s => s.id === pass.student_id)?.email || pass.student_email);
+
+  if (recipientEmail) {
+    sendGatePassEmailAlert({
+      toEmail: recipientEmail,
+      recipientName: pass.user_type === 'faculty' ? pass.faculty_name : pass.student_name,
+      recipientRole: pass.user_type === 'faculty' ? 'Faculty' : 'Student',
+      subject: `❌ GatePass Request Rejected by HOD`,
+      title: 'GatePass Request Rejected',
+      badge: 'REJECTED BY HOD',
+      badgeColor: '#dc2626',
+      message: `Your gate pass request for <b>"${pass.reason}"</b> was <b>REJECTED</b> by HOD <b>${req.user.name}</b>.`,
+      details: {
+        'Applicant': pass.user_type === 'faculty' ? pass.faculty_name : pass.student_name,
+        'Reason Applied': pass.reason,
+        'Rejected By': `HOD ${req.user.name}`,
+        'Rejection Remarks': remarks
+      }
+    }).catch(err => console.warn('[Email Alert Error (Applicant on HOD reject)]:', err?.message));
+  }
 
   res.json(updated);
 });
@@ -1116,7 +1491,7 @@ app.post('/api/faculty/apply', authenticateJWT, authorizeRoles('teacher'), (req,
 
   db.addLog(facultyId, req.user.name, 'teacher', `Faculty applied for gate pass: ${gatePass.id} to HOD: ${finalHodName || 'Department HOD'}`);
 
-  // 1st Step Notification: Sent to HOD
+  // 1st Step Notification: Sent to HOD (In-app)
   db.addNotification(
     finalHodId || 'hod-all',
     'hod',
@@ -1126,6 +1501,29 @@ app.post('/api/faculty/apply', authenticateJWT, authorizeRoles('teacher'), (req,
     gatePass.id,
     req.user.department
   );
+
+  // 🔔 Dispatch Real-Time Email to HOD
+  const hodObj = (db.getHODs() || []).find(h => h.id === finalHodId || (h.department && req.user.department && h.department.toLowerCase() === req.user.department.toLowerCase()));
+  if (hodObj?.email) {
+    sendGatePassEmailAlert({
+      toEmail: hodObj.email,
+      recipientName: hodObj.name,
+      recipientRole: 'Head of Department (HOD)',
+      subject: `🔔 [Action Required] New Faculty GatePass: ${req.user.name}`,
+      title: 'Faculty GatePass Request Awaiting Your Review',
+      badge: 'FACULTY GATEPASS - HOD REVIEW',
+      badgeColor: '#7c3aed',
+      message: `Faculty member <b>${req.user.name}</b> has submitted a gate pass application.`,
+      details: {
+        'Faculty Name': req.user.name,
+        'Department': req.user.department || 'General',
+        'Reason': reason,
+        'Vehicle No': vehicle_no || 'N/A',
+        'Departure Time': new Date(exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
+        'Expected Return': new Date(finalReturnTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+      }
+    }).catch(err => console.warn('[Email Alert Error (HOD on faculty apply)]:', err?.message));
+  }
 
   res.json(gatePass);
 });
@@ -1185,7 +1583,7 @@ app.post('/api/principal/approve', authenticateJWT, authorizeRoles('principal', 
     const updated = db.updateGatePassStatus(id, 'approved', req.user.name, remarks || 'Approved by Principal', qrCodeBase64);
     db.addLog(req.user.id, req.user.name, 'principal', `Principal approved faculty gate pass ${id} for ${pass.faculty_name}`);
 
-    // Notify faculty member
+    // Notify faculty member (In-app)
     db.addNotification(
       pass.faculty_id,
       'teacher',
@@ -1194,6 +1592,31 @@ app.post('/api/principal/approve', authenticateJWT, authorizeRoles('principal', 
       'status_changed',
       id
     );
+
+    // 🔔 Dispatch Real-Time Email to Faculty
+    const teacherObj = (db.getTeachers() || []).find(t => t.id === pass.faculty_id);
+    const facultyEmail = teacherObj?.email || pass.faculty_email;
+    if (facultyEmail) {
+      sendGatePassEmailAlert({
+        toEmail: facultyEmail,
+        recipientName: pass.faculty_name,
+        recipientRole: 'Faculty',
+        subject: `🎉 Faculty GatePass APPROVED by Principal - QR Code Ready!`,
+        title: 'Faculty GatePass Authorized by Principal',
+        badge: 'APPROVED & AUTHORIZED',
+        badgeColor: '#059669',
+        message: `Your gate pass application for <b>"${pass.reason}"</b> has received final clearance from Principal <b>${req.user.name}</b>. Your Digital QR Pass is active now.`,
+        details: {
+          'Faculty Name': pass.faculty_name,
+          'Department': pass.faculty_department || 'General',
+          'Authorized By': `Principal ${req.user.name}`,
+          'Reason': pass.reason,
+          'Destination': pass.destination || 'N/A',
+          'Departure Time': pass.exit_time ? new Date(pass.exit_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : 'N/A',
+          'Remarks': remarks || 'Approved by Principal'
+        }
+      }).catch(err => console.warn('[Email Alert Error (Faculty on Principal approve)]:', err?.message));
+    }
 
     res.json(updated);
   } catch (err) {
@@ -1212,7 +1635,7 @@ app.post('/api/principal/reject', authenticateJWT, authorizeRoles('principal', '
   const updated = db.updateGatePassStatus(id, 'rejected', req.user.name, remarks);
   db.addLog(req.user.id, req.user.name, 'principal', `Principal rejected faculty gate pass ${id} for ${pass.faculty_name}`);
 
-  // Notify faculty member
+  // Notify faculty member (In-app)
   db.addNotification(
     pass.faculty_id,
     'teacher',
@@ -1221,6 +1644,28 @@ app.post('/api/principal/reject', authenticateJWT, authorizeRoles('principal', '
     'status_changed',
     id
   );
+
+  // 🔔 Dispatch Real-Time Email to Faculty
+  const teacherObj = (db.getTeachers() || []).find(t => t.id === pass.faculty_id);
+  const facultyEmail = teacherObj?.email || pass.faculty_email;
+  if (facultyEmail) {
+    sendGatePassEmailAlert({
+      toEmail: facultyEmail,
+      recipientName: pass.faculty_name,
+      recipientRole: 'Faculty',
+      subject: `❌ Faculty GatePass Rejected by Principal`,
+      title: 'GatePass Request Rejected',
+      badge: 'REJECTED BY PRINCIPAL',
+      badgeColor: '#dc2626',
+      message: `Your gate pass application for <b>"${pass.reason}"</b> was <b>REJECTED</b> by Principal <b>${req.user.name}</b>.`,
+      details: {
+        'Faculty Name': pass.faculty_name,
+        'Reason Applied': pass.reason,
+        'Rejected By': `Principal ${req.user.name}`,
+        'Remarks': remarks
+      }
+    }).catch(err => console.warn('[Email Alert Error (Faculty on Principal reject)]:', err?.message));
+  }
 
   res.json(updated);
 });
@@ -1634,13 +2079,15 @@ app.post('/api/student/late-come', authenticateJWT, authorizeRoles('student'), (
   const studentId = req.user.id;
   const { arrival_time, reason } = req.body;
 
-  if (!arrival_time || !reason) {
-    return res.status(400).json({ error: 'Arrival time and reason are required.' });
+  if (!reason || !reason.trim()) {
+    return res.status(400).json({ error: 'Reason for late arrival is required.' });
   }
 
+  const finalArrivalTime = arrival_time || new Date().toISOString();
+
   try {
-    const entry = db.addLateComeEntry(studentId, arrival_time, reason);
-    db.addLog(studentId, req.user.name, 'student', `Logged a late arrival entry for today: Reason: "${reason}"`);
+    const entry = db.addLateComeEntry(studentId, finalArrivalTime, reason.trim());
+    db.addLog(studentId, req.user.name, 'student', `Logged a late arrival entry for today: Reason: "${reason.trim()}"`);
     res.status(201).json({ success: true, entry });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to submit late come entry.' });

@@ -15,6 +15,29 @@ dotenv.config();
 const DB_DIR = path.join(process.cwd(), 'database');
 const DB_FILE = path.join(DB_DIR, 'gatepass.json');
 
+function deduplicateById(items, isGatepass = false) {
+  if (!Array.isArray(items)) return [];
+  const map = new Map();
+  for (const item of items) {
+    if (!item || !item.id) continue;
+    if (!map.has(item.id)) {
+      map.set(item.id, item);
+    } else {
+      const existing = map.get(item.id);
+      if (isGatepass) {
+        if (existing.status === 'pending' && item.status !== 'pending') {
+          map.set(item.id, item);
+        } else if (item.status === 'closed' || item.status === 'exited') {
+          map.set(item.id, item);
+        }
+      } else {
+        map.set(item.id, item);
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
 /**
  * GatePass Database Controller - MongoDB Atlas Integrated
  * 
@@ -77,11 +100,17 @@ export class Database {
       try {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         this.data = JSON.parse(raw);
-        this.data.teachers = this.data.teachers || [];
-        this.data.principals = this.data.principals || [];
+        this.data.departments = deduplicateById(this.data.departments || []);
+        this.data.students = deduplicateById(this.data.students || []);
+        this.data.teachers = deduplicateById(this.data.teachers || []);
+        this.data.hods = deduplicateById(this.data.hods || []);
+        this.data.guards = deduplicateById(this.data.guards || []);
+        this.data.admins = deduplicateById(this.data.admins || []);
+        this.data.principals = deduplicateById(this.data.principals || []);
+        this.data.gatepasses = deduplicateById(this.data.gatepasses || [], true);
         this.data.notifications = this.data.notifications || [];
         this.data.officialParentContacts = this.data.officialParentContacts || [];
-        this.data.lateComeEntries = this.data.lateComeEntries || [];
+        this.data.lateComeEntries = deduplicateById(this.data.lateComeEntries || []);
         this.data.whatsappStatus = this.data.whatsappStatus || { status: 'DISCONNECTED', qr: null };
         this.data.whatsappLogs = this.data.whatsappLogs || [];
 
@@ -276,7 +305,8 @@ export class Database {
       for (const col of collections) {
         const docs = await this.mongoDb.collection(col).find({}).toArray();
         // Remove MongoDB internal _id before caching
-        loadedData[col] = docs.map(({ _id, ...rest }) => rest);
+        const rawList = docs.map(({ _id, ...rest }) => rest);
+        loadedData[col] = deduplicateById(rawList, col === 'gatepasses');
       }
 
       // If database is empty, seed it
@@ -287,6 +317,7 @@ export class Database {
       }
 
       this.data = { ...this.data, ...loadedData };
+      this.data.gatepasses = deduplicateById(this.data.gatepasses || [], true);
       console.log('[MongoDB Atlas] Synchronization completed! Total gate passes loaded:', this.data.gatepasses.length);
       this.lastSyncTime = Date.now();
       this.saveLocal();
@@ -898,19 +929,26 @@ export class Database {
   }
 
   updateGatePassStatus(id, status, approvedBy, remarks, qrCode) {
-    const index = this.data.gatepasses.findIndex(p => p.id === id);
-    if (index !== -1) {
-      const current = this.data.gatepasses[index];
+    let found = false;
+    let updatedPass = null;
 
-      const updatedPass = {
-        ...current,
-        status,
-        approved_by: approvedBy ?? current.approved_by,
-        remarks: remarks ?? current.remarks,
-        qr_code: qrCode ?? current.qr_code,
-      };
+    this.data.gatepasses = this.data.gatepasses.map(p => {
+      if (p.id === id) {
+        found = true;
+        updatedPass = {
+          ...p,
+          status,
+          approved_by: approvedBy !== undefined ? approvedBy : p.approved_by,
+          remarks: remarks !== undefined ? remarks : p.remarks,
+          qr_code: qrCode !== undefined ? qrCode : p.qr_code,
+        };
+        return updatedPass;
+      }
+      return p;
+    });
 
-      this.data.gatepasses[index] = updatedPass;
+    if (found && updatedPass) {
+      this.data.gatepasses = deduplicateById(this.data.gatepasses, true);
       this.saveLocal();
       this.saveDoc('gatepasses', id, updatedPass);
       return this.getGatePassById(id);
@@ -919,15 +957,24 @@ export class Database {
   }
 
   markExit(id) {
-    const index = this.data.gatepasses.findIndex(p => p.id === id);
-    if (index !== -1) {
-      const current = this.data.gatepasses[index];
-      const updatedPass = {
-        ...current,
-        status: 'exited',
-        exit_marked_at: new Date().toISOString(),
-      };
-      this.data.gatepasses[index] = updatedPass;
+    let found = false;
+    let updatedPass = null;
+
+    this.data.gatepasses = this.data.gatepasses.map(p => {
+      if (p.id === id) {
+        found = true;
+        updatedPass = {
+          ...p,
+          status: 'exited',
+          exit_marked_at: new Date().toISOString(),
+        };
+        return updatedPass;
+      }
+      return p;
+    });
+
+    if (found && updatedPass) {
+      this.data.gatepasses = deduplicateById(this.data.gatepasses, true);
       this.saveLocal();
       this.saveDoc('gatepasses', id, updatedPass);
       return this.getGatePassById(id);
@@ -936,15 +983,24 @@ export class Database {
   }
 
   markReturn(id) {
-    const index = this.data.gatepasses.findIndex(p => p.id === id);
-    if (index !== -1) {
-      const current = this.data.gatepasses[index];
-      const updatedPass = {
-        ...current,
-        status: 'closed',
-        return_marked_at: new Date().toISOString(),
-      };
-      this.data.gatepasses[index] = updatedPass;
+    let found = false;
+    let updatedPass = null;
+
+    this.data.gatepasses = this.data.gatepasses.map(p => {
+      if (p.id === id) {
+        found = true;
+        updatedPass = {
+          ...p,
+          status: 'closed',
+          return_marked_at: new Date().toISOString(),
+        };
+        return updatedPass;
+      }
+      return p;
+    });
+
+    if (found && updatedPass) {
+      this.data.gatepasses = deduplicateById(this.data.gatepasses, true);
       this.saveLocal();
       this.saveDoc('gatepasses', id, updatedPass);
       return this.getGatePassById(id);

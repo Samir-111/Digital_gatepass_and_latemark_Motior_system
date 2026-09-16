@@ -64,6 +64,12 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
   const [adminDeptFilter, setAdminDeptFilter] = useState("all");
   const [adminStatusFilter, setAdminStatusFilter] = useState("all");
   const [adminSearch, setAdminSearch] = useState("");
+  const [studentDeptFilter, setStudentDeptFilter] = useState("all");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [hodDeptFilter, setHodDeptFilter] = useState("all");
+  const [hodSearch, setHodSearch] = useState("");
+  const [teacherDeptFilter, setTeacherDeptFilter] = useState("all");
+  const [teacherSearch, setTeacherSearch] = useState("");
   const [newDeptName, setNewDeptName] = useState("");
   const [studCollegeId, setStudCollegeId] = useState("");
   const [studName, setStudName] = useState("");
@@ -1560,58 +1566,112 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
                 </div>
               </form>
 
-              {/* Student Table */}
-              <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="min-w-full divide-y divide-slate-200 text-xs">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Student Name</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Roll No & ID</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Department</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Contact Information</th>
-                      <th className="px-4 py-2.5 text-right font-semibold text-slate-600 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-100 text-slate-700">
-                    {studentList.map((stud) => (
-                      <tr key={stud.id} className="hover:bg-slate-50 transition">
-                        <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900">{stud.name}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="font-semibold text-slate-800 font-mono">{stud.roll_no}</div>
-                          <div className="text-[10px] text-slate-400">ID: {stud.college_id}</div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-700">{stud.department}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-                          <div className="flex items-center space-x-1">
-                            <Mail className="h-3 w-3 text-slate-400" />
-                            <span>{stud.email}</span>
-                          </div>
-                          <div className="flex items-center space-x-1 mt-0.5">
-                            <Phone className="h-3 w-3 text-slate-400" />
-                            <span>{stud.phone}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right">
-                          <button
-                            onClick={() => handleDeleteStudent(stud.id)}
-                            className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
-                            title="Delete Student"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
+              {/* Student Filter Toolbar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Search student name, roll..."
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    className="block w-full pl-8 pr-3 py-1.5 border border-slate-300 bg-white text-xs rounded-md focus:ring-2 focus:ring-blue-800 focus:outline-none"
+                  />
+                  <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                </div>
+
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
+                  <span className="text-xs font-semibold text-slate-600 shrink-0">Department:</span>
+                  <select
+                    value={studentDeptFilter}
+                    onChange={(e) => setStudentDeptFilter(e.target.value)}
+                    className="px-3 py-1.5 border border-slate-300 bg-white text-xs rounded-md font-medium text-slate-800 focus:ring-2 focus:ring-blue-800 focus:outline-none cursor-pointer w-full sm:w-auto"
+                  >
+                    <option value="all">All Departments</option>
+                    {deptList.map((d) => (
+                      <option key={d.id} value={d.department_name}>
+                        {d.department_name}
+                      </option>
                     ))}
-                    {studentList.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-slate-400">
-                          No registered students found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                  </select>
+                </div>
               </div>
+
+              {/* Student Table */}
+              {(() => {
+                const filteredStudents = studentList.filter((stud) => {
+                  const name = (stud.name || "").toLowerCase();
+                  const roll = (stud.roll_no || "").toLowerCase();
+                  const query = studentSearch.toLowerCase();
+                  const matchesSearch = name.includes(query) || roll.includes(query);
+                  const matchesDept = studentDeptFilter === "all" || stud.department === studentDeptFilter;
+                  return matchesSearch && matchesDept;
+                });
+
+                return (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs text-slate-500 font-medium px-1">
+                      <span>Showing {filteredStudents.length} of {studentList.length} students</span>
+                      {studentDeptFilter !== "all" && (
+                        <span className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-semibold">
+                          Dept: {studentDeptFilter}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                      <table className="min-w-full divide-y divide-slate-200 text-xs">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Student Name</th>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Roll No & ID</th>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Department</th>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Contact Information</th>
+                            <th className="px-4 py-2.5 text-right font-semibold text-slate-600 uppercase">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-slate-100 text-slate-700">
+                          {filteredStudents.map((stud) => (
+                            <tr key={stud.id} className="hover:bg-slate-50 transition">
+                              <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900">{stud.name}</td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <div className="font-semibold text-slate-800 font-mono">{stud.roll_no}</div>
+                                <div className="text-[10px] text-slate-400">ID: {stud.college_id}</div>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-700">{stud.department}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                                <div className="flex items-center space-x-1">
+                                  <Mail className="h-3 w-3 text-slate-400" />
+                                  <span>{stud.email}</span>
+                                </div>
+                                <div className="flex items-center space-x-1 mt-0.5">
+                                  <Phone className="h-3 w-3 text-slate-400" />
+                                  <span>{stud.phone}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right">
+                                <button
+                                  onClick={() => handleDeleteStudent(stud.id)}
+                                  className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
+                                  title="Delete Student"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                          {filteredStudents.length === 0 && (
+                            <tr>
+                              <td colSpan={5} className="py-8 text-center text-slate-400">
+                                No students found matching the selected filter.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -1686,43 +1746,98 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
                 </div>
               </form>
 
-              <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="min-w-full divide-y divide-slate-200 text-xs">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">HOD Name</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Department Assigned</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Institutional Email</th>
-                      <th className="px-4 py-2.5 text-right font-semibold text-slate-600 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-100 text-slate-700">
-                    {hodList.map((hod) => (
-                      <tr key={hod.id} className="hover:bg-slate-50 transition">
-                        <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900">{hod.name}</td>
-                        <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">{hod.department}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-slate-600 font-mono">{hod.email}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right">
-                          <button
-                            onClick={() => handleDeleteHOD(hod.id)}
-                            className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
-                            title="Delete HOD"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
+              {/* HOD Filter Toolbar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Search HOD name, email..."
+                    value={hodSearch}
+                    onChange={(e) => setHodSearch(e.target.value)}
+                    className="block w-full pl-8 pr-3 py-1.5 border border-slate-300 bg-white text-xs rounded-md focus:ring-2 focus:ring-blue-800 focus:outline-none"
+                  />
+                  <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                </div>
+
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
+                  <span className="text-xs font-semibold text-slate-600 shrink-0">Department:</span>
+                  <select
+                    value={hodDeptFilter}
+                    onChange={(e) => setHodDeptFilter(e.target.value)}
+                    className="px-3 py-1.5 border border-slate-300 bg-white text-xs rounded-md font-medium text-slate-800 focus:ring-2 focus:ring-blue-800 focus:outline-none cursor-pointer w-full sm:w-auto"
+                  >
+                    <option value="all">All Departments</option>
+                    {deptList.map((d) => (
+                      <option key={d.id} value={d.department_name}>
+                        {d.department_name}
+                      </option>
                     ))}
-                    {hodList.length === 0 && (
-                      <tr>
-                        <td colSpan={4} className="py-8 text-center text-slate-400">
-                          No registered HODs found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                  </select>
+                </div>
               </div>
+
+              {/* HOD Table */}
+              {(() => {
+                const filteredHods = hodList.filter((hod) => {
+                  const name = (hod.name || "").toLowerCase();
+                  const email = (hod.email || "").toLowerCase();
+                  const query = hodSearch.toLowerCase();
+                  const matchesSearch = name.includes(query) || email.includes(query);
+                  const matchesDept = hodDeptFilter === "all" || hod.department === hodDeptFilter;
+                  return matchesSearch && matchesDept;
+                });
+
+                return (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs text-slate-500 font-medium px-1">
+                      <span>Showing {filteredHods.length} of {hodList.length} HODs</span>
+                      {hodDeptFilter !== "all" && (
+                        <span className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-semibold">
+                          Dept: {hodDeptFilter}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                      <table className="min-w-full divide-y divide-slate-200 text-xs">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">HOD Name</th>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Department Assigned</th>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Institutional Email</th>
+                            <th className="px-4 py-2.5 text-right font-semibold text-slate-600 uppercase">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-slate-100 text-slate-700">
+                          {filteredHods.map((hod) => (
+                            <tr key={hod.id} className="hover:bg-slate-50 transition">
+                              <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900">{hod.name}</td>
+                              <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">{hod.department}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-slate-600 font-mono">{hod.email}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right">
+                                <button
+                                  onClick={() => handleDeleteHOD(hod.id)}
+                                  className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
+                                  title="Delete HOD"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                          {filteredHods.length === 0 && (
+                            <tr>
+                              <td colSpan={4} className="py-8 text-center text-slate-400">
+                                No HODs found matching the selected filter.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -1808,45 +1923,101 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
                 </div>
               </form>
 
-              <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="min-w-full divide-y divide-slate-200 text-xs">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Teacher Name</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Class Section</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Department</th>
-                      <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Email</th>
-                      <th className="px-4 py-2.5 text-right font-semibold text-slate-600 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-100 text-slate-700">
-                    {teacherList.map((teacher) => (
-                      <tr key={teacher.id} className="hover:bg-slate-50 transition">
-                        <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900">{teacher.name}</td>
-                        <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">{teacher.class_name}</td>
-                        <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-600">{teacher.department}</td>
-                        <td className="px-4 py-3 whitespace-nowrap font-mono text-slate-600">{teacher.email}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right">
-                          <button
-                            onClick={() => handleDeleteTeacher(teacher.id)}
-                            className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
-                            title="Delete Teacher"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
+              {/* Teacher Filter Toolbar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Search teacher name, email..."
+                    value={teacherSearch}
+                    onChange={(e) => setTeacherSearch(e.target.value)}
+                    className="block w-full pl-8 pr-3 py-1.5 border border-slate-300 bg-white text-xs rounded-md focus:ring-2 focus:ring-blue-800 focus:outline-none"
+                  />
+                  <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                </div>
+
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
+                  <span className="text-xs font-semibold text-slate-600 shrink-0">Department:</span>
+                  <select
+                    value={teacherDeptFilter}
+                    onChange={(e) => setTeacherDeptFilter(e.target.value)}
+                    className="px-3 py-1.5 border border-slate-300 bg-white text-xs rounded-md font-medium text-slate-800 focus:ring-2 focus:ring-blue-800 focus:outline-none cursor-pointer w-full sm:w-auto"
+                  >
+                    <option value="all">All Departments</option>
+                    {deptList.map((d) => (
+                      <option key={d.id} value={d.department_name}>
+                        {d.department_name}
+                      </option>
                     ))}
-                    {teacherList.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-slate-400">
-                          No registered class teachers found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                  </select>
+                </div>
               </div>
+
+              {/* Teacher Table */}
+              {(() => {
+                const filteredTeachers = teacherList.filter((teacher) => {
+                  const name = (teacher.name || "").toLowerCase();
+                  const email = (teacher.email || "").toLowerCase();
+                  const className = (teacher.class_name || "").toLowerCase();
+                  const query = teacherSearch.toLowerCase();
+                  const matchesSearch = name.includes(query) || email.includes(query) || className.includes(query);
+                  const matchesDept = teacherDeptFilter === "all" || teacher.department === teacherDeptFilter;
+                  return matchesSearch && matchesDept;
+                });
+
+                return (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs text-slate-500 font-medium px-1">
+                      <span>Showing {filteredTeachers.length} of {teacherList.length} Class Teachers</span>
+                      {teacherDeptFilter !== "all" && (
+                        <span className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-semibold">
+                          Dept: {teacherDeptFilter}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                      <table className="min-w-full divide-y divide-slate-200 text-xs">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Teacher Name</th>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Class Section</th>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Department</th>
+                            <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase">Email</th>
+                            <th className="px-4 py-2.5 text-right font-semibold text-slate-600 uppercase">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-slate-100 text-slate-700">
+                          {filteredTeachers.map((teacher) => (
+                            <tr key={teacher.id} className="hover:bg-slate-50 transition">
+                              <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900">{teacher.name}</td>
+                              <td className="px-4 py-3 whitespace-nowrap font-semibold text-slate-800">{teacher.class_name}</td>
+                              <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-600">{teacher.department}</td>
+                              <td className="px-4 py-3 whitespace-nowrap font-mono text-slate-600">{teacher.email}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right">
+                                <button
+                                  onClick={() => handleDeleteTeacher(teacher.id)}
+                                  className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
+                                  title="Delete Teacher"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                          {filteredTeachers.length === 0 && (
+                            <tr>
+                              <td colSpan={5} className="py-8 text-center text-slate-400">
+                                No class teachers found matching the selected filter.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
