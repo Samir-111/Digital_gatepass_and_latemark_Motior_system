@@ -331,7 +331,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
   const isClassIncharge = true;
 
   return (
-    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans pb-20 sm:pb-12 transition-colors">
       {/* 1. Upper Navigation Bar (Dark Navy Header matching Admin & Student portals) */}
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -403,12 +403,12 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-20 sm:pb-12">
         {/* 2. Faculty / Class Incharge Profile Card */}
-        <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
-          <div className="flex items-start sm:items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-[#0a1e33] dark:text-blue-400 shrink-0 shadow-xs">
-              <Award className="h-7 w-7 text-[#0a1e33] dark:text-blue-400" />
+        <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 transition-all">
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-[#0a1e33] dark:text-blue-400 shrink-0 shadow-xs">
+              <Award className="h-6 w-6 sm:h-7 sm:w-7 text-[#0a1e33] dark:text-blue-400" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -454,10 +454,10 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
         </div>
 
         {/* 3. Modern Tab Navigation Header */}
-        <div className="flex flex-wrap border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0b132b] p-1.5 rounded-2xl shadow-sm gap-1.5">
+        <div className="flex items-center overflow-x-auto no-scrollbar border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0b132b] p-1.5 rounded-2xl shadow-sm gap-1.5 whitespace-nowrap max-w-full">
           <button
             onClick={() => setActiveTab("gatepasses")}
-            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
               activeTab === "gatepasses"
                 ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
@@ -480,7 +480,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
 
           <button
             onClick={() => setActiveTab("faculty")}
-            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
               activeTab === "faculty"
                 ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
@@ -497,7 +497,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
 
           <button
             onClick={() => setActiveTab("late")}
-            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
               activeTab === "late"
                 ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
@@ -514,7 +514,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
 
           <button
             onClick={() => setActiveTab("students")}
-            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
               activeTab === "students"
                 ? "bg-[#0a1e33] dark:bg-blue-600 text-white shadow-sm"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
@@ -532,55 +532,55 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
 
         {/* 4. Analytics KPI Grid for GatePasses */}
         {activeTab === "gatepasses" && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 animate-fade-in">
-            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-5 animate-fade-in">
+            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-sm flex items-center justify-between">
               <div>
-                <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
                   Pending My Clearance
                 </span>
-                <h2 className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+                <h2 className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-1">
                   {activeGatePassKPI}
                 </h2>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                  Awaiting Class Incharge review
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                  Awaiting review
                 </p>
               </div>
-              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl border border-amber-100 dark:border-amber-800/60">
-                <FileText className="h-6 w-6" />
+              <div className="p-2 sm:p-3.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl sm:rounded-2xl border border-amber-100 dark:border-amber-800/60 shrink-0">
+                <FileText className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-sm flex items-center justify-between">
               <div>
-                <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
                   Forwarded to HOD
                 </span>
-                <h2 className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
+                <h2 className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 mt-0.5 sm:mt-1">
                   {forwardedGatePassKPI}
                 </h2>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                  Approved &amp; sent for HOD clearance
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                  Sent for HOD sign-off
                 </p>
               </div>
-              <div className="p-3.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-2xl border border-blue-100 dark:border-blue-800/60">
-                <Users className="h-6 w-6" />
+              <div className="p-2 sm:p-3.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl sm:rounded-2xl border border-blue-100 dark:border-blue-800/60 shrink-0">
+                <Users className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+            <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-sm flex items-center justify-between">
               <div>
-                <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
-                  Total Class Applications
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
+                  Total Applications
                 </span>
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1">
                   {gatePasses.length}
                 </h2>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
                   Total student outing requests
                 </p>
               </div>
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl border border-slate-100 dark:border-slate-700">
-                <CheckCircle className="h-6 w-6 text-emerald-500" />
+              <div className="p-2 sm:p-3.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-slate-700 shrink-0">
+                <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-500" />
               </div>
             </div>
           </div>
@@ -700,31 +700,17 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Destination / Location (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. University Office, Bank"
-                        value={applyDestination}
-                        onChange={(e) => setApplyDestination(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Vehicle No. (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. MH-31 AB-1234"
-                        value={applyVehicleNo}
-                        onChange={(e) => setApplyVehicleNo(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium font-mono"
-                      />
-                    </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Vehicle No. (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. MH-31 AB-1234"
+                      value={applyVehicleNo}
+                      onChange={(e) => setApplyVehicleNo(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium font-mono"
+                    />
                   </div>
 
                   <div>
@@ -912,9 +898,6 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                         </div>
 
                         <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{pass.reason}</h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                          Destination: {pass.destination || "N/A"}
-                        </p>
 
                         <div className="mt-3 text-xs space-y-1 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 font-medium">
                           <div className="flex justify-between items-center">
@@ -1475,6 +1458,38 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
           </div>
         )}
       </main>
+
+      {/* MOBILE FIXED BOTTOM NAVIGATION BAR */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a1e33]/95 backdrop-blur-md border-t border-[#081726] px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        {[
+          { id: "gatepasses", label: "Approvals", icon: FileText, badge: activeGatePassKPI || null },
+          { id: "faculty", label: "My Outing", icon: Award, badge: myFacultyPasses.length || null },
+          { id: "late", label: "Late Logs", icon: Clock, badge: lateEntries.length || null },
+          { id: "students", label: "Roll Call", icon: Users, badge: myStudents.length || null }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10px] font-bold transition relative cursor-pointer ${
+                isActive ? "text-emerald-400 font-extrabold" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <div className="relative">
+                <Icon className={`h-5 w-5 ${isActive ? "text-emerald-400 scale-110" : "text-slate-400"}`} />
+                {tab.badge && (
+                  <span className="absolute -top-1 -right-2 h-3.5 min-w-[14px] px-1 bg-amber-500 text-slate-950 font-black text-[8px] rounded-full flex items-center justify-center">
+                    {tab.badge}
+                  </span>
+                )}
+              </div>
+              <span className="mt-0.5 leading-tight">{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

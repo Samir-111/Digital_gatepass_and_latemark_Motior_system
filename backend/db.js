@@ -1155,27 +1155,25 @@ export class Database {
   // Get CSV Reports Data
   getCSVData() {
     const list = this.getGatePasses();
-    const headers = ['Pass ID', 'Student Name', 'Roll No', 'Department', 'Reason', 'Destination', 'Status', 'Risk Level', 'Exit Expected', 'Return Expected', 'Actual Exit', 'Actual Return', 'Approved By', 'Remarks', 'Applied At'];
+    const headers = ['Pass ID', 'Student Name', 'Roll No', 'Department', 'Reason', 'Status', 'Risk Level', 'Exit Time', 'Actual Exit', 'Actual Return', 'Approved By', 'Remarks', 'Applied At'];
 
     const rows = list.map(p => [
       p.id,
-      p.student_name,
-      p.student_roll_no,
-      p.student_department,
+      `"${(p.student_name || '').replace(/"/g, '""')}"`,
+      `"${(p.student_roll_no || '').replace(/"/g, '""')}"`,
+      `"${(p.student_department || p.department || '').replace(/"/g, '""')}"`,
       `"${(p.reason || '').replace(/"/g, '""')}"`,
-      `"${(p.destination || '').replace(/"/g, '""')}"`,
       p.status,
       p.risk_level || 'N/A',
-      p.exit_time,
-      p.return_time,
+      p.exit_time || 'N/A',
       p.exit_marked_at || 'N/A',
       p.return_marked_at || 'N/A',
-      p.approved_by || 'N/A',
+      `"${(p.approved_by || 'N/A').replace(/"/g, '""')}"`,
       `"${(p.remarks || '').replace(/"/g, '""')}"`,
-      p.created_at,
+      p.created_at || 'N/A',
     ]);
 
-    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    return '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   }
 
   // Export SQL Script

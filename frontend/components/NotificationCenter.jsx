@@ -63,7 +63,7 @@ export default function NotificationCenter() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50 transform origin-top-right transition-all duration-300 ease-out">
+        <div className="absolute right-0 mt-3 w-[calc(100vw-2.5rem)] max-w-xs sm:max-w-sm sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50 transform origin-top-right transition-all duration-300 ease-out">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
             <h3 className="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
               Notifications

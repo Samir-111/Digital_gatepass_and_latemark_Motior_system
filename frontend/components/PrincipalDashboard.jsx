@@ -187,26 +187,26 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-12 transition-colors">
+    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-20 sm:pb-12 transition-colors">
       {/* Header Bar */}
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md px-4 sm:px-6 py-3">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <img
               src={sbjainLogo}
               alt="S.B. Jain Institute Logo"
-              className="h-11 w-11 sm:h-12 sm:w-12 object-contain bg-white rounded-xl p-1 shadow-sm border border-white/20 shrink-0"
+              className="h-10 w-10 sm:h-12 sm:w-12 object-contain bg-white rounded-xl p-1 shadow-sm border border-white/20 shrink-0"
             />
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-white font-extrabold text-sm sm:text-base tracking-tight drop-shadow-sm">
-                  S. B. Jain Institute of Technology, Management and Research
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="text-white font-extrabold text-xs sm:text-sm md:text-base tracking-tight drop-shadow-sm truncate">
+                  S. B. Jain Institute of Technology
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 uppercase tracking-wider">
+                <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 uppercase tracking-wider shrink-0">
                   PRINCIPAL &amp; EXECUTIVE PORTAL
                 </span>
               </div>
-              <p className="text-xs text-slate-300 font-medium">
+              <p className="text-[10px] sm:text-xs text-slate-300 font-medium truncate">
                 Nagpur • Campus-Wide Authorization &amp; Gate Pass Monitoring
               </p>
             </div>
@@ -247,84 +247,76 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        {/* Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                  Pending Faculty Gatepasses
-                </p>
-                <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
-                  {pendingPasses.length}
-                </h3>
-              </div>
-              <div className="p-3 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-300">
-                <Clock className="h-6 w-6" />
-              </div>
+      <main className="max-w-7xl mx-auto px-3.5 sm:px-6 pt-4 sm:pt-6 space-y-4 sm:space-y-6">
+        {/* Metric Cards (Compact 2-Column Mobile Grid) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-4 sm:mb-6">
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs sm:shadow-sm relative overflow-hidden flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider truncate">
+                Pending Requests
+              </p>
+              <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">
+                {pendingPasses.length}
+              </h3>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 sm:mt-3 truncate hidden sm:block">Awaiting Principal Sign-Off</p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Awaiting Principal Sign-Off</p>
+            <div className="p-2 sm:p-3 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-300 shrink-0 ml-2">
+              <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                  Approved Passes
-                </p>
-                <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
-                  {statsApprovedToday}
-                </h3>
-              </div>
-              <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
-                <CheckCircle className="h-6 w-6" />
-              </div>
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs sm:shadow-sm relative overflow-hidden flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider truncate">
+                Approved Passes
+              </p>
+              <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">
+                {statsApprovedToday}
+              </h3>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 sm:mt-3 truncate hidden sm:block">Authorized for Exit</p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Authorized for Exit</p>
+            <div className="p-2 sm:p-3 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 shrink-0 ml-2">
+              <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">
-                  Currently Off-Campus
-                </p>
-                <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
-                  {statsOffCampus}
-                </h3>
-              </div>
-              <div className="p-3 rounded-xl bg-sky-500/20 text-sky-600 dark:text-sky-300">
-                <LogOut className="h-6 w-6" />
-              </div>
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs sm:shadow-sm relative overflow-hidden flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider truncate">
+                Off-Campus
+              </p>
+              <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">
+                {statsOffCampus}
+              </h3>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 sm:mt-3 truncate hidden sm:block">Active Exits Logged</p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Active Exits Logged</p>
+            <div className="p-2 sm:p-3 rounded-xl bg-sky-500/20 text-sky-600 dark:text-sky-300 shrink-0 ml-2">
+              <LogOut className="h-4 w-4 sm:h-6 sm:w-6" />
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                  Total College Passes
-                </p>
-                <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
-                  {allCollegePasses.length}
-                </h3>
-              </div>
-              <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-300">
-                <FileText className="h-6 w-6" />
-              </div>
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs sm:shadow-sm relative overflow-hidden flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider truncate">
+                Total Passes
+              </p>
+              <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">
+                {allCollegePasses.length}
+              </h3>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 sm:mt-3 truncate hidden sm:block">Faculty &amp; Student Combined</p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Faculty &amp; Student Combined</p>
+            <div className="p-2 sm:p-3 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 shrink-0 ml-2">
+              <FileText className="h-4 w-4 sm:h-6 sm:w-6" />
+            </div>
           </div>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-200 dark:border-slate-800 pb-3">
-          <div className="flex bg-white dark:bg-slate-900/90 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div className="flex items-center overflow-x-auto no-scrollbar gap-1.5 bg-white dark:bg-slate-900/90 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm whitespace-nowrap max-w-full">
             <button
               onClick={() => setActiveTab("pending")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
                 activeTab === "pending"
                   ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -336,7 +328,7 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
 
             <button
               onClick={() => setActiveTab("history")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
                 activeTab === "history"
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -348,7 +340,7 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
 
             <button
               onClick={() => setActiveTab("student_history")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
                 activeTab === "student_history"
                   ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -360,7 +352,7 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
 
             <button
               onClick={() => setActiveTab("all")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
                 activeTab === "all"
                   ? "bg-slate-800 dark:bg-slate-700 text-white"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -482,19 +474,9 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500 dark:text-slate-400">Destination:</span>
-                          <span className="text-slate-800 dark:text-slate-200">{pass.destination || "N/A"}</span>
-                        </div>
-                        <div className="flex justify-between">
                           <span className="text-slate-500 dark:text-slate-400">Exit Time:</span>
                           <span className="text-amber-700 dark:text-amber-300 font-semibold">
                             {formatDateSafe(pass.exit_time)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500 dark:text-slate-400">Expected Return:</span>
-                          <span className="text-slate-800 dark:text-slate-300">
-                            {formatDateSafe(pass.return_time)}
                           </span>
                         </div>
                         {pass.vehicle_no && (
@@ -548,7 +530,7 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
                   <tr className="bg-slate-50 dark:bg-slate-900/90 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                     <th className="p-4">Faculty Member</th>
                     <th className="p-4">Department</th>
-                    <th className="p-4">Reason & Destination</th>
+                    <th className="p-4">Reason</th>
                     <th className="p-4">Timing</th>
                     <th className="p-4">Status</th>
                     <th className="p-4">Remarks</th>
@@ -572,14 +554,10 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
                         <td className="p-4 text-slate-700 dark:text-slate-300 font-medium">{pass.faculty_department}</td>
                         <td className="p-4">
                           <div className="text-slate-900 dark:text-white font-medium">{pass.reason}</div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">{pass.destination}</div>
                         </td>
                         <td className="p-4">
                           <div className="text-slate-800 dark:text-slate-300">
                             Exit: {formatTimeSafe(pass.exit_time)}
-                          </div>
-                          <div className="text-slate-500 dark:text-slate-400 text-[10px]">
-                            Return: {formatTimeSafe(pass.return_time)}
                           </div>
                         </td>
                         <td className="p-4">
@@ -634,7 +612,7 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
                   <tr className="bg-slate-50 dark:bg-slate-900/90 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                     <th className="p-4">Student Name</th>
                     <th className="p-4">Dept / Roll</th>
-                    <th className="p-4">Reason &amp; Destination</th>
+                    <th className="p-4">Reason</th>
                     <th className="p-4">Timing</th>
                     <th className="p-4">Status</th>
                     <th className="p-4">Remarks</th>
@@ -660,7 +638,6 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
                         </td>
                         <td className="p-4">
                           <div className="text-slate-900 dark:text-white font-medium">{pass.reason}</div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">{pass.destination}</div>
                         </td>
                         <td className="p-4">
                           <div className="text-slate-800 dark:text-slate-300 font-mono">
@@ -927,6 +904,76 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
           </div>
         </div>
       )}
+
+      {/* Mobile Bottom Navigation Bar (Fixed 1-Tap Access for Mobile) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a1e33]/95 dark:bg-[#060e18]/95 backdrop-blur-md border-t border-white/10 px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        <button
+          onClick={() => {
+            setActiveTab("pending");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition cursor-pointer relative ${
+            activeTab === "pending"
+              ? "text-amber-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <div className="relative">
+            <Clock className="h-5 w-5" />
+            {pendingPasses.length > 0 && (
+              <span className="absolute -top-1 -right-2 bg-amber-500 text-slate-950 font-black text-[9px] h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center animate-pulse">
+                {pendingPasses.length}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">Pending</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("history");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition cursor-pointer ${
+            activeTab === "history"
+              ? "text-amber-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <User className="h-5 w-5" />
+          <span className="text-[10px] tracking-tight mt-0.5">Faculty Logs</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("student_history");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition cursor-pointer ${
+            activeTab === "student_history"
+              ? "text-amber-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <Users className="h-5 w-5" />
+          <span className="text-[10px] tracking-tight mt-0.5">Student Logs</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("all");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition cursor-pointer ${
+            activeTab === "all"
+              ? "text-amber-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <FileText className="h-5 w-5" />
+          <span className="text-[10px] tracking-tight mt-0.5">All Passes</span>
+        </button>
+      </nav>
     </div>
   );
 }

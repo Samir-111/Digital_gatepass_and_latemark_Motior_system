@@ -6,6 +6,9 @@ import { useState, useEffect, useRef } from "react";
 import {
   ShieldAlert,
   ShieldCheck,
+  Shield,
+  User,
+  UserCheck,
   QrCode,
   RefreshCw,
   ArrowRight,
@@ -258,16 +261,16 @@ export default function GuardDashboard({ user, onLogout, isDarkMode, onToggleThe
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
               <div className="bg-white p-1 rounded-xl shrink-0 shadow-sm border border-white/20">
                 <img src={sbjainLogo} alt="SB Jain Logo" className="h-8 w-8 object-contain" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-white tracking-tight text-xs sm:text-sm md:text-base leading-tight">
-                  S. B. Jain Institute of Technology, Management and Research
+              <div className="flex flex-col min-w-0">
+                <span className="font-extrabold text-white tracking-tight text-xs sm:text-sm leading-tight truncate">
+                  S. B. Jain Institute of Technology
                 </span>
-                <span className="text-[10px] text-slate-300 font-medium tracking-wide">
-                  Nagpur • Gate Pass Security Console
+                <span className="text-[10px] text-slate-300 font-medium tracking-wide truncate">
+                  Nagpur • Security Console
                 </span>
               </div>
               <span className="hidden lg:inline-flex items-center bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border border-amber-400/30 shrink-0 ml-2">
@@ -276,13 +279,23 @@ export default function GuardDashboard({ user, onLogout, isDarkMode, onToggleThe
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="text-right hidden sm:block">
-                <div className="text-xs font-bold text-white flex items-center justify-end space-x-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{user?.name || "Security Officer"}</span>
+              {/* User preview */}
+              <div className="hidden sm:flex items-center space-x-2.5 pl-2 pr-1">
+                <div className="h-8 w-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-amber-300">
+                  <UserCheck className="h-4 w-4" />
                 </div>
-                <div className="text-[10px] text-slate-300">Security Checkpoint</div>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-bold text-white leading-tight flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>{user?.name || "Security Officer"}</span>
+                  </span>
+                  <span className="text-[10px] text-amber-300 font-semibold uppercase">
+                    Security Checkpoint
+                  </span>
+                </div>
               </div>
+
+              <div className="h-6 w-px bg-white/15 hidden sm:block" />
 
               {onToggleTheme && (
                 <button
@@ -308,16 +321,48 @@ export default function GuardDashboard({ user, onLogout, isDarkMode, onToggleThe
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 mt-4 sm:mt-8 space-y-4 sm:space-y-6">
+        {/* Guard Welcome & Profile Banner */}
+        <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 transition-all animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 shadow-xs">
+              <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                  Welcome back, {user?.name || "Security Officer"}!
+                </h2>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold border uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+                  <Shield className="h-3 w-3" />
+                  <span>Main Gate Security</span>
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                Campus Perimeter &amp; Single-Use QR Pass Verification Console
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 dark:border-slate-800 shrink-0">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Checkpoint Status:
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Active on Duty</span>
+            </span>
+          </div>
+        </div>
+
         {/* Main interactive grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
           {/* Scanner Console Panel */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-4 sm:space-y-6">
             {/* Real-time Live QR Code Scanner */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-1.5">
-                  <Camera className="h-4.5 w-4.5 text-slate-700 dark:text-slate-300 animate-pulse" />
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-1.5">
+                  <Camera className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-slate-700 dark:text-slate-300 animate-pulse" />
                   <span>Real-time Live QR Scanner</span>
                 </h2>
                 <div className="flex items-center space-x-2">
@@ -519,13 +564,13 @@ export default function GuardDashboard({ user, onLogout, isDarkMode, onToggleThe
           </div>
 
           {/* Verification Results Panel */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-center min-h-[460px]">
+          <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-center min-h-[200px] sm:min-h-[460px]">
               {!verifiedPass && !verificationError && !verifyLoading && (
-                <div className="text-center py-12 text-slate-400 dark:text-slate-500">
-                  <Clipboard className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3 animate-bounce" />
-                  <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Scan Queue Empty</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-1 leading-relaxed">
+                <div className="text-center py-6 sm:py-12 text-slate-400 dark:text-slate-500">
+                  <Clipboard className="h-8 w-8 sm:h-12 sm:w-12 text-slate-300 dark:text-slate-600 mx-auto mb-2 sm:mb-3" />
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200">Scan Queue Empty</h3>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-1 leading-relaxed">
                     Capture student pass QR code, upload file, or click on a test simulator on the left to verify credentials.
                   </p>
                 </div>

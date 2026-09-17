@@ -198,45 +198,43 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
   const approvedCount = myPasses.filter((p) => p.status === "approved").length;
 
   return (
-    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-16 transition-colors">
+    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-20 sm:pb-12 transition-colors">
       {/* Header */}
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md px-4 sm:px-6 py-3">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <img
               src={sbjainLogo}
               alt="S.B. Jain Institute Logo"
-              className="h-11 w-11 sm:h-12 sm:w-12 object-contain bg-white rounded-xl p-1 shadow-sm border border-white/20 shrink-0"
+              className="h-10 w-10 sm:h-12 sm:w-12 object-contain bg-white rounded-xl p-1 shadow-sm border border-white/20 shrink-0"
             />
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-white font-extrabold text-sm sm:text-base tracking-tight drop-shadow-sm">
-                  S. B. Jain Institute of Technology, Management and Research
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="text-white font-extrabold text-xs sm:text-sm md:text-base tracking-tight drop-shadow-sm truncate">
+                  S. B. Jain Institute of Technology
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider">
+                <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider shrink-0">
                   FACULTY &amp; STAFF PORTAL
                 </span>
               </div>
-              <p className="text-xs text-slate-300 font-medium">
-                Nagpur • Faculty Gate Pass &amp; Staff Late Mark Management
+              <p className="text-[10px] sm:text-xs text-slate-300 font-medium truncate">
+                Nagpur • Departmental Outing Clearance &amp; Gate Pass System
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <div className="hidden sm:block text-right">
-              <div className="text-xs font-semibold text-white">{user?.name}</div>
-              <div className="text-[11px] text-slate-400">{user?.department || "Academic Faculty"}</div>
-            </div>
-
-            <button
-              onClick={onToggleTheme}
-              className="p-1.5 sm:p-2 rounded-lg border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
-              title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-              aria-label="Toggle theme"
-            >
-              {isDarkMode ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-200" />}
-            </button>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {onToggleTheme && (
+              <button
+                type="button"
+                onClick={onToggleTheme}
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                className="p-1.5 sm:p-2 rounded-lg border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-slate-300" />}
+              </button>
+            )}
 
             <button
               onClick={fetchFacultyPasses}
@@ -258,60 +256,54 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
-        {/* Quick Info & Stats Banner */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                  Pending Authorization
-                </span>
-                <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{pendingCount}</h3>
-              </div>
-              <div className="p-3 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-300">
-                <Clock className="h-6 w-6" />
-              </div>
+      <main className="max-w-6xl mx-auto px-3.5 sm:px-6 pt-4 sm:pt-8 space-y-4 sm:space-y-8">
+        {/* Quick Info & Stats Banner (Compact 2-Col Mobile Grid) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4">
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs sm:shadow-sm relative overflow-hidden flex items-center justify-between">
+            <div className="min-w-0">
+              <span className="text-[10px] sm:text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider block truncate">
+                Pending Approval
+              </span>
+              <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">{pendingCount}</h3>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-2 truncate hidden sm:block">Awaiting HOD / Principal</p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Awaiting HOD / Principal approval</p>
+            <div className="p-2 sm:p-3 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-300 shrink-0 ml-2">
+              <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                  Approved &amp; Active Passes
-                </span>
-                <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{approvedCount}</h3>
-              </div>
-              <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
-                <QrCode className="h-6 w-6" />
-              </div>
+          <div className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs sm:shadow-sm relative overflow-hidden flex items-center justify-between">
+            <div className="min-w-0">
+              <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block truncate">
+                Active Passes
+              </span>
+              <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">{approvedCount}</h3>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-2 truncate hidden sm:block">Ready with QR code</p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Ready with QR code for gate scan</p>
+            <div className="p-2 sm:p-3 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 shrink-0 ml-2">
+              <QrCode className="h-4 w-4 sm:h-6 sm:w-6" />
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                  Total Passes Applied
-                </span>
-                <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{myPasses.length}</h3>
-              </div>
-              <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-300">
-                <FileText className="h-6 w-6" />
-              </div>
+          <div className="col-span-2 md:col-span-1 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs sm:shadow-sm relative overflow-hidden flex items-center justify-between">
+            <div className="min-w-0">
+              <span className="text-[10px] sm:text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block truncate">
+                Total Applied
+              </span>
+              <h3 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5 sm:mt-1">{myPasses.length}</h3>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-2 truncate hidden sm:block">Historical gate pass records</p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Historical faculty gate pass records</p>
+            <div className="p-2 sm:p-3 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 shrink-0 ml-2">
+              <FileText className="h-4 w-4 sm:h-6 sm:w-6" />
+            </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex bg-slate-200/80 dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-300/80 dark:border-slate-800 max-w-xl">
+        <div className="flex items-center overflow-x-auto no-scrollbar gap-1.5 p-1.5 bg-slate-200/80 dark:bg-slate-900/90 rounded-2xl border border-slate-300/80 dark:border-slate-800 max-w-xl whitespace-nowrap">
           <button
             onClick={() => setActiveTab("apply")}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 sm:flex-1 ${
               activeTab === "apply"
                 ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -323,7 +315,7 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
 
           <button
             onClick={() => setActiveTab("late_mark")}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 sm:flex-1 ${
               activeTab === "late_mark"
                 ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-black"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -335,7 +327,7 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
 
           <button
             onClick={() => setActiveTab("passes")}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 sm:flex-1 ${
               activeTab === "passes"
                 ? "bg-slate-800 dark:bg-slate-700 text-white shadow-md font-black"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -586,9 +578,6 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
                       </div>
 
                       <h3 className="text-base font-bold text-slate-900 dark:text-white">{pass.reason}</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Destination: <span className="text-slate-800 dark:text-slate-200 font-medium">{pass.destination || "N/A"}</span>
-                      </p>
 
                       <div className="mt-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 text-xs space-y-2">
                         <div className="flex justify-between">
@@ -597,14 +586,6 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
                             {new Date(pass.exit_time).toLocaleString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                           </span>
                         </div>
-                        {pass.return_time && (
-                          <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">Expected Return:</span>
-                            <span className="text-slate-800 dark:text-slate-300 font-mono">
-                              {new Date(pass.return_time).toLocaleString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-                            </span>
-                          </div>
-                        )}
                         {pass.vehicle_no && (
                           <div className="flex justify-between">
                             <span className="text-slate-500 dark:text-slate-400">Vehicle No:</span>
@@ -701,6 +682,61 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
           </div>
         </div>
       )}
+
+      {/* Mobile Bottom Navigation Bar (Fixed 1-Tap Access for Mobile) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a1e33]/95 dark:bg-[#060e18]/95 backdrop-blur-md border-t border-white/10 px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        <button
+          onClick={() => {
+            setActiveTab("apply");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition cursor-pointer ${
+            activeTab === "apply"
+              ? "text-amber-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <PlusCircle className="h-5 w-5" />
+          <span className="text-[10px] tracking-tight mt-0.5">Apply Pass</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("late_mark");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition cursor-pointer ${
+            activeTab === "late_mark"
+              ? "text-amber-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <Clock className="h-5 w-5" />
+          <span className="text-[10px] tracking-tight mt-0.5">Late Mark</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("history");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition cursor-pointer relative ${
+            activeTab === "history"
+              ? "text-amber-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <div className="relative">
+            <FileText className="h-5 w-5" />
+            {pendingCount > 0 && (
+              <span className="absolute -top-1 -right-2 bg-amber-500 text-slate-950 font-black text-[9px] h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center animate-pulse">
+                {pendingCount}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">My Requests</span>
+        </button>
+      </nav>
     </div>
   );
 }

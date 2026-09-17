@@ -175,7 +175,7 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
   });
 
   return (
-    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors pb-20 sm:pb-12">
       {/* 1. Upper Navigation Bar (Institutional Navy #0a1e33) */}
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -254,12 +254,12 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* 2. HOD Welcome & Profile Card */}
-        <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
-          <div className="flex items-start sm:items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 shadow-xs">
-              <ShieldCheck className="h-7 w-7 text-purple-600 dark:text-purple-400" />
+        <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 transition-all">
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 shadow-xs">
+              <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -296,77 +296,77 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
           </div>
         </div>
 
-        {/* 3. Analytics KPI Grid (4 High-Contrast Metric Cards) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 animate-fade-in">
+        {/* 3. Analytics KPI Grid (4 High-Contrast Metric Cards - Compact 2-Col Mobile) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 animate-fade-in">
           {/* Awaiting Review */}
-          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
+          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xs sm:shadow-sm flex items-center justify-between">
+            <div className="min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block truncate">
                 Awaiting Clearance
               </span>
-              <h2 className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+              <h2 className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-1">
                 {pending.length}
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate hidden sm:block">
                 Pending HOD decision
               </p>
             </div>
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl border border-amber-100 dark:border-amber-800/60">
-              <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
+            <div className="p-2 sm:p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl sm:rounded-2xl border border-amber-100 dark:border-amber-800/60 shrink-0 ml-2">
+              <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
             </div>
           </div>
 
           {/* Approved Today */}
-          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
+          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xs sm:shadow-sm flex items-center justify-between">
+            <div className="min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block truncate">
                 Approved Today
               </span>
-              <h2 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+              <h2 className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 sm:mt-1">
                 {approvedToday}
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate hidden sm:block">
                 Authorized QR passes
               </p>
             </div>
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-800/60">
-              <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
+            <div className="p-2 sm:p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl sm:rounded-2xl border border-emerald-100 dark:border-emerald-800/60 shrink-0 ml-2">
+              <CheckCircle2 className="h-4 w-4 sm:h-6 sm:w-6" />
             </div>
           </div>
 
           {/* Rejected Today */}
-          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
+          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xs sm:shadow-sm flex items-center justify-between">
+            <div className="min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block truncate">
                 Disallowed Today
               </span>
-              <h2 className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">
+              <h2 className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5 sm:mt-1">
                 {rejectedToday}
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate hidden sm:block">
                 Flagged / denied outings
               </p>
             </div>
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-2xl border border-rose-100 dark:border-rose-800/60">
-              <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6" />
+            <div className="p-2 sm:p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl sm:rounded-2xl border border-rose-100 dark:border-rose-800/60 shrink-0 ml-2">
+              <AlertTriangle className="h-4 w-4 sm:h-6 sm:w-6" />
             </div>
           </div>
 
           {/* Total History */}
-          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
-                Total Department Log
+          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xs sm:shadow-sm flex items-center justify-between">
+            <div className="min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block truncate">
+                Department Logs
               </span>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1">
                 {history.length}
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate hidden sm:block">
                 Departmental applications
               </p>
             </div>
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-2xl border border-purple-100 dark:border-purple-800/60">
-              <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
+            <div className="p-2 sm:p-3 bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-xl sm:rounded-2xl border border-purple-100 dark:border-purple-800/60 shrink-0 ml-2">
+              <FileText className="h-4 w-4 sm:h-6 sm:w-6" />
             </div>
           </div>
         </div>
@@ -375,10 +375,10 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
         <div className="bg-white dark:bg-[#0b132b] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="border-b border-slate-100 dark:border-slate-800 p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Tabs List */}
-            <div className="flex flex-wrap gap-1.5 p-1 bg-slate-50/70 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+            <div className="flex items-center overflow-x-auto no-scrollbar gap-1.5 p-1 bg-slate-50/70 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 whitespace-nowrap max-w-full">
               <button
                 onClick={() => setActiveTab("pending")}
-                className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   activeTab === "pending"
                     ? "bg-[#0a1e33] dark:bg-purple-600 text-white shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -401,7 +401,7 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
 
               <button
                 onClick={() => setActiveTab("student_history")}
-                className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   activeTab === "student_history" || activeTab === "history"
                     ? "bg-[#0a1e33] dark:bg-purple-600 text-white shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -420,7 +420,7 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
 
               <button
                 onClick={() => setActiveTab("faculty_history")}
-                className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   activeTab === "faculty_history"
                     ? "bg-[#0a1e33] dark:bg-purple-600 text-white shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -442,7 +442,7 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                   setActiveTab("late_come");
                   fetchLateEntries();
                 }}
-                className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   activeTab === "late_come"
                     ? "bg-[#0a1e33] dark:bg-purple-600 text-white shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -585,13 +585,6 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                               {new Date(pass.exit_time).toLocaleDateString([], { month: "short", day: "numeric" })} at {new Date(pass.exit_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           </div>
-
-                          {pass.destination && (
-                            <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-700/60">
-                              <span className="font-bold text-slate-400 uppercase text-[10px]">Destination</span>
-                              <span className="font-semibold text-slate-700 dark:text-slate-300">{pass.destination}</span>
-                            </div>
-                          )}
 
                           <div className="pt-1 border-t border-slate-100 dark:border-slate-700/60">
                             <span className="font-bold text-slate-400 uppercase text-[10px] block mb-0.5">Reason Submitted</span>
@@ -741,9 +734,6 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                         <div className="font-semibold text-slate-800 dark:text-slate-200 max-w-xs truncate">
                           {pass.reason}
                         </div>
-                        {pass.destination && (
-                          <div className="text-[10px] text-slate-400 mt-0.5">Dest: {pass.destination}</div>
-                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-mono">
                         {new Date(pass.exit_time).toLocaleString("en-IN", {
@@ -896,6 +886,76 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
           )}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation Bar (Fixed 1-Tap Access for Mobile) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a1e33]/95 dark:bg-[#060e18]/95 backdrop-blur-md border-t border-white/10 px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        <button
+          onClick={() => {
+            setActiveTab("pending");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition cursor-pointer relative ${
+            activeTab === "pending"
+              ? "text-purple-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <div className="relative">
+            <Clock className="h-5 w-5" />
+            {pending.length > 0 && (
+              <span className="absolute -top-1 -right-2 bg-amber-500 text-white font-black text-[9px] h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center animate-pulse">
+                {pending.length}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">Approvals</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("history");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition cursor-pointer ${
+            activeTab === "history"
+              ? "text-purple-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <FileText className="h-5 w-5" />
+          <span className="text-[10px] tracking-tight mt-0.5">Student Logs</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("faculty_history");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition cursor-pointer ${
+            activeTab === "faculty_history"
+              ? "text-purple-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <Users className="h-5 w-5" />
+          <span className="text-[10px] tracking-tight mt-0.5">Faculty Logs</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("latecomers");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition cursor-pointer ${
+            activeTab === "latecomers"
+              ? "text-purple-400 font-bold"
+              : "text-slate-400 hover:text-slate-200 font-medium"
+          }`}
+        >
+          <AlertTriangle className="h-5 w-5" />
+          <span className="text-[10px] tracking-tight mt-0.5">Late Marks</span>
+        </button>
+      </nav>
     </div>
   );
 }

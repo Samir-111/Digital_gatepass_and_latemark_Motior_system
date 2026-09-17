@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Users,
   Layers,
@@ -47,11 +47,18 @@ import {
   ShieldAlert,
   Sparkles,
   Eye,
-  EyeOff
+  EyeOff,
+  Menu,
+  X,
+  Calendar,
+  TrendingUp,
+  PieChart,
+  ArrowUpRight
 } from "lucide-react";
 import { apiFetch } from "../lib/api.js";
 import { gatepassService } from "../services/gatepassService.js";
 import sbjainLogo from "../assets/sbjain-logo.png";
+import campusImg from "../assets/campus.png";
 
 export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleTheme }) {
   const [stats, setStats] = useState(null);
@@ -65,6 +72,7 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
   const [loading, setLoading] = useState(true);
   const [parentContacts, setParentContacts] = useState([]);
   const [activeTab, setActiveTab] = useState("analytics");
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState({ status: 'DISCONNECTED', qr: null });
   const [whatsappLogs, setWhatsappLogs] = useState([]);
   const [whatsappLoading, setWhatsappLoading] = useState(false);
@@ -122,6 +130,9 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
   const [parentSearchQuery, setParentSearchQuery] = useState("");
   const [isUploadingContacts, setIsUploadingContacts] = useState(false);
   const [exportMonthFilter, setExportMonthFilter] = useState("");
+  const [exportDeptFilter, setExportDeptFilter] = useState("all");
+  const [exportStatusFilter, setExportStatusFilter] = useState("all");
+  const [exportSearchQuery, setExportSearchQuery] = useState("");
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -410,36 +421,202 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
     }
   };
 
-  const exportMonthlyGatePasses = () => {
-    let list = [...gatePassList];
-    let fileName = "all_gatepasses_report.csv";
-    if (exportMonthFilter) {
-      list = list.filter((p) => {
-        const date = new Date(p.created_at);
-        const yyyymm = date.toISOString().substring(0, 7);
-        return yyyymm === exportMonthFilter;
-      });
-      fileName = `gatepass_report_${exportMonthFilter}.csv`;
+  // Available departments list (merging registered depts + defaults + records)
+  const availableDepts = useMemo(() => {
+    const set = new Set();
+    ["AIML", "AIDS", "CSE", "ETC", "Electrical", "Mechanical"].forEach((d) => set.add(d));
+    deptList.forEach((d) => {
+      if (d.department_name && d.department_name.trim()) set.add(d.department_name.trim());
+    });
+    gatePassList.forEach((p) => {
+      const d = p.student_department || p.department;
+      if (d && d.trim()) set.add(d.trim());
+    });
+    return Array.from(set).sort();
+  }, [deptList, gatePassList]);
+
+  // Dynamic available months list generated from pass timestamps + rolling recent months
+  const availableMonths = useMemo(() => {
+    const monthMap = new Map();
+    const formatMonthLabel = (yyyymm) => {
+      const [yearStr, monthStr] = yyyymm.split("-");
+      const d = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, 1);
+      return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    };
+
+    // Include recent 6 months to current month
+    const now = new Date();
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const yyyymm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      monthMap.set(yyyymm, formatMonthLabel(yyyymm));
     }
-    const headers = ["Pass ID", "Student Name", "Roll No", "Department", "Reason", "Destination", "Status", "Risk Level", "Exit Expected", "Return Expected", "Actual Exit", "Actual Return", "Approved By", "Remarks", "Applied At"];
+
+    // Include all historical months present in gatePassList
+    gatePassList.forEach((p) => {
+      const dateVal = p.created_at || p.exit_time || p.exit_marked_at;
+      if (dateVal) {
+        const d = new Date(dateVal);
+        if (!isNaN(d.getTime())) {
+          const yyyymm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          if (!monthMap.has(yyyymm)) {
+            monthMap.set(yyyymm, formatMonthLabel(yyyymm));
+          }
+        }
+      }
+    });
+
+    return Array.from(monthMap.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => b.value.localeCompare(a.value));
+  }, [gatePassList]);
+
+  // Filtered passes calculation based on selected department, month, status, and search query
+  const filteredExportPasses = useMemo(() => {
+    return gatePassList.filter((p) => {
+      // 1. Department filter
+      const pDept = (p.student_department || p.department || "").trim().toLowerCase();
+      const matchesDept =
+        exportDeptFilter === "all" || pDept === exportDeptFilter.trim().toLowerCase();
+
+      // 2. Month filter
+      let matchesMonth = true;
+      if (exportMonthFilter) {
+        const dateVal = p.created_at || p.exit_time || p.exit_marked_at;
+        if (dateVal) {
+          const d = new Date(dateVal);
+          if (!isNaN(d.getTime())) {
+            const yyyymm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+            matchesMonth = yyyymm === exportMonthFilter;
+          } else {
+            matchesMonth = String(dateVal).startsWith(exportMonthFilter);
+          }
+        } else {
+          matchesMonth = false;
+        }
+      }
+
+      // 3. Status filter
+      const pStatus = (p.status || "").toLowerCase();
+      const matchesStatus =
+        exportStatusFilter === "all" || pStatus === exportStatusFilter.toLowerCase();
+
+      // 4. Search filter
+      const q = (exportSearchQuery || "").toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        (p.student_name || "").toLowerCase().includes(q) ||
+        (p.student_roll_no || "").toLowerCase().includes(q) ||
+        (p.reason || "").toLowerCase().includes(q);
+
+      return matchesDept && matchesMonth && matchesStatus && matchesSearch;
+    });
+  }, [gatePassList, exportDeptFilter, exportMonthFilter, exportStatusFilter, exportSearchQuery]);
+
+  // Aggregated Department-wise analytics matrix for the selected month
+  const deptAnalyticsSummary = useMemo(() => {
+    const monthFiltered = gatePassList.filter((p) => {
+      if (!exportMonthFilter) return true;
+      const dateVal = p.created_at || p.exit_time || p.exit_marked_at;
+      if (dateVal) {
+        const d = new Date(dateVal);
+        if (!isNaN(d.getTime())) {
+          const yyyymm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          return yyyymm === exportMonthFilter;
+        }
+        return String(dateVal).startsWith(exportMonthFilter);
+      }
+      return false;
+    });
+
+    const summaryMap = {};
+    availableDepts.forEach((d) => {
+      summaryMap[d.toLowerCase()] = {
+        name: d,
+        total: 0,
+        pending: 0,
+        approved: 0,
+        exited: 0,
+        closed: 0,
+        rejected: 0,
+        highRisk: 0,
+      };
+    });
+
+    monthFiltered.forEach((p) => {
+      const deptName = (p.student_department || p.department || "Other").trim();
+      const key = deptName.toLowerCase();
+      if (!summaryMap[key]) {
+        summaryMap[key] = {
+          name: deptName,
+          total: 0,
+          pending: 0,
+          approved: 0,
+          exited: 0,
+          closed: 0,
+          rejected: 0,
+          highRisk: 0,
+        };
+      }
+      summaryMap[key].total += 1;
+      const st = (p.status || "").toLowerCase();
+      if (st === "pending") summaryMap[key].pending += 1;
+      else if (st === "approved") summaryMap[key].approved += 1;
+      else if (st === "exited") summaryMap[key].exited += 1;
+      else if (st === "closed" || st === "returned") summaryMap[key].closed += 1;
+      else if (st === "rejected" || st === "cancelled") summaryMap[key].rejected += 1;
+
+      if ((p.risk_level || "").toLowerCase() === "high") {
+        summaryMap[key].highRisk += 1;
+      }
+    });
+
+    return Object.values(summaryMap).sort((a, b) => b.total - a.total);
+  }, [gatePassList, availableDepts, exportMonthFilter]);
+
+  const exportMonthlyGatePasses = () => {
+    const list = filteredExportPasses;
+    if (list.length === 0) {
+      showToast("No gate pass records match the selected Department and Month filters.", "error");
+      return;
+    }
+    const deptTag = exportDeptFilter === "all" ? "all_departments" : exportDeptFilter.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const monthTag = exportMonthFilter ? exportMonthFilter : "all_months";
+    const fileName = `gatepass_report_${deptTag}_${monthTag}.csv`;
+
+    const headers = [
+      "Pass ID",
+      "Student Name",
+      "Roll No",
+      "Department",
+      "Reason",
+      "Status",
+      "Risk Level",
+      "Exit Time",
+      "Actual Exit Marked",
+      "Actual Return Marked",
+      "Approved By",
+      "Remarks",
+      "Applied At"
+    ];
+
     const rows = list.map((p) => [
       p.id,
-      p.student_name,
-      p.student_roll_no,
-      p.student_department,
+      `"${(p.student_name || "").replace(/"/g, '""')}"`,
+      `"${(p.student_roll_no || "").replace(/"/g, '""')}"`,
+      `"${(p.student_department || p.department || "").replace(/"/g, '""')}"`,
       `"${(p.reason || "").replace(/"/g, '""')}"`,
-      `"${(p.destination || "").replace(/"/g, '""')}"`,
       p.status,
-      p.risk_level || "N/A",
-      p.exit_time,
-      p.return_time,
+      p.risk_level || "Normal",
+      p.exit_time || "N/A",
       p.exit_marked_at || "N/A",
       p.return_marked_at || "N/A",
-      p.approved_by || "N/A",
+      `"${(p.approved_by || "N/A").replace(/"/g, '""')}"`,
       `"${(p.remarks || "").replace(/"/g, '""')}"`,
-      p.created_at
+      p.created_at || "N/A"
     ]);
-    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -448,7 +625,54 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast(`Successfully downloaded ${list.length} monthly gatepass reports!`);
+    URL.revokeObjectURL(url);
+    showToast(`Downloaded ${list.length} gate pass records for ${exportDeptFilter === 'all' ? 'All Departments' : exportDeptFilter} (${monthTag})!`);
+  };
+
+  const exportDeptSummaryCSV = () => {
+    const list = deptAnalyticsSummary;
+    const monthTag = exportMonthFilter ? exportMonthFilter : "all_months";
+    const fileName = `department_summary_${monthTag}.csv`;
+
+    const headers = [
+      "Department",
+      "Total Applications",
+      "Approved Passes",
+      "Currently Outside (Exited)",
+      "Safely Returned (Closed)",
+      "Pending Review",
+      "Rejected",
+      "High Risk Flags",
+      "Approval Rate (%)"
+    ];
+
+    const rows = list.map((d) => {
+      const processed = d.approved + d.exited + d.closed + d.rejected;
+      const rate = processed > 0 ? Math.round(((d.approved + d.exited + d.closed) / processed) * 100) : 0;
+      return [
+        `"${d.name}"`,
+        d.total,
+        d.approved,
+        d.exited,
+        d.closed,
+        d.pending,
+        d.rejected,
+        d.highRisk,
+        `${rate}%`
+      ];
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast(`Downloaded Department Breakdown Summary for ${monthTag}!`);
   };
 
   const exportMonthlyLogs = () => {
@@ -716,18 +940,29 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* College Identity */}
-            <div className="flex items-center space-x-3.5 min-w-0">
+            {/* College Identity & Mobile Toggle */}
+            <div className="flex items-center space-x-2 sm:space-x-3.5 min-w-0">
+              {/* Mobile Drawer Hamburger Button */}
+              <button
+                type="button"
+                onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+                className="lg:hidden p-1.5 -ml-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0"
+                aria-label="Toggle Navigation Menu"
+                title="Open navigation menu"
+              >
+                {isMobileNavOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-white" />}
+              </button>
+
               <img
                 src={sbjainLogo}
                 alt="SBJITMR Logo"
-                className="h-10 w-10 object-contain rounded-md border border-white/20 p-0.5 bg-white shrink-0"
+                className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-md border border-white/20 p-0.5 bg-white shrink-0"
               />
               <div className="min-w-0">
                 <h1 className="text-xs sm:text-sm font-bold text-white leading-tight truncate">
-                  S. B. Jain Institute of Technology, Management and Research
+                  S. B. Jain Institute of Technology
                 </h1>
-                <p className="text-[11px] text-slate-400 font-medium">Nagpur</p>
+                <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">Nagpur • Admin Console</p>
               </div>
             </div>
 
@@ -752,10 +987,10 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
             </div>
 
             {/* Admin Account Profile & Logout */}
-            <div className="flex items-center space-x-3 shrink-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
               <div className="flex items-center space-x-2.5">
-                <div className="h-8 w-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                  <UserCheck className="h-4 w-4 text-blue-300" />
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white">
+                  <UserCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-300" />
                 </div>
                 <div className="hidden md:flex flex-col text-left">
                   <span className="text-xs font-bold text-white leading-tight">
@@ -780,16 +1015,16 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
                 title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
                 aria-label="Toggle theme"
               >
-                {isDarkMode ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4 text-slate-200" />}
+                {isDarkMode ? <Sun className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-300" /> : <Moon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-200" />}
               </button>
 
               <button
                 onClick={onLogout}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 border border-white/20 hover:border-white/40 text-xs font-semibold rounded-md text-white bg-white/5 hover:bg-white/15 transition shadow-xs cursor-pointer"
+                className="inline-flex items-center space-x-1 sm:space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 border border-white/20 hover:border-white/40 text-xs font-semibold rounded-md text-white bg-white/5 hover:bg-white/15 transition shadow-xs cursor-pointer"
                 title="Sign out of Admin Session"
               >
                 <LogOut className="h-3.5 w-3.5 text-slate-300" />
-                <span>Logout</span>
+                <span className="hidden xs:inline">Logout</span>
               </button>
             </div>
           </div>
@@ -797,103 +1032,142 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
       </header>
 
       {/* 2. BODY LAYOUT: LEFT SIDEBAR + MAIN CONTENT AREA */}
-      <div className="flex flex-1 w-full min-h-[calc(100vh-64px)]">
+      <div className="flex flex-1 w-full min-h-[calc(100vh-64px)] relative">
         
-        {/* LEFT STATIC/STICKY SIDEBAR */}
-        <aside className="w-64 bg-[#0a1e33] text-slate-300 border-r border-[#081726] shrink-0 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto flex flex-col justify-between p-3.5 z-20 select-none">
-          <div className="space-y-1">
-            {/* Primary Section */}
-            {[
-              { id: "analytics", label: "Dashboard", icon: Home },
-              { id: "gatepasses", label: "Gate Pass Applications", icon: FileText },
-              { id: "students", label: "Students", icon: Users },
-              { id: "hods", label: "HODs", icon: Layers },
-              { id: "teachers", label: "Class Teachers", icon: GraduationCap },
-              { id: "principals", label: "Principals", icon: UserCheck },
-              { id: "guards", label: "Guards", icon: ShieldCheck },
-              { id: "depts", label: "Departments", icon: Building2 }
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer text-left ${
-                    isActive
-                      ? "bg-[#1e60d5] text-white font-bold shadow-sm"
-                      : "text-slate-300 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-slate-400"}`} />
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            })}
+        {/* Mobile Backdrop Overlay */}
+        {isMobileNavOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-xs transition-opacity"
+            onClick={() => setIsMobileNavOpen(false)}
+          />
+        )}
 
-            {/* Sidebar Divider */}
-            <div className="pt-3 pb-2">
-              <div className="border-t border-slate-700/60" />
+        {/* SIDEBAR: Slide-over drawer on Mobile, Fixed sticky column on Desktop */}
+        <aside
+          className={`fixed lg:sticky top-0 lg:top-16 left-0 z-50 lg:z-20 w-72 lg:w-64 bg-[#0a1e33] text-slate-300 border-r border-[#081726] shrink-0 h-full lg:h-[calc(100vh-64px)] overflow-y-auto flex flex-col justify-between p-3.5 select-none transition-transform duration-300 ease-in-out ${
+            isMobileNavOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
+          }`}
+        >
+          <div>
+            {/* Mobile Drawer Header with Close Button */}
+            <div className="lg:hidden flex items-center justify-between pb-3 mb-3 border-b border-slate-700/60">
+              <div className="flex items-center space-x-2">
+                <img src={sbjainLogo} alt="Logo" className="h-7 w-7 rounded p-0.5 bg-white shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white tracking-wide">Admin Portal</p>
+                  <p className="text-[10px] text-slate-400">Navigation Menu</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsMobileNavOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                aria-label="Close Navigation"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            {/* Secondary Section */}
-            {[
-              { id: "parent_contacts", label: "Parent Contacts", icon: Phone },
-              { id: "whatsapp", label: "WhatsApp Gateway", icon: MessageSquare },
-              { id: "monthly_export", label: "Monthly Analytics", icon: BarChart2 },
-              { id: "logs", label: "Logs & Reports", icon: Clock }
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id || (item.id === "monthly_export" && activeTab === "analytics");
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    if (item.id === "monthly_export") {
-                      setActiveTab("analytics");
-                      setTimeout(() => {
-                        const el = document.getElementById("monthly-analytics-console");
-                        if (el) el.scrollIntoView({ behavior: "smooth" });
-                      }, 100);
-                    } else {
+            <div className="space-y-1">
+              {/* Primary Section */}
+              {[
+                { id: "analytics", label: "Dashboard", icon: Home },
+                { id: "gatepasses", label: "Gate Pass Applications", icon: FileText },
+                { id: "students", label: "Students", icon: Users },
+                { id: "hods", label: "HODs", icon: Layers },
+                { id: "teachers", label: "Class Teachers", icon: GraduationCap },
+                { id: "principals", label: "Principals", icon: UserCheck },
+                { id: "guards", label: "Guards", icon: ShieldCheck },
+                { id: "depts", label: "Departments", icon: Building2 }
+              ].map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
                       setActiveTab(item.id);
-                    }
-                  }}
-                  className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer text-left ${
-                    activeTab === item.id
-                      ? "bg-[#1e60d5] text-white font-bold shadow-sm"
-                      : "text-slate-300 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  <Icon className={`h-4 w-4 ${activeTab === item.id ? "text-white" : "text-slate-400"}`} />
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            })}
+                      setIsMobileNavOpen(false);
+                    }}
+                    className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer text-left ${
+                      isActive
+                        ? "bg-[#1e60d5] text-white font-bold shadow-sm"
+                        : "text-slate-300 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+
+              {/* Sidebar Divider */}
+              <div className="pt-3 pb-2">
+                <div className="border-t border-slate-700/60" />
+              </div>
+
+              {/* Secondary Section */}
+              {[
+                { id: "monthly_export", label: "Monthly & Dept Analytics", icon: BarChart2 },
+                { id: "parent_contacts", label: "Parent Contacts", icon: Phone },
+                { id: "whatsapp", label: "WhatsApp Gateway", icon: MessageSquare },
+                { id: "logs", label: "Logs & Reports", icon: Clock }
+              ].map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setIsMobileNavOpen(false);
+                      setActiveTab(item.id);
+                    }}
+                    className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition cursor-pointer text-left ${
+                      isActive
+                        ? "bg-[#1e60d5] text-white font-bold shadow-sm"
+                        : "text-slate-300 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Sidebar Footer Artwork */}
-          <div className="pt-4 border-t border-slate-800/80 mt-4 space-y-2">
-            <div className="flex items-center space-x-2 px-2 text-slate-400">
-              <Shield className="h-4 w-4 text-blue-400 shrink-0" />
-              <div>
-                <p className="text-[11px] font-bold text-slate-200">Secure Campus</p>
-                <p className="text-[10px] text-slate-400">Safer Tomorrow</p>
+          {/* Sidebar Footer Card with Subtle Blended College Image Background */}
+          <div className="relative rounded-xl overflow-hidden mt-3 border border-white/10 bg-[#081726]/80 shadow-xs shrink-0">
+            {/* College Campus Faded Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-100 pointer-events-none mix-blend-luminosity"
+              style={{ backgroundImage: `url(${campusImg})` }}
+            />
+            {/* Dark Navy Semi-Transparent Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a1e33] via-[#0a1e33]/85 to-[#0a1e33]/60 pointer-events-none" />
+
+            <div className="relative z-10 p-2.5 space-y-1">
+              <div className="flex items-center space-x-2">
+                <div className="p-1 rounded-md bg-blue-500/20 text-blue-400 border border-blue-400/30 shrink-0">
+                  <Shield className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white tracking-tight truncate">S. B. JITMR</p>
+                  <p className="text-[10px] text-slate-300 font-medium truncate">Nagpur </p>
+                </div>
               </div>
-            </div>
-            {/* Subtle Campus Graphic */}
-            <div className="opacity-20 px-2 pt-1 text-center">
-              <Building2 className="h-12 w-12 mx-auto text-blue-300" />
+              <p className="text-[9.5px] text-blue-200/70 font-medium pl-0.5">
+                Secure Campus • Safer Tomorrow
+              </p>
             </div>
           </div>
         </aside>
 
         {/* 3. MAIN DASHBOARD CONTENT */}
-        <main className="flex-1 min-w-0 p-6 sm:p-8 space-y-6 overflow-y-auto">
+        <main className="flex-1 min-w-0 max-w-full overflow-x-hidden p-3 sm:p-5 lg:p-8 space-y-4 sm:space-y-6 pb-12">
           
           {/* TAB 1: OVERVIEW ANALYTICS (MAIN DASHBOARD) */}
           {activeTab === "analytics" && (
-            <div className="space-y-6 max-w-7xl mx-auto">
+            <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
               {/* PAGE TITLE & ACTION BUTTONS */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -926,136 +1200,136 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
                 </div>
               </div>
 
-              {/* 4 TOP STATISTICS CARDS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* 4 TOP STATISTICS CARDS (Compact 2-Col Mobile Grid) */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
                 {/* Card 1: Total Registered Students */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs border-t-4 border-t-blue-500 transition hover:shadow-md">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
-                      <Users className="h-5 w-5" />
+                <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-5 shadow-xs border-t-4 border-t-blue-500 transition hover:shadow-md">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="p-2 sm:p-2.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                        TOTAL REGISTERED STUDENTS
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block truncate">
+                        REGISTERED STUDENTS
                       </span>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
+                      <div className="text-xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
                         {studentList.length}
                       </div>
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-3 pt-2 border-t border-slate-100">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-slate-100 truncate hidden sm:block">
                     Enrolled with pass profiles
                   </p>
                 </div>
 
                 {/* Card 2: Total Gate Passes Applied */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs border-t-4 border-t-emerald-500 transition hover:shadow-md">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2.5 bg-emerald-50 rounded-full text-emerald-600 shrink-0">
-                      <FileText className="h-5 w-5" />
+                <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-5 shadow-xs border-t-4 border-t-emerald-500 transition hover:shadow-md">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="p-2 sm:p-2.5 bg-emerald-50 rounded-full text-emerald-600 shrink-0">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                        TOTAL GATE PASSES APPLIED
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block truncate">
+                        PASSES APPLIED
                       </span>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
+                      <div className="text-xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
                         {totalRequestsCount}
                       </div>
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-3 pt-2 border-t border-slate-100">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-slate-100 truncate hidden sm:block">
                     Cumulative safety applications
                   </p>
                 </div>
 
                 {/* Card 3: Pending HOD Review */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs border-t-4 border-t-amber-500 transition hover:shadow-md">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2.5 bg-amber-50 rounded-full text-amber-600 shrink-0">
-                      <Clock className="h-5 w-5" />
+                <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-5 shadow-xs border-t-4 border-t-amber-500 transition hover:shadow-md">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="p-2 sm:p-2.5 bg-amber-50 rounded-full text-amber-600 shrink-0">
+                      <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                        PENDING HOD REVIEW
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block truncate">
+                        PENDING HOD
                       </span>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
+                      <div className="text-xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
                         {pendingHODPasses}
                       </div>
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-3 pt-2 border-t border-slate-100">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-slate-100 truncate hidden sm:block">
                     Awaiting active decision
                   </p>
                 </div>
 
                 {/* Card 4: Students Outside Campus */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs border-t-4 border-t-rose-500 transition hover:shadow-md">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2.5 bg-rose-50 rounded-full text-rose-600 shrink-0">
-                      <MapPin className="h-5 w-5" />
+                <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-5 shadow-xs border-t-4 border-t-rose-500 transition hover:shadow-md">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="p-2 sm:p-2.5 bg-rose-50 rounded-full text-rose-600 shrink-0">
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                        STUDENTS OUTSIDE CAMPUS
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block truncate">
+                        OUTSIDE CAMPUS
                       </span>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
+                      <div className="text-xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
                         {activeCurfewPasses}
                       </div>
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-3 pt-2 border-t border-slate-100">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-slate-100 truncate hidden sm:block">
                     Currently out (Active curfew checks)
                   </p>
                 </div>
               </div>
 
               {/* HORIZONTAL QUICK NAVIGATION BAR */}
-              <div className="bg-white border border-slate-200 rounded-xl p-1.5 shadow-xs flex items-center overflow-x-auto space-x-1.5 text-xs font-semibold text-slate-600">
+              <div className="bg-white border border-slate-200 rounded-xl p-1.5 shadow-xs flex items-center overflow-x-auto no-scrollbar space-x-1.5 text-xs font-semibold text-slate-600 whitespace-nowrap max-w-full">
                 <button
                   onClick={() => setActiveTab("analytics")}
-                  className="px-4 py-2 rounded-lg bg-[#0a1e33] text-white font-bold flex items-center space-x-2 shadow-xs cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#0a1e33] text-white font-bold flex items-center space-x-2 shadow-xs cursor-pointer shrink-0"
                 >
                   <BarChart2 className="h-3.5 w-3.5" />
                   <span>Overview Analytics</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("gatepasses")}
-                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer"
+                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer shrink-0"
                 >
                   <FileText className="h-3.5 w-3.5 text-slate-400" />
                   <span>GatePass Traffic Console</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("students")}
-                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer"
+                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer shrink-0"
                 >
                   <Users className="h-3.5 w-3.5 text-slate-400" />
                   <span>Manage Students</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("hods")}
-                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer"
+                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer shrink-0"
                 >
                   <Layers className="h-3.5 w-3.5 text-slate-400" />
                   <span>Manage HODs</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("teachers")}
-                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer"
+                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer shrink-0"
                 >
                   <GraduationCap className="h-3.5 w-3.5 text-slate-400" />
                   <span>Manage Class Teachers</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("principals")}
-                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer"
+                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer shrink-0"
                 >
                   <UserCheck className="h-3.5 w-3.5 text-slate-400" />
                   <span>Manage Principals</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("guards")}
-                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer"
+                  className="px-4 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center space-x-2 transition cursor-pointer shrink-0"
                 >
                   <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
                   <span>Manage Guards</span>
@@ -1292,53 +1566,94 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
                 </div>
               </div>
 
-              {/* MONTHLY ANALYTICS & LOG EXPORT CONSOLE */}
-              <div id="monthly-analytics-console" className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              {/* MONTHLY & DEPARTMENT ANALYTICS CONSOLE CARD */}
+              <div id="monthly-analytics-console" className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 pb-3.5 border-b border-slate-100">
                   <div className="flex items-start space-x-3">
                     <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0 mt-0.5">
                       <BarChart2 className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900">
-                        Monthly Analytics & Log Export Console
-                      </h4>
+                      <div className="flex items-center space-x-2">
+                        <h4 className="text-sm font-bold text-slate-900">
+                          Department & Monthly Analytics Center
+                        </h4>
+                        <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {filteredExportPasses.length} records matching
+                        </span>
+                      </div>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        View monthly gate pass data and export logs for reporting and analysis.
+                        Filter and download gate-pass logs sorted precisely by department and month.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs font-semibold text-slate-600">Select Month</span>
-                      <select
-                        value={exportMonthFilter}
-                        onChange={(e) => setExportMonthFilter(e.target.value)}
-                        className="bg-white border border-slate-300 text-xs font-medium rounded-md px-3 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                      >
-                        <option value="">All Months (Cumulative)</option>
-                        <option value="2026-09">September 2026</option>
-                        <option value="2026-08">August 2026</option>
-                        <option value="2026-07">July 2026</option>
-                        <option value="2026-06">June 2026</option>
-                      </select>
-                    </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => setActiveTab("monthly_export")}
+                      className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md shadow-xs transition flex items-center space-x-1.5 cursor-pointer"
+                    >
+                      <span>Open Full Analytics Portal</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
 
+                {/* Filter and Quick Action Bar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Filter by Department
+                    </label>
+                    <select
+                      value={exportDeptFilter}
+                      onChange={(e) => setExportDeptFilter(e.target.value)}
+                      className="w-full bg-white border border-slate-300 text-xs font-medium rounded-md px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    >
+                      <option value="all">All Departments (Institutional)</option>
+                      {availableDepts.map((d) => (
+                        <option key={d} value={d}>
+                          {d} Department
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Filter by Month
+                    </label>
+                    <select
+                      value={exportMonthFilter}
+                      onChange={(e) => setExportMonthFilter(e.target.value)}
+                      className="w-full bg-white border border-slate-300 text-xs font-medium rounded-md px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    >
+                      <option value="">All Months (Cumulative)</option>
+                      {availableMonths.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-end">
                     <button
                       onClick={exportMonthlyGatePasses}
-                      className="px-4 py-2 bg-[#0a1e33] hover:bg-[#112d4a] text-white text-xs font-semibold rounded-md shadow-xs transition flex items-center space-x-1.5 cursor-pointer"
+                      className="w-full px-3 py-1.5 bg-[#0a1e33] hover:bg-[#112d4a] text-white text-xs font-semibold rounded-md shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer"
                     >
                       <Download className="h-3.5 w-3.5" />
-                      <span>Export Monthly CSV</span>
+                      <span>Download Filtered CSV</span>
                     </button>
+                  </div>
 
+                  <div className="flex items-end">
                     <button
-                      onClick={() => setActiveTab("logs")}
-                      className="px-3.5 py-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-md shadow-xs transition flex items-center space-x-1.5 cursor-pointer"
+                      onClick={exportDeptSummaryCSV}
+                      className="w-full px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-md shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer"
                     >
-                      <FileText className="h-3.5 w-3.5 text-slate-500" />
-                      <span>View Logs</span>
+                      <FileSpreadsheet className="h-3.5 w-3.5 text-slate-500" />
+                      <span>Dept Summary CSV</span>
                     </button>
                   </div>
                 </div>
@@ -1457,10 +1772,10 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
                               HOD Authority
                             </th>
                             <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase tracking-wider">
-                              Reason & Destination
+                              Reason
                             </th>
                             <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase tracking-wider">
-                              Timings
+                              Exit Timing
                             </th>
                             <th className="px-4 py-2.5 text-left font-semibold text-slate-600 uppercase tracking-wider">
                               Status
@@ -1496,21 +1811,12 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
                                 </td>
                                 <td className="px-4 py-3 max-w-xs">
                                   <div className="font-medium text-slate-800">{pass.reason}</div>
-                                  {pass.destination && (
-                                    <div className="text-[11px] text-slate-500 mt-0.5">Dest: {pass.destination}</div>
-                                  )}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap text-slate-700">
                                   <div>
                                     <span className="text-[10px] text-slate-400 uppercase">Exit: </span>
                                     <span className="font-semibold">{new Date(pass.exit_time).toLocaleDateString()} {new Date(pass.exit_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                                   </div>
-                                  {pass.return_time && (
-                                    <div className="text-[11px] text-slate-500">
-                                      <span className="text-[10px] text-slate-400 uppercase">Return: </span>
-                                      {new Date(pass.return_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                    </div>
-                                  )}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap">
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${badgeColors[pass.status] || "bg-slate-50 border-slate-200"}`}>
@@ -2992,32 +3298,598 @@ export default function AdminDashboard({ user, onLogout, isDarkMode, onToggleThe
             </div>
           )}
 
-          {/* TAB 11: AUDIT ACTIVITY LOGS */}
-          {activeTab === "logs" && (
-            <div className="space-y-3.5">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-                <h3 className="text-sm font-bold text-slate-900">
-                  System Audit Trail & Security Logs
-                </h3>
-                <span className="text-xs text-slate-500 font-medium">Recent 50 transactions</span>
+          {/* TAB 10: DEDICATED DEPARTMENT & MONTHLY ANALYTICS PORTAL */}
+          {activeTab === "monthly_export" && (
+            <div className="space-y-5">
+              {/* Header & Quick Action Bar */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 gap-3">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+                      <BarChart2 className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                      Department &amp; Monthly Gate Pass Analytics Center
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Filter by academic department and month, analyze campus movement rates, and download structured CSV reports.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+                  <button
+                    onClick={exportMonthlyGatePasses}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#0a1e33] hover:bg-[#112d4a] text-white font-semibold text-xs rounded-md shadow-xs transition cursor-pointer"
+                    title="Export currently filtered gate pass records to CSV"
+                  >
+                    <Download className="h-3.5 w-3.5 text-blue-300" />
+                    <span>Download Gatepass CSV ({filteredExportPasses.length})</span>
+                  </button>
+
+                  <button
+                    onClick={exportDeptSummaryCSV}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-semibold text-xs rounded-md shadow-xs transition cursor-pointer"
+                    title="Export aggregated department summary table to CSV"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                    <span>Dept Summary CSV</span>
+                  </button>
+
+                  <button
+                    onClick={fetchAdminData}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-md border border-slate-200 dark:border-slate-700 transition cursor-pointer"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="bg-slate-900 text-slate-200 font-mono text-xs rounded-lg p-4 overflow-y-auto max-h-[480px] space-y-2 border border-slate-800">
-                {logs.map((log) => (
-                  <div key={log.id} className="flex items-start space-x-2 leading-relaxed">
-                    <span className="text-slate-400 shrink-0">
-                      [{new Date(log.timestamp).toLocaleTimeString()}]
-                    </span>
-                    <span className="text-slate-300 shrink-0 uppercase font-bold text-[10px] bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
-                      {log.role}
-                    </span>
-                    <span className="text-emerald-400 font-semibold shrink-0">{log.user_name}:</span>
-                    <span className="text-slate-100">{log.action}</span>
+              {/* 1. FILTER CONTROLS TOOLBAR */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span>Data Filter Console</span>
                   </div>
-                ))}
+                  {(exportDeptFilter !== "all" || exportMonthFilter !== "" || exportStatusFilter !== "all" || exportSearchQuery.trim() !== "") && (
+                    <button
+                      onClick={() => {
+                        setExportDeptFilter("all");
+                        setExportMonthFilter("");
+                        setExportStatusFilter("all");
+                        setExportSearchQuery("");
+                      }}
+                      className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                    >
+                      Reset All Filters
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* Department Filter */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Academic Department
+                    </label>
+                    <select
+                      value={exportDeptFilter}
+                      onChange={(e) => setExportDeptFilter(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-md px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    >
+                      <option value="all">All Departments (Institutional)</option>
+                      {availableDepts.map((d) => (
+                        <option key={d} value={d}>
+                          {d} Department
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Month Filter */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Reporting Month
+                    </label>
+                    <select
+                      value={exportMonthFilter}
+                      onChange={(e) => setExportMonthFilter(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-md px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    >
+                      <option value="">All Months (Cumulative)</option>
+                      {availableMonths.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Pass Status Filter */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Gate Pass Status
+                    </label>
+                    <select
+                      value={exportStatusFilter}
+                      onChange={(e) => setExportStatusFilter(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-md px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    >
+                      <option value="all">All Pass Statuses</option>
+                      <option value="pending">Pending Review (Awaiting HOD)</option>
+                      <option value="approved">Approved (Awaiting Exit)</option>
+                      <option value="exited">Exited (Currently Outside)</option>
+                      <option value="closed">Closed / Returned Safely</option>
+                      <option value="rejected">Rejected / Cancelled</option>
+                    </select>
+                  </div>
+
+                  {/* Student Search */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      Search Student / Reason
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Name, Roll No, Reason..."
+                        value={exportSearchQuery}
+                        onChange={(e) => setExportSearchQuery(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs rounded-md pl-8 pr-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      />
+                      <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Filter Chips & Record Count */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">Active View:</span>
+                    <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 font-medium">
+                      Dept: {exportDeptFilter === "all" ? "All Departments" : exportDeptFilter}
+                    </span>
+                    <span className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800 font-medium">
+                      Month: {exportMonthFilter ? (availableMonths.find(m => m.value === exportMonthFilter)?.label || exportMonthFilter) : "All Months (Cumulative)"}
+                    </span>
+                    {exportStatusFilter !== "all" && (
+                      <span className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800 font-medium capitalize">
+                        Status: {exportStatusFilter}
+                      </span>
+                    )}
+                    {exportSearchQuery.trim() && (
+                      <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium">
+                        Search: "{exportSearchQuery}"
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-bold text-slate-800 dark:text-slate-200">
+                    Showing {filteredExportPasses.length} of {gatePassList.length} total passes
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. DYNAMIC LIVE KPI METRICS (FILTERED) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+                {/* Total */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Filtered Total</span>
+                    <FileText className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1.5">
+                    {filteredExportPasses.length}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Total matching applications</div>
+                </div>
+
+                {/* Approved */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs">
+                  <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Approved</span>
+                    <CheckCircle className="h-4 w-4 text-emerald-600" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-1.5">
+                    {filteredExportPasses.filter(p => (p.status || "").toLowerCase() === "approved").length}
+                  </div>
+                  <div className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">Ready for campus exit</div>
+                </div>
+
+                {/* Currently Exited */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs">
+                  <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Currently Out</span>
+                    <Activity className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-300 mt-1.5">
+                    {filteredExportPasses.filter(p => (p.status || "").toLowerCase() === "exited").length}
+                  </div>
+                  <div className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">Active outside campus</div>
+                </div>
+
+                {/* Returned / Closed */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs">
+                  <div className="flex items-center justify-between text-blue-600 dark:text-blue-400">
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Returned</span>
+                    <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-blue-700 dark:text-blue-300 mt-1.5">
+                    {filteredExportPasses.filter(p => ["closed", "returned"].includes((p.status || "").toLowerCase())).length}
+                  </div>
+                  <div className="text-[10px] text-blue-600/80 dark:text-blue-400/80 mt-0.5">Safely returned &amp; closed</div>
+                </div>
+
+                {/* Rejected / Pending */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs col-span-2 sm:col-span-1">
+                  <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Rejected</span>
+                    <AlertTriangle className="h-4 w-4 text-rose-600" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-300 mt-1.5">
+                    {filteredExportPasses.filter(p => ["rejected", "cancelled"].includes((p.status || "").toLowerCase())).length}
+                  </div>
+                  <div className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">Declined applications</div>
+                </div>
+              </div>
+
+              {/* 3. DEPARTMENT-WISE PERFORMANCE MATRIX */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
+                  <div className="flex items-center space-x-2">
+                    <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Department-Wise Performance Matrix
+                    </h4>
+                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      ({exportMonthFilter ? (availableMonths.find(m => m.value === exportMonthFilter)?.label || exportMonthFilter) : "All Months Cumulative"})
+                    </span>
+                  </div>
+                  <button
+                    onClick={exportDeptSummaryCSV}
+                    className="inline-flex items-center space-x-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 self-start sm:self-auto cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span>Export Department Matrix (CSV)</span>
+                  </button>
+                </div>
+
+                {/* Matrix Table */}
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px] uppercase tracking-wider">
+                        <th className="py-2.5 px-3">Department</th>
+                        <th className="py-2.5 px-3 text-center">Total Passes</th>
+                        <th className="py-2.5 px-3 text-center text-emerald-700 dark:text-emerald-400">Approved</th>
+                        <th className="py-2.5 px-3 text-center text-amber-700 dark:text-amber-400">Exited</th>
+                        <th className="py-2.5 px-3 text-center text-blue-700 dark:text-blue-400">Returned</th>
+                        <th className="py-2.5 px-3 text-center text-rose-700 dark:text-rose-400">Rejected</th>
+                        <th className="py-2.5 px-3 text-center text-purple-700 dark:text-purple-400">Pending</th>
+                        <th className="py-2.5 px-3 text-center">Approval Rate</th>
+                        <th className="py-2.5 px-3 text-right">Quick Filter</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {deptAnalyticsSummary.map((dept) => {
+                        const processed = dept.approved + dept.exited + dept.closed + dept.rejected;
+                        const approvalRate = processed > 0 ? Math.round(((dept.approved + dept.exited + dept.closed) / processed) * 100) : 0;
+                        const isSelected = exportDeptFilter.toLowerCase() === dept.name.toLowerCase();
+
+                        return (
+                          <tr
+                            key={dept.name}
+                            className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
+                              isSelected ? "bg-blue-50/60 dark:bg-blue-900/20 font-medium" : ""
+                            }`}
+                          >
+                            <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white flex items-center space-x-2">
+                              <span className="h-2 w-2 rounded-full bg-blue-600 inline-block" />
+                              <span>{dept.name}</span>
+                              {isSelected && (
+                                <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full ml-1">
+                                  ACTIVE
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
+                              {dept.total}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-semibold text-emerald-600 dark:text-emerald-400">
+                              {dept.approved}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-semibold text-amber-600 dark:text-amber-400">
+                              {dept.exited}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-semibold text-blue-600 dark:text-blue-400">
+                              {dept.closed}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-semibold text-rose-600 dark:text-rose-400">
+                              {dept.rejected}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-semibold text-slate-500 dark:text-slate-400">
+                              {dept.pending}
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              <div className="flex items-center justify-center space-x-1.5">
+                                <div className="w-12 bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                  <div
+                                    className="bg-emerald-500 h-1.5 rounded-full"
+                                    style={{ width: `${approvalRate}%` }}
+                                  />
+                                </div>
+                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  {approvalRate}%
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3 text-right">
+                              <button
+                                onClick={() => {
+                                  setExportDeptFilter(isSelected ? "all" : dept.name);
+                                }}
+                                className={`px-2.5 py-1 text-[11px] font-semibold rounded transition cursor-pointer ${
+                                  isSelected
+                                    ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300"
+                                    : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100"
+                                }`}
+                              >
+                                {isSelected ? "Show All" : "Filter"}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 4. FILTERED GATE PASS TRANSACTIONS REGISTER */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                      <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <span>Filtered Gate Pass Transactions ({filteredExportPasses.length})</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Individual gatepass records matching active department and month filter criteria.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={exportMonthlyGatePasses}
+                    disabled={filteredExportPasses.length === 0}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#0a1e33] hover:bg-[#112d4a] text-white font-semibold text-xs rounded-md shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed self-start sm:self-auto"
+                  >
+                    <Download className="h-3.5 w-3.5 text-blue-300" />
+                    <span>Export Filtered Records ({filteredExportPasses.length})</span>
+                  </button>
+                </div>
+
+                {/* Desktop Data Table */}
+                <div className="hidden md:block overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px] uppercase tracking-wider">
+                        <th className="py-2.5 px-3">Pass ID</th>
+                        <th className="py-2.5 px-3">Student Details</th>
+                        <th className="py-2.5 px-3">Department</th>
+                        <th className="py-2.5 px-3">Reason</th>
+                        <th className="py-2.5 px-3">Exit Timing</th>
+                        <th className="py-2.5 px-3 text-center">Status</th>
+                        <th className="py-2.5 px-3 text-center">Risk Level</th>
+                        <th className="py-2.5 px-3">Date Applied</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {filteredExportPasses.map((pass) => {
+                        const statusStr = (pass.status || "").toLowerCase();
+                        const statusBadge =
+                          statusStr === "approved"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800"
+                            : statusStr === "exited"
+                            ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
+                            : statusStr === "closed" || statusStr === "returned"
+                            ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
+                            : statusStr === "rejected" || statusStr === "cancelled"
+                            ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800"
+                            : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300";
+
+                        return (
+                          <tr key={pass.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <td className="py-2.5 px-3 font-mono font-bold text-slate-800 dark:text-slate-200">
+                              #{pass.id}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <div className="font-bold text-slate-900 dark:text-white">
+                                {pass.student_name}
+                              </div>
+                              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                                {pass.student_roll_no}
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                                {pass.student_department || pass.department || "General"}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 max-w-[240px]">
+                              <div className="font-medium text-slate-900 dark:text-slate-200 truncate" title={pass.reason}>
+                                {pass.reason || "N/A"}
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-slate-600 dark:text-slate-300 font-mono">
+                              {pass.exit_marked_at || pass.exit_time || "N/A"}
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${statusBadge}`}>
+                                {pass.status}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                (pass.risk_level || "").toLowerCase() === "high"
+                                  ? "bg-rose-100 text-rose-700 border border-rose-200"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}>
+                                {pass.risk_level || "Normal"}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                              {pass.created_at ? new Date(pass.created_at).toLocaleDateString() : "N/A"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Responsive Cards */}
+                <div className="md:hidden space-y-2.5">
+                  {filteredExportPasses.map((pass) => {
+                    const statusStr = (pass.status || "").toLowerCase();
+                    const statusBadge =
+                      statusStr === "approved"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : statusStr === "exited"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : statusStr === "closed" || statusStr === "returned"
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        : statusStr === "rejected" || statusStr === "cancelled"
+                        ? "bg-rose-50 text-rose-700 border-rose-200"
+                        : "bg-slate-100 text-slate-700 border-slate-200";
+
+                    return (
+                      <div
+                        key={pass.id}
+                        className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-2 text-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                              #{pass.id}
+                            </span>
+                            <span className="font-bold text-slate-900 dark:text-white">
+                              {pass.student_name}
+                            </span>
+                          </div>
+                          <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border uppercase tracking-wider ${statusBadge}`}>
+                            {pass.status}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400">
+                          <span className="font-mono">{pass.student_roll_no}</span>
+                          <span>•</span>
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">
+                            {pass.student_department || pass.department || "General"}
+                          </span>
+                        </div>
+
+                        <div className="text-slate-700 dark:text-slate-300">
+                          <strong>Reason:</strong> {pass.reason || "N/A"}
+                        </div>
+
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-700/60 font-mono">
+                          Exit Time: <span className="font-semibold text-slate-700 dark:text-slate-300">{pass.exit_marked_at || pass.exit_time || "N/A"}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {filteredExportPasses.length === 0 && (
+                  <div className="text-center py-10 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 space-y-2">
+                    <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      No gate pass transactions match the selected Department and Month criteria.
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      Try selecting "All Departments" or "All Months" to inspect cumulative institutional records.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setExportDeptFilter("all");
+                        setExportMonthFilter("");
+                        setExportStatusFilter("all");
+                        setExportSearchQuery("");
+                      }}
+                      className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md transition cursor-pointer"
+                    >
+                      Clear Active Filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 11: AUDIT ACTIVITY LOGS */}
+          {activeTab === "logs" && (
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 border-b border-slate-200 dark:border-slate-800">
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span>System Audit Trail &amp; Security Logs</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Live chronological event trace and access transactions
+                  </p>
+                </div>
+                <span className="self-start sm:self-auto text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                  Recent {logs.length} transactions
+                </span>
+              </div>
+
+              <div className="bg-[#0a1e33] text-slate-200 rounded-xl p-2 sm:p-3.5 overflow-y-auto max-h-[520px] divide-y divide-slate-800/80 border border-slate-800 shadow-sm">
+                {logs.map((log) => {
+                  const roleStr = (log.role || "").toLowerCase();
+                  const roleBadgeClass = roleStr.includes("admin")
+                    ? "bg-blue-500/20 text-blue-300 border-blue-400/30"
+                    : roleStr.includes("hod")
+                    ? "bg-purple-500/20 text-purple-300 border-purple-400/30"
+                    : roleStr.includes("teacher")
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
+                    : roleStr.includes("guard")
+                    ? "bg-amber-500/20 text-amber-300 border-amber-400/30"
+                    : roleStr.includes("principal")
+                    ? "bg-indigo-500/20 text-indigo-300 border-indigo-400/30"
+                    : "bg-slate-800 text-slate-300 border-slate-700";
+
+                  return (
+                    <div
+                      key={log.id}
+                      className="py-2 px-1.5 sm:px-2 hover:bg-white/[0.04] rounded-lg transition-colors flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2.5 text-xs"
+                    >
+                      {/* Meta header row (Timestamp + Role Badge + User Name) */}
+                      <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                        <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">
+                          [{new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}]
+                        </span>
+                        <span className={`uppercase font-extrabold text-[9px] px-1.5 py-0.5 rounded border tracking-wider ${roleBadgeClass}`}>
+                          {log.role}
+                        </span>
+                        <span className="text-emerald-400 dark:text-emerald-300 font-bold text-xs">
+                          {log.user_name}:
+                        </span>
+                      </div>
+
+                      {/* Log Action Details */}
+                      <div className="flex-1 min-w-0 text-slate-200 text-xs sm:text-[11px] leading-relaxed break-words pl-0.5 sm:pl-0 font-sans">
+                        {log.action}
+                      </div>
+                    </div>
+                  );
+                })}
+
                 {logs.length === 0 && (
-                  <div className="text-slate-500 text-center py-8">
-                    No transactions recorded in safety register.
+                  <div className="text-slate-400 text-center py-10 text-xs">
+                    No audit transactions recorded in system register.
                   </div>
                 )}
               </div>

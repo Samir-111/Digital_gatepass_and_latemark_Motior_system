@@ -250,7 +250,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
   const completedCount = passes.filter((p) => p.status === "closed").length;
 
   return (
-    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-12 transition-colors">
+    <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-20 sm:pb-12 transition-colors">
       {/* 1. TOP HEADER (INSTITUTIONAL NAVY #0a1e33) */}
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -326,9 +326,9 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
       </header>
 
       {/* 2. MAIN CONTAINER */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-6 pb-20 sm:pb-12">
         {/* Student Profile & Navigation Banner Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5 sm:p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-5 border-b border-slate-100 dark:border-slate-800/80">
             {/* Student Info */}
             <div className="flex items-center space-x-4">
@@ -380,18 +380,18 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
             </div>
 
             {/* Quick Metrics */}
-            <div className="grid grid-cols-3 gap-3 shrink-0">
-              <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Passes</span>
-                <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{passes.length}</span>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
+              <div className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total</span>
+                <span className="text-sm sm:text-lg font-black text-slate-900 dark:text-white">{passes.length}</span>
               </div>
-              <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Completed</span>
-                <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">{completedCount}</span>
+              <div className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Completed</span>
+                <span className="text-sm sm:text-lg font-black text-emerald-600 dark:text-emerald-400">{completedCount}</span>
               </div>
-              <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Late Marks</span>
-                <span className="text-base sm:text-lg font-black text-amber-600 dark:text-amber-400">{lateEntries.length}</span>
+              <div className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-center">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Late Marks</span>
+                <span className="text-sm sm:text-lg font-black text-amber-600 dark:text-amber-400">{lateEntries.length}</span>
               </div>
             </div>
           </div>
@@ -1087,22 +1087,41 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
         </div>
       )}
 
-      {/* Custom Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-5 right-5 z-[100] max-w-sm w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 flex items-center gap-3">
-          <div className={`p-2 rounded-xl shrink-0 ${toast.type === "success" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"}`}>
-            {toast.type === "success" ? (
-              <CheckCircle2 className="h-5 w-5" />
-            ) : (
-              <AlertCircle className="h-5 w-5" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-slate-900 dark:text-white">{toast.type === "success" ? "Success" : "Notice"}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">{toast.message}</p>
-          </div>
-        </div>
-      )}
+      {/* 5. MOBILE FIXED BOTTOM NAVIGATION BAR */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a1e33]/95 backdrop-blur-md border-t border-[#081726] px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        {[
+          { id: "status", label: "Status", icon: Compass, badge: activePass ? "●" : null },
+          { id: "apply", label: "Apply", icon: Plus, badge: null },
+          { id: "history", label: "History", icon: FileText, badge: passes.length || null },
+          { id: "late", label: "Late Logs", icon: Clock, badge: lateEntries.length || null },
+          { id: "profile", label: "Profile", icon: User, badge: null }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (tab.id === "late") fetchLateEntries();
+              }}
+              className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10px] font-bold transition relative cursor-pointer ${
+                isActive ? "text-emerald-400 font-extrabold" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <div className="relative">
+                <Icon className={`h-5 w-5 ${isActive ? "text-emerald-400 scale-110" : "text-slate-400"}`} />
+                {tab.badge && (
+                  <span className="absolute -top-1 -right-2 h-3.5 min-w-[14px] px-1 bg-emerald-500 text-slate-950 font-black text-[8px] rounded-full flex items-center justify-center">
+                    {tab.badge}
+                  </span>
+                )}
+              </div>
+              <span className="mt-0.5 leading-tight">{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
