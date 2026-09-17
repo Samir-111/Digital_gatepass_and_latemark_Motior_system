@@ -253,35 +253,37 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
     <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans pb-20 sm:pb-12 transition-colors">
       {/* 1. TOP HEADER (INSTITUTIONAL NAVY #0a1e33) */}
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between min-h-[3.75rem] sm:min-h-16 py-2.5 sm:py-3 gap-2 sm:gap-4">
             {/* College Identity */}
-            <div className="flex items-center space-x-3.5 min-w-0">
-              <div className="h-11 w-11 bg-white rounded-xl p-1 border border-white/20 shadow-xs flex items-center justify-center shrink-0">
+            <div className="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
+              <div className="h-9 w-9 sm:h-11 sm:w-11 bg-white rounded-xl p-1 border border-white/20 shadow-xs flex items-center justify-center shrink-0">
                 <img
                   src={sbjainLogo}
                   alt="SBJITMR Logo"
-                  className="h-9 w-9 object-contain"
+                  className="h-7 w-7 sm:h-9 sm:w-9 object-contain"
                 />
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xs sm:text-sm font-bold text-white leading-tight truncate">
-                    S. B. Jain Institute of Technology, Management and Research
+              <div className="min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <h1 className="text-xs sm:text-sm font-extrabold text-white leading-tight truncate drop-shadow-xs">
+                    S. B. Jain Institute of Technology
                   </h1>
-                  <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  <span className="hidden sm:inline-flex bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
                     STUDENT PORTAL
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-300 font-medium">Nagpur • Digital Gate Pass &amp; Outing System</p>
+                <p className="text-[10px] sm:text-[11px] text-slate-300 font-medium truncate mt-0.5">
+                  <span className="sm:hidden text-emerald-300 font-semibold">Student Portal • </span>Nagpur
+                </p>
               </div>
             </div>
 
             {/* Actions: Notifications + User Preview + Theme Toggle + Logout */}
-            <div className="flex items-center space-x-3 shrink-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
               <NotificationCenter />
 
-              <div className="hidden sm:flex items-center space-x-2.5 pl-2 pr-1">
+              <div className="hidden md:flex items-center space-x-2.5 pl-2 pr-1">
                 {photo ? (
                   <img src={photo} alt={user.name} className="h-8 w-8 rounded-full border border-white/20 object-cover" />
                 ) : (
@@ -295,7 +297,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                 </div>
               </div>
 
-              <div className="h-6 w-px bg-white/15 hidden sm:block" />
+              <div className="h-6 w-px bg-white/15 hidden md:block" />
 
               {/* Theme Toggle Button */}
               <button
@@ -314,7 +316,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
               {/* Sign Out Button */}
               <button
                 onClick={onLogout}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 border border-white/20 hover:border-white/40 text-xs font-semibold rounded-lg text-white bg-white/5 hover:bg-white/15 transition shadow-xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 p-1.5 sm:px-3 sm:py-1.5 border border-white/20 hover:border-white/40 text-xs font-semibold rounded-lg text-white bg-white/5 hover:bg-white/15 transition shadow-xs cursor-pointer"
                 title="Sign out of Student Session"
               >
                 <LogOut className="h-3.5 w-3.5 text-slate-300" />
@@ -801,43 +803,79 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                   <span className="text-sm font-semibold">No gate pass records found.</span>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
-                    <thead className="bg-slate-50 dark:bg-slate-800/60">
-                      <tr>
-                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pass ID</th>
-                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reason for Outing</th>
-                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exit Window</th>
-                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gate Scan Timestamp</th>
-                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Risk Level</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                      {passes.map((pass) => (
-                        <tr key={pass.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                          <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-800 dark:text-slate-200">#{pass.id}</td>
-                          <td className="px-6 py-4">
-                            <div className="font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">{pass.reason}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-medium">
-                            {new Date(pass.exit_time).toLocaleString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-400">
-                            {pass.exit_marked_at ? (
-                              <span className="font-semibold text-slate-800 dark:text-slate-200">
-                                {new Date(pass.exit_marked_at).toLocaleTimeString()}
-                              </span>
-                            ) : (
-                              <span className="text-slate-400 dark:text-slate-500 font-italic">Not Scanned</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">{getRiskBadge(pass.risk_level)}</td>
+                <div>
+                  {/* Mobile Card Layout (block sm:hidden) */}
+                  <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {passes.map((pass) => (
+                      <div key={pass.id} className="p-3.5 space-y-2 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200 block">
+                              Pass #{pass.id}
+                            </span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                              {new Date(pass.exit_time).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })} at {new Date(pass.exit_time).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {getStatusBadge(pass.status)}
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/60">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 block mb-0.5">Reason</span>
+                          <p className="leading-snug">{pass.reason}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-0.5">
+                          <span>
+                            Gate Scan: <strong className="text-slate-700 dark:text-slate-300">{pass.exit_marked_at ? new Date(pass.exit_marked_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Not Scanned"}</strong>
+                          </span>
+                          {pass.risk_level && getRiskBadge(pass.risk_level)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (hidden sm:block) */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
+                      <thead className="bg-slate-50 dark:bg-slate-800/60">
+                        <tr>
+                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pass ID</th>
+                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reason for Outing</th>
+                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exit Window</th>
+                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gate Scan Timestamp</th>
+                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Risk Level</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                        {passes.map((pass) => (
+                          <tr key={pass.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                            <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-800 dark:text-slate-200">#{pass.id}</td>
+                            <td className="px-6 py-4">
+                              <div className="font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">{pass.reason}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-medium">
+                              {new Date(pass.exit_time).toLocaleString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                              {pass.exit_marked_at ? (
+                                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                  {new Date(pass.exit_marked_at).toLocaleTimeString()}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-500 font-italic">Not Scanned</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{getRiskBadge(pass.risk_level)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

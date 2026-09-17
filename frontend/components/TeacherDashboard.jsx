@@ -154,26 +154,24 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
 
   const handleApplyStaffLateMark = async (e) => {
     e.preventDefault();
-    const fullLateTime = `${staffLateDate}T${staffLateTimeOnly}`;
-    if (!staffLateReason || !fullLateTime) {
-      setStaffLateErr("Arrival date, time and reason for late mark are required.");
+    if (!staffLateReason || staffLateReason.trim() === "") {
+      setStaffLateErr("Reason for late arrival is required.");
       return;
     }
     setSubmittingStaffLate(true);
     setStaffLateErr(null);
     setStaffLateMsg(null);
     try {
+      const currentTimestamp = new Date().toISOString();
       await gatepassService.applyFacultyGatePass({
-        reason: `[TEACHER LATE MARK] ${staffLateReason}`,
+        reason: `[TEACHER LATE MARK] ${staffLateReason.trim()}`,
         destination: "Late Arrival at College",
-        exit_time: fullLateTime,
-        remarks: staffLateRemarks ? `Teacher Late Entry: ${staffLateRemarks}` : "Teacher Staff Late Arrival Mark",
+        exit_time: currentTimestamp,
+        remarks: staffLateRemarks ? `Teacher Late Entry: ${staffLateRemarks.trim()}` : "Teacher Staff Late Arrival Mark",
       });
-      setStaffLateMsg("Teacher Staff Late Mark request submitted successfully!");
+      setStaffLateMsg("Teacher Staff Late Mark recorded successfully with live timestamp!");
       setStaffLateReason("");
       setStaffLateRemarks("");
-      setStaffLateDate(getTodayLocalDateStr());
-      setStaffLateTimeOnly("09:30");
       fetchData();
     } catch (err) {
       setStaffLateErr(err.message || "Failed to submit late mark request.");
@@ -334,32 +332,32 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
     <div className="min-h-screen bg-[#f0f5fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans pb-20 sm:pb-12 transition-colors">
       {/* 1. Upper Navigation Bar (Dark Navy Header matching Admin & Student portals) */}
       <header className="bg-[#0a1e33] border-b border-[#081726] sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center min-h-[3.75rem] sm:min-h-16 py-2.5 sm:py-3 gap-2 sm:gap-4">
             {/* Branding Identity */}
-            <div className="flex items-center space-x-3.5 min-w-0">
-              <div className="h-11 w-11 bg-white rounded-xl p-1 border border-white/20 shadow-xs flex items-center justify-center shrink-0">
-                <img src={sbjainLogo} alt="SB Jain Logo" className="h-9 w-9 object-contain" />
+            <div className="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
+              <div className="h-9 w-9 sm:h-11 sm:w-11 bg-white rounded-xl p-1 border border-white/20 shadow-xs flex items-center justify-center shrink-0">
+                <img src={sbjainLogo} alt="SB Jain Logo" className="h-7 w-7 sm:h-9 sm:w-9 object-contain" />
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xs sm:text-sm md:text-base font-bold text-white tracking-tight leading-tight truncate">
-                    S. B. Jain Institute of Technology, Management and Research
+              <div className="min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <h1 className="text-xs sm:text-sm md:text-base font-extrabold text-white tracking-tight leading-tight truncate drop-shadow-xs">
+                    S. B. Jain Institute of Technology
                   </h1>
                   <span className="hidden sm:inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border shrink-0 bg-emerald-500/20 text-emerald-300 border-emerald-400/30">
                     CLASS INCHARGE &amp; FACULTY PORTAL
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-300 font-medium tracking-wide">
-                  Nagpur • Digital Gate Pass &amp; Outing Authorization System
+                <p className="text-[10px] sm:text-[11px] text-slate-300 font-medium truncate mt-0.5">
+                  <span className="sm:hidden text-emerald-300 font-semibold">Teacher Portal • </span>Nagpur
                 </p>
               </div>
             </div>
 
             {/* Right Controls: User Profile + Theme Toggle + Logout */}
-            <div className="flex items-center space-x-3 shrink-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
               {/* User preview */}
-              <div className="hidden sm:flex items-center space-x-2.5 pl-2 pr-1">
+              <div className="hidden md:flex items-center space-x-2.5 pl-2 pr-1">
                 <div className="h-8 w-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-emerald-300">
                   <UserCheck className="h-4 w-4" />
                 </div>
@@ -374,7 +372,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                 </div>
               </div>
 
-              <div className="h-6 w-px bg-white/15 hidden sm:block" />
+              <div className="h-6 w-px bg-white/15 hidden md:block" />
 
               {/* Theme Toggle Button */}
               {onToggleTheme && (
@@ -392,7 +390,8 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
               {/* Logout Button */}
               <button
                 onClick={onLogout}
-                className="inline-flex items-center px-3 py-1.5 border border-white/20 text-xs font-semibold rounded-lg text-white bg-white/10 hover:bg-white/20 transition cursor-pointer gap-1.5"
+                className="inline-flex items-center p-1.5 sm:px-3 sm:py-1.5 border border-white/20 text-xs font-semibold rounded-lg text-white bg-white/10 hover:bg-white/20 transition cursor-pointer gap-1.5"
+                title="Sign out of Session"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Logout</span>
@@ -770,46 +769,41 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                 )}
 
                 <form onSubmit={handleApplyStaffLateMark} className="space-y-4 text-xs">
+                  <div className="p-3.5 bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 dark:border-indigo-500/30 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+                        </span>
+                        <span className="text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">
+                          Auto-Captured Timestamp
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-semibold bg-indigo-200/60 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-200 px-2 py-0.5 rounded-md">
+                        Live System Time
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono mt-2">
+                      📅 {new Date().toLocaleDateString("en-IN", { dateStyle: "medium" })} &nbsp;|&nbsp; ⏰ {new Date().toLocaleTimeString("en-IN", { timeStyle: "short" })}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                      System automatically logs your exact date &amp; time upon submission.
+                    </p>
+                  </div>
+
                   <div>
                     <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Reason for Late Arrival <span className="text-rose-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={3}
                       required
-                      placeholder="e.g. Heavy Traffic, Vehicle Breakdown, University Work, Emergency"
+                      placeholder="e.g. Heavy Traffic, Vehicle Breakdown, University Exam Duty, Emergency..."
                       value={staffLateReason}
                       onChange={(e) => setStaffLateReason(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium leading-relaxed placeholder-slate-400"
                     />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Arrival Date <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        min={getTodayLocalDateStr()}
-                        value={staffLateDate}
-                        onChange={(e) => setStaffLateDate(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Arrival Time <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        type="time"
-                        required
-                        value={staffLateTimeOnly}
-                        onChange={(e) => setStaffLateTimeOnly(e.target.value)}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                      />
-                    </div>
                   </div>
 
                   <div>
@@ -821,7 +815,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                       placeholder="e.g. Informed HOD over phone..."
                       value={staffLateRemarks}
                       onChange={(e) => setStaffLateRemarks(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium placeholder-slate-400"
                     />
                   </div>
 
@@ -1204,7 +1198,57 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                 </div>
               ) : (
                 <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                  <div className="overflow-x-auto">
+                  {/* Mobile Card Layout (block sm:hidden) */}
+                  <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {historicalPasses.map((pass) => (
+                      <div key={pass.id} className="p-3.5 space-y-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="font-extrabold text-xs text-slate-900 dark:text-white block leading-tight truncate">
+                              {pass.student_name}
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase">
+                              Roll: <strong className="text-slate-700 dark:text-slate-300">{pass.student_roll_no}</strong>
+                            </span>
+                          </div>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase border shrink-0 ${
+                              pass.status === "approved"
+                                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                                : pass.status === "pending_hod"
+                                ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                                : pass.status === "rejected"
+                                ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+                                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                            }`}
+                          >
+                            {pass.status === "pending_hod" ? "Forwarded to HOD" : pass.status}
+                          </span>
+                        </div>
+
+                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/60">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 block mb-0.5">
+                            Reason
+                          </span>
+                          <p className="leading-snug">{pass.reason}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-400 pt-0.5">
+                          <span>
+                            Outing: <strong className="text-slate-700 dark:text-slate-300 font-mono">{new Date(pass.exit_time).toLocaleDateString([], { month: "short", day: "numeric" })} {new Date(pass.exit_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong>
+                          </span>
+                          {pass.remarks && (
+                            <span className="italic truncate max-w-[130px]" title={pass.remarks}>
+                              "{pass.remarks}"
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (hidden sm:block) */}
+                  <div className="hidden sm:block overflow-x-auto">
                     <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-xs">
                       <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
                         <tr>
@@ -1332,61 +1376,112 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
-                    <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
-                      <tr>
-                        <th scope="col" className="px-6 py-3.5 text-left">Student Info</th>
-                        <th scope="col" className="px-6 py-3.5 text-left">Academic Dept</th>
-                        <th scope="col" className="px-6 py-3.5 text-left">Log Date</th>
-                        <th scope="col" className="px-6 py-3.5 text-left">Arrival Time</th>
-                        <th scope="col" className="px-6 py-3.5 text-left">Reason</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-[#0b132b] divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
-                      {filteredEntries.map((entry) => {
-                        const entryDate = new Date(entry.arrival_time);
-                        const formattedDate = entryDate.toLocaleDateString("default", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric"
-                        });
-                        const formattedTime = entryDate.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit"
-                        });
-                        return (
-                          <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-slate-900 dark:text-slate-100">
-                                  {entry.student_name}
-                                </span>
-                                <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase mt-0.5">
-                                  {entry.student_roll_no}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap font-semibold text-slate-600 dark:text-slate-300">
-                              {entry.student_department}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-500 dark:text-slate-400">
-                              {formattedDate}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="inline-flex items-center space-x-1 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 rounded-lg border border-rose-100 dark:border-rose-900/50">
-                                <Clock className="h-3.5 w-3.5 shrink-0" />
-                                <span>{formattedTime}</span>
+                <div>
+                  {/* Mobile Card Layout (block sm:hidden) */}
+                  <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredEntries.map((entry) => {
+                      const entryDate = new Date(entry.arrival_time);
+                      const formattedDate = entryDate.toLocaleDateString("default", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                      });
+                      const formattedTime = entryDate.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      });
+                      return (
+                        <div key={entry.id} className="p-3.5 space-y-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className="font-extrabold text-xs text-slate-900 dark:text-white block leading-tight">
+                                {entry.student_name}
                               </span>
-                            </td>
-                            <td className="px-6 py-4 font-medium text-slate-600 dark:text-slate-300 max-w-xs truncate" title={entry.reason}>
-                              {entry.reason}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase">
+                                Roll: <strong className="text-slate-700 dark:text-slate-300">{entry.student_roll_no}</strong> | {entry.student_department}
+                              </span>
+                            </div>
+                            <span className="inline-flex items-center space-x-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-lg border border-rose-100 dark:border-rose-900/50 shrink-0">
+                              <Clock className="h-3 w-3 shrink-0" />
+                              <span>{formattedTime}</span>
+                            </span>
+                          </div>
+
+                          <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/60">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 block mb-0.5">
+                              Reason
+                            </span>
+                            <p className="leading-snug">{entry.reason}</p>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-0.5">
+                            <span>Date: <strong className="text-slate-700 dark:text-slate-300">{formattedDate}</strong></span>
+                            {entry.parent_phone && (
+                              <span className="font-mono">Parent: {entry.parent_phone}</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop Table View (hidden sm:block) */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
+                      <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
+                        <tr>
+                          <th scope="col" className="px-6 py-3.5 text-left">Student Info</th>
+                          <th scope="col" className="px-6 py-3.5 text-left">Academic Dept</th>
+                          <th scope="col" className="px-6 py-3.5 text-left">Log Date</th>
+                          <th scope="col" className="px-6 py-3.5 text-left">Arrival Time</th>
+                          <th scope="col" className="px-6 py-3.5 text-left">Reason</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-[#0b132b] divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
+                        {filteredEntries.map((entry) => {
+                          const entryDate = new Date(entry.arrival_time);
+                          const formattedDate = entryDate.toLocaleDateString("default", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric"
+                          });
+                          const formattedTime = entryDate.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          });
+                          return (
+                            <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-slate-900 dark:text-slate-100">
+                                    {entry.student_name}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase mt-0.5">
+                                    {entry.student_roll_no}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap font-semibold text-slate-600 dark:text-slate-300">
+                                {entry.student_department}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-500 dark:text-slate-400">
+                                {formattedDate}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="inline-flex items-center space-x-1 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 rounded-lg border border-rose-100 dark:border-rose-900/50">
+                                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                                  <span>{formattedTime}</span>
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 font-medium text-slate-600 dark:text-slate-300 max-w-xs truncate" title={entry.reason}>
+                                {entry.reason}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -1420,39 +1515,65 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] text-slate-500 dark:text-slate-400 font-bold text-left uppercase tracking-wider">
-                    <tr>
-                      <th className="px-6 py-3.5">Roll No</th>
-                      <th className="px-6 py-3.5">Student Name</th>
-                      <th className="px-6 py-3.5">Institutional Email</th>
-                      <th className="px-6 py-3.5">Student Mobile</th>
-                      <th className="px-6 py-3.5">Verified Parent Mobile</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-[#0b132b]">
-                    {myStudents.map((student) => (
-                      <tr key={student.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                        <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-slate-100">
-                          {student.roll_no}
-                        </td>
-                        <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
+              <div>
+                {/* Mobile Card Layout (block sm:hidden) */}
+                <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                  {myStudents.map((student) => (
+                    <div key={student.id} className="p-3.5 space-y-1.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-xs text-slate-900 dark:text-white">
                           {student.name}
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-medium">
-                          {student.email}
-                        </td>
-                        <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400">
-                          {student.phone}
-                        </td>
-                        <td className="px-6 py-4 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                          {student.parent_phone || "N/A"}
-                        </td>
+                        </span>
+                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 font-mono font-bold text-[10px] rounded-md text-slate-800 dark:text-slate-200">
+                          {student.roll_no}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {student.email}
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] font-mono pt-1 text-slate-500 dark:text-slate-400">
+                        <span>Ph: {student.phone || "N/A"}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">Parent: {student.parent_phone || "N/A"}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table View (hidden sm:block) */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                    <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] text-slate-500 dark:text-slate-400 font-bold text-left uppercase tracking-wider">
+                      <tr>
+                        <th className="px-6 py-3.5">Roll No</th>
+                        <th className="px-6 py-3.5">Student Name</th>
+                        <th className="px-6 py-3.5">Institutional Email</th>
+                        <th className="px-6 py-3.5">Student Mobile</th>
+                        <th className="px-6 py-3.5">Verified Parent Mobile</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-[#0b132b]">
+                      {myStudents.map((student) => (
+                        <tr key={student.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
+                          <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-slate-100">
+                            {student.roll_no}
+                          </td>
+                          <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
+                            {student.name}
+                          </td>
+                          <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-medium">
+                            {student.email}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400">
+                            {student.phone}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                            {student.parent_phone || "N/A"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>

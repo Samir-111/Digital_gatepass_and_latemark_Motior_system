@@ -643,58 +643,98 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
           {/* TAB 2: STUDENT HISTORICAL LOGS */}
           {/* ------------------------------------------------------------- */}
           {(activeTab === "student_history" || activeTab === "history") && (
-            <div className="overflow-x-auto animate-fade-in">
-              <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
-                  <tr>
-                    <th className="px-6 py-3.5 text-left">Pass ID</th>
-                    <th className="px-6 py-3.5 text-left">Student Info</th>
-                    <th className="px-6 py-3.5 text-left">Reason for Outing</th>
-                    <th className="px-6 py-3.5 text-left">Leave Scheduled</th>
-                    <th className="px-6 py-3.5 text-left">Status</th>
-                    <th className="px-6 py-3.5 text-left">HOD Remarks</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-[#0b132b] divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300">
-                  {studentHistory.map((pass) => (
-                    <tr key={pass.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                      <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-900 dark:text-slate-200">
-                        #{pass.id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-slate-900 dark:text-white">{pass.student_name}</div>
-                        <div className="text-[10px] font-mono text-slate-400 font-medium">Roll: {pass.student_roll_no}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-800 dark:text-slate-200 max-w-xs truncate">
-                          {pass.reason}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-mono">
-                        {new Date(pass.exit_time).toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true
-                        })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400 italic max-w-xs truncate">
-                        "{pass.remarks || "No HOD remarks"}"
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {studentHistory.length === 0 && (
+            <div className="animate-fade-in">
+              {studentHistory.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 dark:text-slate-500 space-y-2">
                   <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600" />
                   <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
                     No student gate pass records found in this department.
                   </p>
+                </div>
+              ) : (
+                <div>
+                  {/* Mobile Card Layout (block sm:hidden) */}
+                  <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {studentHistory.map((pass) => (
+                      <div key={pass.id} className="p-3.5 space-y-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="font-extrabold text-xs text-slate-900 dark:text-white block leading-tight">
+                              {pass.student_name}
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase">
+                              Pass #{pass.id} | Roll: <strong className="text-slate-700 dark:text-slate-300">{pass.student_roll_no}</strong>
+                            </span>
+                          </div>
+                          <span className="shrink-0">{getStatusBadge(pass.status)}</span>
+                        </div>
+
+                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/60">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 block mb-0.5">Reason</span>
+                          <p className="leading-snug">{pass.reason}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-400 pt-0.5">
+                          <span>
+                            Outing: <strong className="text-slate-700 dark:text-slate-300 font-mono">{new Date(pass.exit_time).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })} {new Date(pass.exit_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+                          </span>
+                          {pass.remarks && (
+                            <span className="italic truncate max-w-[130px]" title={pass.remarks}>
+                              "{pass.remarks}"
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (hidden sm:block) */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
+                        <tr>
+                          <th className="px-6 py-3.5 text-left">Pass ID</th>
+                          <th className="px-6 py-3.5 text-left">Student Info</th>
+                          <th className="px-6 py-3.5 text-left">Reason for Outing</th>
+                          <th className="px-6 py-3.5 text-left">Leave Scheduled</th>
+                          <th className="px-6 py-3.5 text-left">Status</th>
+                          <th className="px-6 py-3.5 text-left">HOD Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-[#0b132b] divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300">
+                        {studentHistory.map((pass) => (
+                          <tr key={pass.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
+                            <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-900 dark:text-slate-200">
+                              #{pass.id}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="font-bold text-slate-900 dark:text-white">{pass.student_name}</div>
+                              <div className="text-[10px] font-mono text-slate-400 font-medium">Roll: {pass.student_roll_no}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="font-semibold text-slate-800 dark:text-slate-200 max-w-xs truncate">
+                                {pass.reason}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-mono">
+                              {new Date(pass.exit_time).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true
+                              })}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
+                            <td className="px-6 py-4 text-slate-500 dark:text-slate-400 italic max-w-xs truncate">
+                              "{pass.remarks || "No HOD remarks"}"
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -704,62 +744,102 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
           {/* TAB 3: FACULTY & STAFF HISTORICAL LOGS */}
           {/* ------------------------------------------------------------- */}
           {activeTab === "faculty_history" && (
-            <div className="overflow-x-auto animate-fade-in">
-              <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
-                  <tr>
-                    <th className="px-6 py-3.5 text-left">Pass ID</th>
-                    <th className="px-6 py-3.5 text-left">Faculty / Staff Member</th>
-                    <th className="px-6 py-3.5 text-left">Type / Reason</th>
-                    <th className="px-6 py-3.5 text-left">Date &amp; Time</th>
-                    <th className="px-6 py-3.5 text-left">Status</th>
-                    <th className="px-6 py-3.5 text-left">Remarks</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-[#0b132b] divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300">
-                  {facultyHistory.map((pass) => (
-                    <tr key={pass.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                      <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-900 dark:text-slate-200">
-                        #{pass.id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {pass.faculty_name || pass.student_name || "Faculty Member"}
-                        </div>
-                        <div className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">
-                          {pass.faculty_department || user.department}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-800 dark:text-slate-200 max-w-xs truncate">
-                          {pass.reason}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-mono">
-                        {new Date(pass.exit_time).toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true
-                        })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400 italic max-w-xs truncate">
-                        "{pass.remarks || "No remarks"}"
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {facultyHistory.length === 0 && (
+            <div className="animate-fade-in">
+              {facultyHistory.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 dark:text-slate-500 space-y-2">
                   <Award className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600" />
                   <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
                     No faculty or teacher staff history found in this department.
                   </p>
+                </div>
+              ) : (
+                <div>
+                  {/* Mobile Card Layout (block sm:hidden) */}
+                  <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {facultyHistory.map((pass) => (
+                      <div key={pass.id} className="p-3.5 space-y-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="font-extrabold text-xs text-slate-900 dark:text-white block leading-tight">
+                              {pass.faculty_name || pass.student_name || "Faculty Member"}
+                            </span>
+                            <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">
+                              Pass #{pass.id} • {pass.faculty_department || user.department}
+                            </span>
+                          </div>
+                          <span className="shrink-0">{getStatusBadge(pass.status)}</span>
+                        </div>
+
+                        <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/60">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 block mb-0.5">Type / Reason</span>
+                          <p className="leading-snug">{pass.reason}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-400 pt-0.5">
+                          <span>
+                            Date: <strong className="text-slate-700 dark:text-slate-300 font-mono">{new Date(pass.exit_time).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })} {new Date(pass.exit_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+                          </span>
+                          {pass.remarks && (
+                            <span className="italic truncate max-w-[130px]" title={pass.remarks}>
+                              "{pass.remarks}"
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (hidden sm:block) */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800/70 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
+                        <tr>
+                          <th className="px-6 py-3.5 text-left">Pass ID</th>
+                          <th className="px-6 py-3.5 text-left">Faculty / Staff Member</th>
+                          <th className="px-6 py-3.5 text-left">Type / Reason</th>
+                          <th className="px-6 py-3.5 text-left">Date &amp; Time</th>
+                          <th className="px-6 py-3.5 text-left">Status</th>
+                          <th className="px-6 py-3.5 text-left">Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-[#0b132b] divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300">
+                        {facultyHistory.map((pass) => (
+                          <tr key={pass.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
+                            <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-900 dark:text-slate-200">
+                              #{pass.id}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="font-bold text-slate-900 dark:text-white">
+                                {pass.faculty_name || pass.student_name || "Faculty Member"}
+                              </div>
+                              <div className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">
+                                {pass.faculty_department || user.department}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="font-semibold text-slate-800 dark:text-slate-200 max-w-xs truncate">
+                                {pass.reason}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-mono">
+                              {new Date(pass.exit_time).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true
+                              })}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pass.status)}</td>
+                            <td className="px-6 py-4 text-slate-500 dark:text-slate-400 italic max-w-xs truncate">
+                              "{pass.remarks || "No remarks"}"
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

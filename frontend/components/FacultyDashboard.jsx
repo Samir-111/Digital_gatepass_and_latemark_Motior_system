@@ -117,26 +117,24 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
 
   const handleApplyLateMark = async (e) => {
     e.preventDefault();
-    const fullLateTime = `${lateDate}T${lateTimeOnly}`;
-    if (!lateReason || !fullLateTime) {
-      setLateErr("Arrival date, time and reason for late mark are required.");
+    if (!lateReason || lateReason.trim() === "") {
+      setLateErr("Reason for late arrival is required.");
       return;
     }
     setSubmittingLate(true);
     setLateErr(null);
     setLateMsg(null);
     try {
+      const currentTimestamp = new Date().toISOString();
       await gatepassService.applyFacultyGatePass({
-        reason: `[TEACHER LATE MARK] ${lateReason}`,
+        reason: `[TEACHER LATE MARK] ${lateReason.trim()}`,
         destination: "Late Arrival at College",
-        exit_time: fullLateTime,
-        remarks: lateRemarks ? `Teacher Late Entry: ${lateRemarks}` : "Teacher Staff Late Arrival Mark",
+        exit_time: currentTimestamp,
+        remarks: lateRemarks ? `Teacher Late Entry: ${lateRemarks.trim()}` : "Teacher Staff Late Arrival Mark",
       });
-      setLateMsg("Teacher Staff Late Mark request submitted successfully!");
+      setLateMsg("Teacher Staff Late Mark request submitted successfully with live timestamp!");
       setLateReason("");
       setLateRemarks("");
-      setLateDate(getTodayLocalDateStr());
-      setLateTimeOnly("09:30");
       fetchFacultyPasses();
       setActiveTab("passes");
     } catch (err) {
@@ -470,50 +468,45 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
               </div>
             )}
 
-            <form onSubmit={handleApplyLateMark} className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-              <div className="md:col-span-2 space-y-1.5">
+            <form onSubmit={handleApplyLateMark} className="space-y-4 text-xs">
+              <div className="p-3.5 bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 dark:border-indigo-500/30 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+                    </span>
+                    <span className="text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">
+                      Auto-Captured Timestamp
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold bg-indigo-200/60 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-200 px-2 py-0.5 rounded-md">
+                    Live System Time
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono mt-2">
+                  📅 {new Date().toLocaleDateString("en-IN", { dateStyle: "medium" })} &nbsp;|&nbsp; ⏰ {new Date().toLocaleTimeString("en-IN", { timeStyle: "short" })}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  System automatically logs your exact date &amp; time upon submission.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
                 <label className="block font-semibold text-slate-700 dark:text-slate-200">
                   Reason for Late Arrival <span className="text-amber-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <textarea
+                  rows={3}
                   required
                   placeholder="e.g. Heavy Traffic / Vehicle Breakdown / University Work / Emergency"
                   value={lateReason}
                   onChange={(e) => setLateReason(e.target.value)}
-                  className="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 font-medium"
+                  className="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 font-medium leading-relaxed"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:col-span-2">
-                <div className="space-y-1.5">
-                  <label className="block font-semibold text-slate-700 dark:text-slate-200">
-                    Arrival Date <span className="text-amber-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    min={getTodayLocalDateStr()}
-                    value={lateDate}
-                    onChange={(e) => setLateDate(e.target.value)}
-                    className="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500/60 font-medium"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="block font-semibold text-slate-700 dark:text-slate-200">
-                    Arrival Time <span className="text-amber-500">*</span>
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    value={lateTimeOnly}
-                    onChange={(e) => setLateTimeOnly(e.target.value)}
-                    className="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500/60 font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="md:col-span-2 space-y-1.5">
+              <div className="space-y-1.5">
                 <label className="block font-semibold text-slate-700 dark:text-slate-200">
                   Additional Remarks (Optional)
                 </label>
@@ -526,18 +519,18 @@ export default function FacultyDashboard({ user, onLogout, isDarkMode, onToggleT
                 />
               </div>
 
-              <div className="md:col-span-2 pt-4 flex justify-end">
+              <div className="pt-2 flex justify-end">
                 <button
                   type="submit"
                   disabled={submittingLate}
-                  className="px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-2"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   {submittingLate ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
                   ) : (
                     <Clock className="h-4 w-4" />
                   )}
-                  <span>Submit Teacher Staff Late Mark Request</span>
+                  <span>Submit Late Mark</span>
                 </button>
               </div>
             </form>
