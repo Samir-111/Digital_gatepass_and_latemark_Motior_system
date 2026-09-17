@@ -13,3 +13,5 @@ whatsapp-automation/.wwebjs_auth/
 whatsapp-automation/.wwebjs_cache/
 whatsapp-automation/whatsapp-qr.png
 database/gatepass.json
+*.apk
+.idea/
