@@ -8,13 +8,25 @@ except ImportError:
     subprocess.run(["pip", "install", "Pillow"], check=True)
     from PIL import Image
 
-source = "frontend/assets/app-logo.png.png"
-if not os.path.exists(source):
-    source = "frontend/assets/app-logo.png"
+candidates = [
+    "frontend/assets/app-logo.jpeg",
+    "frontend/assets/app-logo.jpg",
+    "frontend/assets/app-logo.png",
+    "frontend/assets/app-logo.png.png",
+]
 
-shutil.copy(source, "frontend/assets/app-logo.png")
+source = None
+for cand in candidates:
+    if os.path.exists(cand):
+        source = cand
+        break
 
-img = Image.open("frontend/assets/app-logo.png").convert("RGBA")
+if not source:
+    raise FileNotFoundError("Could not find app-logo image in frontend/assets!")
+
+print(f"Found source logo: {source}")
+img = Image.open(source).convert("RGBA")
+img.save("frontend/assets/app-logo.png", "PNG")
 
 targets = [
     ("android/app/src/main/res/mipmap-mdpi", 48, 108),

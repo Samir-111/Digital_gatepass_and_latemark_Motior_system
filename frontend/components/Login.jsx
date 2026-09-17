@@ -31,7 +31,7 @@ import {
   Sun,
   Users
 } from "lucide-react";
-import { apiFetch, setAuthToken } from "../lib/api.js";
+import { apiFetch, setAuthToken, setAuthSession } from "../lib/api.js";
 import { gatepassService } from "../services/gatepassService.js";
 import campusImg from "../assets/campus.png";
 import sbjainLogo from "../assets/sbjain-logo.png";
@@ -141,9 +141,7 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
         return;
       }
 
-      setAuthToken(data.token);
-      localStorage.setItem("gatepass_user", JSON.stringify(data.user));
-      localStorage.setItem("gatepass_role", data.role);
+      setAuthSession(data.token, data.user, data.role);
       onLoginSuccess(data.user, data.role);
     } catch (err) {
       setError(err.message || "Invalid email or password. Please try again.");
@@ -165,9 +163,7 @@ export default function Login({ onLoginSuccess, isDarkMode, onToggleTheme }) {
         method: "POST",
         body: JSON.stringify({ challengeId, otp: twoFactorOtp })
       });
-      setAuthToken(data.token);
-      localStorage.setItem("gatepass_user", JSON.stringify(data.user));
-      localStorage.setItem("gatepass_role", data.role);
+      setAuthSession(data.token, data.user, data.role);
       onLoginSuccess(data.user, data.role);
     } catch (err) {
       setError(err.message || "Invalid verification code. Please check your Gmail inbox and WhatsApp.");

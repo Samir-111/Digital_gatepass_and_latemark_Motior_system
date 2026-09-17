@@ -94,6 +94,11 @@ function MainPortal() {
 
   // Lifecycle hook to check active session on app startup
   useEffect(() => {
+    // Clear legacy localStorage tokens to prevent persistent unauthorized auto-login
+    localStorage.removeItem('gatepass_token');
+    localStorage.removeItem('gatepass_user');
+    localStorage.removeItem('gatepass_role');
+
     const token = getAuthToken();
     const savedUser = getAuthUser();
     const savedRole = getAuthRole();

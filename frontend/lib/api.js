@@ -1,9 +1,9 @@
 export function getAuthToken() {
-  return localStorage.getItem('gatepass_token');
+  return sessionStorage.getItem('gatepass_token');
 }
 
 export function getAuthUser() {
-  const user = localStorage.getItem('gatepass_user');
+  const user = sessionStorage.getItem('gatepass_user');
   if (!user) return null;
   try {
     return JSON.parse(user);
@@ -13,17 +13,30 @@ export function getAuthUser() {
 }
 
 export function getAuthRole() {
-  return localStorage.getItem('gatepass_role');
+  return sessionStorage.getItem('gatepass_role');
 }
 
 export function removeAuthToken() {
+  sessionStorage.removeItem('gatepass_token');
+  sessionStorage.removeItem('gatepass_user');
+  sessionStorage.removeItem('gatepass_role');
   localStorage.removeItem('gatepass_token');
   localStorage.removeItem('gatepass_user');
   localStorage.removeItem('gatepass_role');
 }
 
 export function setAuthToken(token) {
-  localStorage.setItem('gatepass_token', token);
+  sessionStorage.setItem('gatepass_token', token);
+}
+
+export function setAuthSession(token, user, role) {
+  sessionStorage.setItem('gatepass_token', token);
+  sessionStorage.setItem('gatepass_user', typeof user === 'string' ? user : JSON.stringify(user));
+  sessionStorage.setItem('gatepass_role', role);
+  // Clean legacy localStorage to prevent unauthorized persistent logins
+  localStorage.removeItem('gatepass_token');
+  localStorage.removeItem('gatepass_user');
+  localStorage.removeItem('gatepass_role');
 }
 
 export async function apiFetch(url, options = {}) {
