@@ -25,7 +25,8 @@ import {
   AlertTriangle,
   AlertCircle,
   UserCheck,
-  GraduationCap
+  GraduationCap,
+  Mail
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
 import NotificationCenter from "./NotificationCenter";
@@ -168,10 +169,38 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
     const studentName = (p.student_name || p.faculty_name || "").toLowerCase();
     const studentRoll = (p.student_roll_no || "").toLowerCase();
     const reason = (p.reason || "").toLowerCase();
-    const query = searchQuery.toLowerCase();
-    const matchesSearch = studentName.includes(query) || studentRoll.includes(query) || reason.includes(query);
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch = !query || studentName.includes(query) || studentRoll.includes(query) || reason.includes(query);
     const matchesRisk = riskFilter === "all" || p.risk_level === riskFilter;
     return matchesSearch && matchesRisk;
+  });
+
+  const filteredStudentHistory = studentHistory.filter((p) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const name = (p.student_name || "").toLowerCase();
+    const roll = (p.student_roll_no || "").toLowerCase();
+    const reason = (p.reason || "").toLowerCase();
+    const dept = (p.student_department || "").toLowerCase();
+    return name.includes(q) || roll.includes(q) || reason.includes(q) || dept.includes(q);
+  });
+
+  const filteredFacultyHistory = facultyHistory.filter((p) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const name = (p.faculty_name || "").toLowerCase();
+    const reason = (p.reason || "").toLowerCase();
+    const dept = (p.faculty_department || "").toLowerCase();
+    return name.includes(q) || reason.includes(q) || dept.includes(q);
+  });
+
+  const filteredLateEntries = lateEntries.filter((e) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const name = (e.student_name || "").toLowerCase();
+    const roll = (e.student_roll_no || "").toLowerCase();
+    const reason = (e.reason || "").toLowerCase();
+    return name.includes(q) || roll.includes(q) || reason.includes(q);
   });
 
   return (
@@ -199,7 +228,7 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-300 font-medium tracking-wide">
-                  Nagpur • Departmental Outing Clearance &amp; Gate Pass System
+                  Nagpur
                 </p>
               </div>
             </div>
@@ -276,10 +305,15 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                   <Building2 className="h-3.5 w-3.5 text-purple-500" />
                   <span>Department: <strong className="text-slate-700 dark:text-slate-200">{user?.department}</strong></span>
                 </span>
-                <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
-                <span className="text-slate-500 dark:text-slate-400">
-                  Tier-2 Outing Authorization &amp; Student/Faculty Outing Clearance Center
-                </span>
+                {user?.email && (
+                  <>
+                    <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
+                    <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                      <Mail className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+                      <span>{user.email}</span>
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -460,20 +494,35 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
               </button>
             </div>
 
-            {/* Filter controls: Visible on Pending tab */}
-            {activeTab === "pending" && (
-              <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto">
-                <div className="relative w-full sm:w-60">
-                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search name, roll, reason..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-xs"
-                  />
-                </div>
+            {/* Universal Search and Filter controls */}
+            <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder={
+                    activeTab === "late_come"
+                      ? "Search late student by name, roll..."
+                      : activeTab === "faculty_history"
+                      ? "Search faculty by name, reason..."
+                      : "Search student name, roll, reason..."
+                  }
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-8 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-xs"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 top-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-0.5"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
 
+              {activeTab === "pending" && (
                 <div className="flex items-center space-x-1.5">
                   <Filter className="h-3.5 w-3.5 text-slate-400" />
                   <select
@@ -487,8 +536,8 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                     <option value="high">High Risk Only</option>
                   </select>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* ------------------------------------------------------------- */}
@@ -644,18 +693,18 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
           {/* ------------------------------------------------------------- */}
           {(activeTab === "student_history" || activeTab === "history") && (
             <div className="animate-fade-in">
-              {studentHistory.length === 0 ? (
+              {filteredStudentHistory.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 dark:text-slate-500 space-y-2">
                   <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600" />
                   <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                    No student gate pass records found in this department.
+                    {searchQuery ? `No student gate pass records match "${searchQuery}".` : "No student gate pass records found in this department."}
                   </p>
                 </div>
               ) : (
                 <div>
                   {/* Mobile Card Layout (block sm:hidden) */}
                   <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
-                    {studentHistory.map((pass) => (
+                    {filteredStudentHistory.map((pass) => (
                       <div key={pass.id} className="p-3.5 space-y-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
                         <div className="flex items-start justify-between gap-2">
                           <div>
@@ -702,7 +751,7 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-[#0b132b] divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300">
-                        {studentHistory.map((pass) => (
+                        {filteredStudentHistory.map((pass) => (
                           <tr key={pass.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
                             <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-900 dark:text-slate-200">
                               #{pass.id}
@@ -745,18 +794,18 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
           {/* ------------------------------------------------------------- */}
           {activeTab === "faculty_history" && (
             <div className="animate-fade-in">
-              {facultyHistory.length === 0 ? (
+              {filteredFacultyHistory.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 dark:text-slate-500 space-y-2">
                   <Award className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600" />
                   <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                    No faculty or teacher staff history found in this department.
+                    {searchQuery ? `No faculty staff history matches "${searchQuery}".` : "No faculty or teacher staff history found in this department."}
                   </p>
                 </div>
               ) : (
                 <div>
                   {/* Mobile Card Layout (block sm:hidden) */}
                   <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
-                    {facultyHistory.map((pass) => (
+                    {filteredFacultyHistory.map((pass) => (
                       <div key={pass.id} className="p-3.5 space-y-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
                         <div className="flex items-start justify-between gap-2">
                           <div>
@@ -803,7 +852,7 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-[#0b132b] divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300">
-                        {facultyHistory.map((pass) => (
+                        {filteredFacultyHistory.map((pass) => (
                           <tr key={pass.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
                             <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-900 dark:text-slate-200">
                               #{pass.id}
@@ -862,15 +911,15 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
               </div>
 
               {/* Stats Mini Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-slate-50/70 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Incidents</span>
-                  <div className="text-xl font-black text-slate-900 dark:text-white mt-1">{lateEntries.length}</div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                <div className="bg-slate-50/70 dark:bg-slate-800/40 p-2.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Total Incidents</span>
+                  <div className="text-base sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1">{lateEntries.length}</div>
                 </div>
 
-                <div className="bg-slate-50/70 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active This Month</span>
-                  <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
+                <div className="bg-slate-50/70 dark:bg-slate-800/40 p-2.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">This Month</span>
+                  <div className="text-base sm:text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-1">
                     {(() => {
                       const currentMonth = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
                       return lateEntries.filter((e) => {
@@ -881,27 +930,27 @@ export default function HODDashboard({ user, onLogout, isDarkMode, onToggleTheme
                   </div>
                 </div>
 
-                <div className="bg-slate-50/70 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unique Students</span>
-                  <div className="text-xl font-black text-purple-600 dark:text-purple-400 mt-1">
+                <div className="bg-slate-50/70 dark:bg-slate-800/40 p-2.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Students</span>
+                  <div className="text-base sm:text-xl font-black text-purple-600 dark:text-purple-400 mt-0.5 sm:mt-1">
                     {new Set(lateEntries.map((e) => e.student_id)).size}
                   </div>
                 </div>
               </div>
 
               {/* Grouped Monthwise Register */}
-              {lateEntries.length === 0 ? (
+              {filteredLateEntries.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 dark:text-slate-500 space-y-2">
                   <Clock className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600" />
                   <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                    No late-comers recorded in your department yet.
+                    {searchQuery ? `No late students match "${searchQuery}".` : "No late-comers recorded in your department yet."}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {(() => {
                     const groups = {};
-                    lateEntries.forEach((entry) => {
+                    filteredLateEntries.forEach((entry) => {
                       const date = new Date(entry.arrival_time);
                       const monthYear = date.toLocaleString("en-US", { month: "long", year: "numeric" });
                       if (!groups[monthYear]) {

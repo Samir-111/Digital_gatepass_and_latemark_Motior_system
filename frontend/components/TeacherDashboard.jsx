@@ -278,8 +278,19 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
     const sName = pass.student_name?.toLowerCase() || "";
     const sRoll = pass.student_roll_no?.toLowerCase() || "";
     const reason = pass.reason?.toLowerCase() || "";
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
     return sName.includes(query) || sRoll.includes(query) || reason.includes(query);
+  });
+
+  const filteredMyStudents = myStudents.filter((student) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase().trim();
+    const sName = (student.name || "").toLowerCase();
+    const sRoll = (student.roll_no || "").toLowerCase();
+    const sEmail = (student.email || "").toLowerCase();
+    const sPhone = (student.phone || "").toLowerCase();
+    const sParentPhone = (student.parent_phone || "").toLowerCase();
+    return sName.includes(query) || sRoll.includes(query) || sEmail.includes(query) || sPhone.includes(query) || sParentPhone.includes(query);
   });
 
   const todayStr = new Date().toDateString();
@@ -587,34 +598,34 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
 
         {/* Analytics KPI Grid for Late Comers */}
         {activeTab === "late" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 animate-fade-in">
-            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 animate-fade-in">
+            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-sm flex items-center justify-between">
+              <div className="min-w-0 pr-1">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block truncate">
                   Today's Late Comers
                 </span>
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{todayLateCount}</h2>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                  First lecture late entries logged today
+                <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1">{todayLateCount}</h2>
+                <p className="text-[9px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
+                  First lecture late entries
                 </p>
               </div>
-              <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-800/60">
-                <Clock className="h-6 w-6" />
+              <div className="p-2 sm:p-3.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl sm:rounded-2xl border border-emerald-100 dark:border-emerald-800/60 shrink-0">
+                <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block">
-                  Monthly Late Entries ({selectedMonth})
+            <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-sm flex items-center justify-between">
+              <div className="min-w-0 pr-1">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider block truncate">
+                  Monthly Late Entries
                 </span>
-                <h2 className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{monthLateCount}</h2>
-                <p className="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5 font-semibold">
-                  Total filtered logs for {selectedMonth}
+                <h2 className="text-lg sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 sm:mt-1">{monthLateCount}</h2>
+                <p className="text-[9px] sm:text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5 font-semibold truncate">
+                  Filtered: {selectedMonth}
                 </p>
               </div>
-              <div className="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-100 dark:border-indigo-800/60">
-                <Calendar className="h-6 w-6" />
+              <div className="p-2 sm:p-3.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl sm:rounded-2xl border border-indigo-100 dark:border-indigo-800/60 shrink-0">
+                <Calendar className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
             </div>
           </div>
@@ -1052,8 +1063,17 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                     placeholder="Search name, roll, reason..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-4 py-1.5 w-full sm:w-64 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#0b132b] text-slate-800 dark:text-slate-100 shadow-xs"
+                    className="pl-9 pr-8 py-1.5 w-full sm:w-64 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#0b132b] text-slate-800 dark:text-slate-100 shadow-xs"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold"
+                      title="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1329,8 +1349,17 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                       placeholder="Search name, roll..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-4 py-1.5 w-44 sm:w-48 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs"
+                      className="pl-9 pr-8 py-1.5 w-44 sm:w-48 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs"
                     />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold"
+                        title="Clear search"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex items-center space-x-1.5">
@@ -1492,8 +1521,8 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
         {/* TAB 4: MY CLASS ROLL REGISTRY */}
         {/* ------------------------------------------------------------- */}
         {activeTab === "students" && (
-          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4 animate-fade-in">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="bg-white dark:bg-[#0b132b] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm space-y-4 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <h3 className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100">
                   My Class Roll Registry
@@ -1502,23 +1531,52 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                   Official registered student profiles enrolled under your designated class.
                 </p>
               </div>
-              <span className="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 rounded-full text-xs font-black border border-blue-100 dark:border-blue-900/50">
-                {myStudents.length} Students
-              </span>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="relative flex-1 sm:flex-initial">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search name, roll, phone, email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-8 py-1.5 w-full sm:w-64 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold"
+                      title="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <span className="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 rounded-full text-xs font-black border border-blue-100 dark:border-blue-900/50 shrink-0">
+                  {filteredMyStudents.length}{searchQuery ? ` of ${myStudents.length}` : ""} Students
+                </span>
+              </div>
             </div>
 
-            {myStudents.length === 0 ? (
+            {filteredMyStudents.length === 0 ? (
               <div className="py-12 text-center">
                 <Users className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-                  No student registration profiles found for your class yet.
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  {searchQuery ? `No students found matching "${searchQuery}"` : "No student registration profiles found for your class yet."}
                 </p>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="mt-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Clear Search Filter
+                  </button>
+                )}
               </div>
             ) : (
               <div>
                 {/* Mobile Card Layout (block sm:hidden) */}
                 <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
-                  {myStudents.map((student) => (
+                  {filteredMyStudents.map((student) => (
                     <div key={student.id} className="p-3.5 space-y-1.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
                       <div className="flex items-center justify-between">
                         <span className="font-extrabold text-xs text-slate-900 dark:text-white">
@@ -1552,7 +1610,7 @@ export default function TeacherDashboard({ user, onLogout, isDarkMode, onToggleT
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-[#0b132b]">
-                      {myStudents.map((student) => (
+                      {filteredMyStudents.map((student) => (
                         <tr key={student.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
                           <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-slate-100">
                             {student.roll_no}

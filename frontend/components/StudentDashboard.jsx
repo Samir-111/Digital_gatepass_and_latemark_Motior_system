@@ -31,7 +31,8 @@ import {
   GraduationCap,
   Building2,
   Phone,
-  Mail
+  Mail,
+  Search
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
 import NotificationCenter from "./NotificationCenter";
@@ -40,6 +41,7 @@ import sbjainLogo from "../assets/sbjain-logo.png";
 export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleTheme }) {
   const [passes, setPasses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [historySearch, setHistorySearch] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState(null);
   const [reason, setReason] = useState("");
@@ -195,7 +197,14 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
       showToast("Profile & incharge details updated successfully!");
       setProfileSuccess(true);
       if (res?.user) {
-        sessionStorage.setItem("gatepass_user", JSON.stringify(res.user));
+        try {
+          const safeUser = res.user.photo && res.user.photo.length > 50000 
+            ? { ...res.user, photo: '' } 
+            : res.user;
+          sessionStorage.setItem("gatepass_user", JSON.stringify(safeUser));
+        } catch {
+          // Ignore storage quota warnings
+        }
       }
       setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err) {
@@ -207,8 +216,37 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          // Resize image to max 300x300 for optimal fast storage & performance
+          const canvas = document.createElement("canvas");
+          const MAX_SIZE = 300;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to compressed JPEG data URL (approx 15-30KB)
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+          setPhoto(compressedDataUrl);
+        };
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -792,75 +830,113 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
 
             {/* Passes Table */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
-              <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">My Gate Pass History Records</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Historical register of all outing requests.</p>
                 </div>
-                <button
-                  onClick={fetchPasses}
-                  className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer"
-                  title="Refresh History"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2.5">
+                  <div className="relative flex-1 sm:flex-initial">
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search reason, status, date..."
+                      value={historySearch}
+                      onChange={(e) => setHistorySearch(e.target.value)}
+                      className="pl-9 pr-8 py-1.5 w-full sm:w-56 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs"
+                    />
+                    {historySearch && (
+                      <button
+                        onClick={() => setHistorySearch("")}
+                        className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold"
+                        title="Clear search"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    onClick={fetchPasses}
+                    className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer shrink-0"
+                    title="Refresh History"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
-              {passes.length === 0 ? (
-                <div className="text-center py-16 text-slate-400 dark:text-slate-500">
-                  <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                  <span className="text-sm font-semibold">No gate pass records found.</span>
-                </div>
-              ) : (
-                <div>
-                  {/* Mobile Card Layout (block sm:hidden) */}
-                  <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
-                    {passes.map((pass) => (
-                      <div key={pass.id} className="p-3.5 space-y-2 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200 block">
-                              Pass #{pass.id}
-                            </span>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                              {new Date(pass.exit_time).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })} at {new Date(pass.exit_time).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+              {(() => {
+                const filteredPasses = passes.filter((pass) => {
+                  if (!historySearch) return true;
+                  const q = historySearch.toLowerCase().trim();
+                  const reason = (pass.reason || "").toLowerCase();
+                  const status = (pass.status || "").toLowerCase();
+                  const id = String(pass.id || "");
+                  const dateStr = new Date(pass.exit_time || pass.created_at).toLocaleDateString().toLowerCase();
+                  return reason.includes(q) || status.includes(q) || id.includes(q) || dateStr.includes(q);
+                });
+
+                if (filteredPasses.length === 0) {
+                  return (
+                    <div className="text-center py-16 text-slate-400 dark:text-slate-500">
+                      <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                      <span className="text-sm font-semibold">
+                        {historySearch ? `No gate pass records found matching "${historySearch}"` : "No gate pass records found."}
+                      </span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div>
+                    {/* Mobile Card Layout (block sm:hidden) */}
+                    <div className="block sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                      {filteredPasses.map((pass) => (
+                        <div key={pass.id} className="p-3.5 space-y-2 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200 block">
+                                Pass #{pass.id}
+                              </span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                                {new Date(pass.exit_time).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })} at {new Date(pass.exit_time).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {getStatusBadge(pass.status)}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {getStatusBadge(pass.status)}
+
+                          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/60">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 block mb-0.5">Reason</span>
+                            <p className="leading-snug">{pass.reason}</p>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-0.5">
+                            <span>
+                              Gate Scan: <strong className="text-slate-700 dark:text-slate-300">{pass.exit_marked_at ? new Date(pass.exit_marked_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Not Scanned"}</strong>
+                            </span>
+                            {pass.risk_level && getRiskBadge(pass.risk_level)}
                           </div>
                         </div>
+                      ))}
+                    </div>
 
-                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/60">
-                          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 block mb-0.5">Reason</span>
-                          <p className="leading-snug">{pass.reason}</p>
-                        </div>
-
-                        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-0.5">
-                          <span>
-                            Gate Scan: <strong className="text-slate-700 dark:text-slate-300">{pass.exit_marked_at ? new Date(pass.exit_marked_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Not Scanned"}</strong>
-                          </span>
-                          {pass.risk_level && getRiskBadge(pass.risk_level)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (hidden sm:block) */}
-                  <div className="hidden sm:block overflow-x-auto">
-                    <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
-                      <thead className="bg-slate-50 dark:bg-slate-800/60">
-                        <tr>
-                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pass ID</th>
-                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reason for Outing</th>
-                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exit Window</th>
-                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gate Scan Timestamp</th>
-                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Risk Level</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                        {passes.map((pass) => (
+                    {/* Desktop Table View (hidden sm:block) */}
+                    <div className="hidden sm:block overflow-x-auto">
+                      <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
+                        <thead className="bg-slate-50 dark:bg-slate-800/60">
+                          <tr>
+                            <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pass ID</th>
+                            <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reason for Outing</th>
+                            <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exit Window</th>
+                            <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gate Scan Timestamp</th>
+                            <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Risk Level</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                          {filteredPasses.map((pass) => (
                           <tr key={pass.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
                             <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-slate-800 dark:text-slate-200">#{pass.id}</td>
                             <td className="px-6 py-4">
@@ -886,7 +962,8 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                     </table>
                   </div>
                 </div>
-              )}
+              );
+            })()}
             </div>
           </div>
         )}

@@ -20,7 +20,8 @@ import {
   AlertCircle,
   XCircle,
   Sun,
-  Moon
+  Moon,
+  Search
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
 import { Html5Qrcode } from "html5-qrcode";
@@ -29,6 +30,7 @@ import sbjainLogo from "../assets/sbjain-logo.png";
 export default function GuardDashboard({ user, onLogout, isDarkMode, onToggleTheme }) {
   const [todayEntries, setTodayEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [manualToken, setManualToken] = useState("");
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifiedPass, setVerifiedPass] = useState(null);
@@ -692,63 +694,99 @@ export default function GuardDashboard({ user, onLogout, isDarkMode, onToggleThe
 
         {/* Today's Entries Activity Logs Table */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm mt-8 overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Today's GatePass Checkpoints Activity</h2>
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">Today's GatePass Checkpoints Activity</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Real-time log of student exits and entries registered today.</p>
             </div>
-            <button
-              onClick={fetchGuardData}
-              className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex-1 sm:flex-initial">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search student, roll, dept..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-8 py-1.5 w-full sm:w-56 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold"
+                    title="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={fetchGuardData}
+                className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer shrink-0"
+                title="Refresh logs"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
-              <thead className="bg-slate-50 dark:bg-slate-800/70">
-                <tr>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Student Details</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reason</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Scan / Exit Timestamp</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
-                {todayEntries.map((pass) => (
-                  <tr key={pass.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-bold text-slate-800 dark:text-slate-100">{pass.student_name}</div>
-                      <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Roll: {pass.student_roll_no} • {pass.student_department}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-xs">"{pass.reason}"</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-semibold">
-                      {pass.exit_marked_at ? (
-                        <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-bold">
-                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                          {new Date(pass.exit_marked_at).toLocaleTimeString()}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 dark:text-slate-500">No Scan Logged</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(pass.status)}
-                    </td>
-                  </tr>
-                ))}
-                {todayEntries.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">
-                      No gate exits have been logged yet today.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            {(() => {
+              const filteredTodayEntries = todayEntries.filter((pass) => {
+                if (!searchQuery) return true;
+                const q = searchQuery.toLowerCase().trim();
+                const name = (pass.student_name || pass.faculty_name || "").toLowerCase();
+                const roll = (pass.student_roll_no || "").toLowerCase();
+                const dept = (pass.student_department || pass.faculty_department || "").toLowerCase();
+                const reason = (pass.reason || "").toLowerCase();
+                return name.includes(q) || roll.includes(q) || dept.includes(q) || reason.includes(q);
+              });
+
+              return (
+                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800">
+                  <thead className="bg-slate-50 dark:bg-slate-800/70">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Student Details</th>
+                      <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reason</th>
+                      <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Scan / Exit Timestamp</th>
+                      <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
+                    {filteredTodayEntries.map((pass) => (
+                      <tr key={pass.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-bold text-slate-800 dark:text-slate-100">{pass.student_name}</div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Roll: {pass.student_roll_no} • {pass.student_department}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-xs">"{pass.reason}"</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-semibold">
+                          {pass.exit_marked_at ? (
+                            <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-bold">
+                              <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                              {new Date(pass.exit_marked_at).toLocaleTimeString()}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 dark:text-slate-500">No Scan Logged</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(pass.status)}
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredTodayEntries.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium">
+                          {searchQuery ? `No checkpoint logs found matching "${searchQuery}"` : "No gate exits have been logged yet today."}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              );
+            })()}
           </div>
         </div>
       </div>

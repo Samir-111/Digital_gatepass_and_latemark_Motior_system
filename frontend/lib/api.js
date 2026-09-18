@@ -30,13 +30,53 @@ export function setAuthToken(token) {
 }
 
 export function setAuthSession(token, user, role) {
-  sessionStorage.setItem('gatepass_token', token);
-  sessionStorage.setItem('gatepass_user', typeof user === 'string' ? user : JSON.stringify(user));
-  sessionStorage.setItem('gatepass_role', role);
+  try {
+    sessionStorage.setItem('gatepass_token', token);
+    sessionStorage.setItem('gatepass_role', role);
+
+    // Prepare a safe user object to avoid exceeding sessionStorage quota (e.g., if photo is a multi-megabyte base64 image)
+    let safeUser = user;
+    if (user && typeof user === 'object') {
+      // If photo is huge (> 50KB), strip or omit it from sessionStorage to prevent QuotaExceededError
+      if (user.photo && typeof user.photo === 'string' && user.photo.length > 50000) {
+        safeUser = { ...user, photo: '' };
+      }
+    }
+
+    try {
+      sessionStorage.setItem('gatepass_user', typeof safeUser === 'string' ? safeUser : JSON.stringify(safeUser));
+    } catch (quotaErr) {
+      console.warn('Storage quota exceeded when saving full user profile. Saving minimal profile.', quotaErr);
+      // Strip heavy data fields and retry
+      if (user && typeof user === 'object') {
+        const minimalUser = {
+          id: user.id || user._id,
+          name: user.name,
+          email: user.email,
+          role: role || user.role,
+          department: user.department,
+          roll_no: user.roll_no,
+          college_id: user.college_id,
+          phone: user.phone,
+          parent_phone: user.parent_phone,
+          class_teacher_id: user.class_teacher_id,
+          selected_hod_id: user.selected_hod_id
+        };
+        sessionStorage.setItem('gatepass_user', JSON.stringify(minimalUser));
+      }
+    }
+  } catch (err) {
+    console.error('Failed to set auth session in storage:', err);
+  }
+
   // Clean legacy localStorage to prevent unauthorized persistent logins
-  localStorage.removeItem('gatepass_token');
-  localStorage.removeItem('gatepass_user');
-  localStorage.removeItem('gatepass_role');
+  try {
+    localStorage.removeItem('gatepass_token');
+    localStorage.removeItem('gatepass_user');
+    localStorage.removeItem('gatepass_role');
+  } catch {
+    // Ignore localStorage cleanup errors
+  }
 }
 
 export async function apiFetch(url, options = {}) {

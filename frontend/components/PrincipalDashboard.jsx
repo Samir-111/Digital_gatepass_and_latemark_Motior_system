@@ -150,16 +150,17 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
     return (passesList || []).filter((pass) => {
       if (!pass) return false;
       const name = (pass.faculty_name || pass.student_name || "").toLowerCase();
+      const roll = (pass.student_roll_no || "").toLowerCase();
       const reason = (pass.reason || "").toLowerCase();
       const dept = (
         pass.faculty_department ||
         pass.student_department ||
         ""
       ).toLowerCase();
-      const query = (searchQuery || "").toLowerCase();
+      const query = (searchQuery || "").toLowerCase().trim();
 
       const matchesSearch =
-        name.includes(query) || reason.includes(query) || dept.includes(query);
+        name.includes(query) || roll.includes(query) || reason.includes(query) || dept.includes(query);
       const matchesDept =
         filterDepartment === "All" ||
         (pass.faculty_department || pass.student_department) ===
@@ -369,11 +370,20 @@ export default function PrincipalDashboard({ user, onLogout, isDarkMode, onToggl
               <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search by name, reason..."
+                placeholder="Search by name, roll, reason..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500/50 w-48 sm:w-64 shadow-sm"
+                className="pl-9 pr-8 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500/50 w-48 sm:w-64 shadow-sm"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold"
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
             <select
