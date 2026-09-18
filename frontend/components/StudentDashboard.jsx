@@ -32,7 +32,8 @@ import {
   Building2,
   Phone,
   Mail,
-  Search
+  Search,
+  Lock
 } from "lucide-react";
 import { gatepassService } from "../services/gatepassService.js";
 import NotificationCenter from "./NotificationCenter";
@@ -132,7 +133,23 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
         console.error("Failed to fetch metadata for dropdowns:", err);
       }
     };
+    const fetchStudentProfileData = async () => {
+      try {
+        const res = await gatepassService.getStudentProfile();
+        if (res?.student) {
+          if (res.student.photo) setPhoto(res.student.photo);
+          if (res.student.phone) setPhone(res.student.phone);
+          if (res.student.email) setEmail(res.student.email);
+          if (res.student.parent_phone) setParentPhone(res.student.parent_phone);
+          if (res.student.class_teacher_id) setSelectedClassTeacherId(res.student.class_teacher_id);
+          if (res.student.selected_hod_id) setSelectedHodId(res.student.selected_hod_id);
+        }
+      } catch (err) {
+        console.warn("Could not fetch student profile details:", err);
+      }
+    };
     fetchMetadata();
+    fetchStudentProfileData();
     const interval = setInterval(() => {
       fetchPasses();
     }, 5000);
@@ -198,7 +215,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
       setProfileSuccess(true);
       if (res?.user) {
         try {
-          const safeUser = res.user.photo && res.user.photo.length > 50000 
+          const safeUser = res.user.photo && res.user.photo.length > 500000 
             ? { ...res.user, photo: '' } 
             : res.user;
           sessionStorage.setItem("gatepass_user", JSON.stringify(safeUser));
@@ -1127,7 +1144,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                   <input
                     disabled
                     type="text"
-                    value={user.name}
+                    value={user?.name || ""}
                     className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
                   />
                 </div>
@@ -1136,7 +1153,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                   <input
                     disabled
                     type="text"
-                    value={user.roll_no}
+                    value={user?.roll_no || ""}
                     className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
                   />
                 </div>
@@ -1145,7 +1162,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                   <input
                     disabled
                     type="text"
-                    value={user.department || "Engineering"}
+                    value={user?.department || "Engineering"}
                     className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
                   />
                 </div>
@@ -1177,7 +1194,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                   <input
                     disabled
                     type="text"
-                    value={user.parent_phone || "+91 9876543210"}
+                    value={user?.parent_phone || "+91 9876543210"}
                     className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
                   />
                   <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
@@ -1209,7 +1226,7 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                       className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value="">-- Select Class Incharge --</option>
-                      {teachersList.map((t) => (
+                      {(teachersList || []).map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.name} {t.department ? `(${t.department})` : ""}
                         </option>
@@ -1225,14 +1242,14 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                     <div className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-between">
                       <span className="truncate">
                         {(() => {
-                          const deptHod = hodsList.find(
-                            (h) => h.department && user.department && h.department.trim().toLowerCase() === user.department.trim().toLowerCase()
+                          const deptHod = (hodsList || []).find(
+                            (h) => h.department && user?.department && h.department.trim().toLowerCase() === user.department.trim().toLowerCase()
                           );
-                          return deptHod ? deptHod.name : (user.selected_hod_name || "Department HOD");
+                          return deptHod ? deptHod.name : (user?.selected_hod_name || "Department HOD");
                         })()}
                       </span>
                       <span className="text-[10px] bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-md font-bold shrink-0 ml-1">
-                        {user.department || "Dept"} HOD
+                        {user?.department || "Dept"} HOD
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">

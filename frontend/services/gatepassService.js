@@ -25,6 +25,10 @@ export const gatepassService = {
     });
   },
 
+  getStudentProfile: async () => {
+    return apiFetch('/api/student/me');
+  },
+
   updateStudentProfile: async (payload) => {
     return apiFetch('/api/student/profile', {
       method: 'POST',

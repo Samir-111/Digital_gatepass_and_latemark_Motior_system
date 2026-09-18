@@ -2427,6 +2427,16 @@ app.delete('/api/admin/teachers/:id', authenticateJWT, authorizeRoles('admin'), 
   res.json({ message: 'Class Teacher deleted successfully.' });
 });
 
+// Student Self-Service: Get current student profile
+app.get('/api/student/me', authenticateJWT, authorizeRoles('student'), (req, res) => {
+  const studentId = req.user.id;
+  const currentStudent = (db.getStudents() || []).find(s => s.id === studentId);
+  if (!currentStudent) {
+    return res.status(404).json({ error: 'Student profile not found.' });
+  }
+  res.json({ student: currentStudent });
+});
+
 // Student Self-Service: Edit profile
 app.post('/api/student/profile', authenticateJWT, authorizeRoles('student'), (req, res) => {
   const studentId = req.user.id;

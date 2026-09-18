@@ -37,8 +37,8 @@ export function setAuthSession(token, user, role) {
     // Prepare a safe user object to avoid exceeding sessionStorage quota (e.g., if photo is a multi-megabyte base64 image)
     let safeUser = user;
     if (user && typeof user === 'object') {
-      // If photo is huge (> 50KB), strip or omit it from sessionStorage to prevent QuotaExceededError
-      if (user.photo && typeof user.photo === 'string' && user.photo.length > 50000) {
+      // If photo is huge (> 500KB), strip or omit it from sessionStorage to prevent QuotaExceededError
+      if (user.photo && typeof user.photo === 'string' && user.photo.length > 500000) {
         safeUser = { ...user, photo: '' };
       }
     }
