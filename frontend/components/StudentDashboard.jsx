@@ -50,12 +50,14 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
   };
   const [exitDate, setExitDate] = useState(getTodayLocalDateStr());
   const [exitTimeOnly, setExitTimeOnly] = useState("09:00");
-  const [selectedHodId, setSelectedHodId] = useState("");
-  const [selectedHodName, setSelectedHodName] = useState("");
-  const [hodsList, setHodsList] = useState([]);
   const [phone, setPhone] = useState(user.phone || "");
+  const [parentPhone, setParentPhone] = useState(user.parent_phone || "");
   const [email, setEmail] = useState(user.email || "");
   const [photo, setPhoto] = useState(user.photo || "");
+  const [selectedClassTeacherId, setSelectedClassTeacherId] = useState(user.class_teacher_id || "");
+  const [selectedHodId, setSelectedHodId] = useState(user.selected_hod_id || "");
+  const [teachersList, setTeachersList] = useState([]);
+  const [hodsList, setHodsList] = useState([]);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("status");
   const [lateEntries, setLateEntries] = useState([]);
@@ -119,15 +121,16 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
   useEffect(() => {
     fetchPasses();
     fetchLateEntries();
-    const fetchHodsData = async () => {
+    const fetchMetadata = async () => {
       try {
         const data = await gatepassService.getPublicInfo();
         setHodsList(data.hods || []);
+        setTeachersList(data.teachers || data.allTeachers || []);
       } catch (err) {
-        console.error("Failed to fetch HODs for apply dropdown:", err);
+        console.error("Failed to fetch metadata for dropdowns:", err);
       }
     };
-    fetchHodsData();
+    fetchMetadata();
     const interval = setInterval(() => {
       fetchPasses();
     }, 5000);
@@ -181,13 +184,19 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     try {
-      await gatepassService.updateStudentProfile({
+      const res = await gatepassService.updateStudentProfile({
         phone,
+        parent_phone: parentPhone,
         email,
-        photo
+        photo,
+        class_teacher_id: selectedClassTeacherId,
+        selected_hod_id: selectedHodId
       });
-      showToast("Profile updated successfully!");
+      showToast("Profile & incharge details updated successfully!");
       setProfileSuccess(true);
+      if (res?.user) {
+        sessionStorage.setItem("gatepass_user", JSON.stringify(res.user));
+      }
       setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err) {
       showToast(err.message || "Failed to update profile.", "error");
@@ -1055,6 +1064,15 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Department</label>
+                  <input
+                    disabled
+                    type="text"
+                    value={user.department || "Engineering"}
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
+                  />
+                </div>
+                <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Email Address</label>
                   <input
                     type="email"
@@ -1064,13 +1082,86 @@ export default function StudentDashboard({ user, onLogout, isDarkMode, onToggleT
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Phone Number</label>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Student Phone</label>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-blue-500"
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                    <span>Parent WhatsApp Number</span>
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                      <Lock className="h-3 w-3" /> Official Record
+                    </span>
+                  </label>
+                  <input
+                    disabled
+                    type="text"
+                    value={user.parent_phone || "+91 9876543210"}
+                    className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed"
+                  />
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                    Registered during admission. (Non-editable by student to prevent misuse).
+                  </p>
+                </div>
+              </div>
+
+              {/* Semester / Academic Incharge Configuration */}
+              <div className="bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <GraduationCap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span>Academic Incharge (Semester Update)</span>
+                  </h4>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Update your assigned Class Incharge when your semester changes so your GatePass approval requests route correctly.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                      Class Teacher / Incharge *
+                    </label>
+                    <select
+                      value={selectedClassTeacherId}
+                      onChange={(e) => setSelectedClassTeacherId(e.target.value)}
+                      className="block w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+                    >
+                      <option value="">-- Select Class Incharge --</option>
+                      {teachersList.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} {t.department ? `(${t.department})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                      <span>Head of Department (HOD)</span>
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">Auto-Synced</span>
+                    </label>
+                    <div className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-between">
+                      <span className="truncate">
+                        {(() => {
+                          const deptHod = hodsList.find(
+                            (h) => h.department && user.department && h.department.trim().toLowerCase() === user.department.trim().toLowerCase()
+                          );
+                          return deptHod ? deptHod.name : (user.selected_hod_name || "Department HOD");
+                        })()}
+                      </span>
+                      <span className="text-[10px] bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-md font-bold shrink-0 ml-1">
+                        {user.department || "Dept"} HOD
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                      Automatically updated whenever Admin changes department HOD.
+                    </p>
+                  </div>
                 </div>
               </div>
 

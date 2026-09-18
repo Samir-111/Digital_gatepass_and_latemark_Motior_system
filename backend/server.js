@@ -493,6 +493,8 @@ app.get('/api/public/info', (req, res) => {
     hods: db.getHODs(),
     teachers: allTeachers,
     allTeachers: allTeachers,
+    guards: (db.getGuards() || []).map(g => ({ id: g.id, name: g.name, email: g.email, shift: g.shift })),
+    principals: (db.getPrincipals() || []).map(p => ({ id: p.id, name: p.name, email: p.email })),
     students: (db.getStudents() || []).map(s => ({ id: s.id, name: s.name, email: s.email, roll_no: s.roll_no })),
   });
 });
@@ -1015,19 +1017,32 @@ app.post('/api/student/apply', authenticateJWT, authorizeRoles('student'), async
     return res.status(404).json({ error: 'Student profile not found.' });
   }
 
-  let finalHODId = student.selected_hod_id;
-  let finalHODName = student.selected_hod_name;
+  // Automatically route to the active HOD of the student's department
+  let finalHODId = null;
+  let finalHODName = 'Department HOD';
 
-  if (!finalHODId && student.department) {
-    const deptHOD = db.getHODs().find(h => h.department && student.department && h.department.toLowerCase() === student.department.toLowerCase());
+  if (student.department) {
+    const deptHOD = (db.getHODs() || []).find(h => h.department && h.department.trim().toLowerCase() === student.department.trim().toLowerCase());
     if (deptHOD) {
       finalHODId = deptHOD.id;
       finalHODName = deptHOD.name;
     }
   }
 
+  if (!finalHODId && student.selected_hod_id) {
+    const savedHOD = (db.getHODs() || []).find(h => h.id === student.selected_hod_id);
+    if (savedHOD) {
+      finalHODId = savedHOD.id;
+      finalHODName = savedHOD.name;
+    }
+  }
+
   if (!finalHODId) {
-    return res.status(400).json({ error: 'You have not selected an HOD in your registered profile. Please update your profile or contact administrator.' });
+    const firstHOD = (db.getHODs() || [])[0];
+    if (firstHOD) {
+      finalHODId = firstHOD.id;
+      finalHODName = firstHOD.name;
+    }
   }
 
   const finalDestination = destination || 'N/A';
@@ -2415,24 +2430,48 @@ app.delete('/api/admin/teachers/:id', authenticateJWT, authorizeRoles('admin'), 
 // Student Self-Service: Edit profile
 app.post('/api/student/profile', authenticateJWT, authorizeRoles('student'), (req, res) => {
   const studentId = req.user.id;
-  const { name, roll_no, college_id, phone, email, password, photo } = req.body;
+  const currentStudent = (db.getStudents() || []).find(s => s.id === studentId);
+  if (!currentStudent) {
+    return res.status(404).json({ error: 'Student profile not found.' });
+  }
+
+  const { phone, email, password, photo, class_teacher_id } = req.body;
+
+  let class_teacher_name = currentStudent.class_teacher_name;
+  if (class_teacher_id) {
+    const teacher = (db.getTeachers() || []).find(t => t.id === class_teacher_id);
+    if (teacher) class_teacher_name = teacher.name;
+  }
+
+  // Auto-resolve HOD dynamically based on student's department
+  let resolvedHodId = currentStudent.selected_hod_id;
+  let resolvedHodName = currentStudent.selected_hod_name;
+  if (currentStudent.department) {
+    const deptHOD = (db.getHODs() || []).find(h => h.department && h.department.trim().toLowerCase() === currentStudent.department.trim().toLowerCase());
+    if (deptHOD) {
+      resolvedHodId = deptHOD.id;
+      resolvedHodName = deptHOD.name;
+    }
+  }
 
   const success = db.updateStudent(studentId, {
-    name,
-    roll_no,
-    college_id,
-    phone,
-    email,
-    photo,
+    phone: phone || currentStudent.phone,
+    email: email || currentStudent.email,
+    photo: photo ?? currentStudent.photo,
+    class_teacher_id: class_teacher_id || currentStudent.class_teacher_id,
+    class_teacher_name: class_teacher_name,
+    selected_hod_id: resolvedHodId,
+    selected_hod_name: resolvedHodName,
     password_plain: password || undefined,
   });
 
   if (!success) {
-    return res.status(404).json({ error: 'Student profile not found.' });
+    return res.status(500).json({ error: 'Failed to update student profile.' });
   }
 
-  db.addLog(studentId, name || req.user.name, 'student', `Updated profile information`);
-  res.json({ message: 'Profile updated successfully.' });
+  const updatedStudent = (db.getStudents() || []).find(s => s.id === studentId);
+  db.addLog(studentId, currentStudent.name, 'student', `Updated profile & incharge configuration`);
+  res.json({ message: 'Profile updated successfully.', user: updatedStudent });
 });
 
 // ==========================================
